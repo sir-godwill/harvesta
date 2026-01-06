@@ -10,6 +10,7 @@ import WelcomePanel from '@/components/home/WelcomePanel';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import TopSuppliers from '@/components/home/TopSuppliers';
 import HeroBanner from '@/components/home/HeroBanner';
+import HeroSlider from '@/components/home/HeroSlider';
 
 export default function Index() {
   return (
@@ -25,11 +26,21 @@ export default function Index() {
             <QuickActions />
           </div>
           
+          {/* Hero Slider - Mobile (after quick actions) */}
+          <div className="lg:hidden px-4 py-4">
+            <HeroSlider />
+          </div>
+          
           {/* Main Content */}
           <div className="px-4 lg:px-6 py-4 lg:py-6">
             {/* Hero Banner - Desktop */}
             <div className="hidden lg:block mb-6">
               <HeroBanner />
+            </div>
+            
+            {/* Hero Slider - Desktop (after hero banner) */}
+            <div className="hidden lg:block mb-6">
+              <HeroSlider />
             </div>
             
             {/* Desktop Layout - 3 Column Grid */}

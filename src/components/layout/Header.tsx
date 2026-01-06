@@ -18,7 +18,7 @@ export default function Header() {
       {/* Top Bar */}
       <div className="hidden lg:flex items-center justify-between px-6 py-2 bg-muted text-sm">
         <div className="flex items-center gap-4">
-          <span className="text-muted-foreground">Welcome to AgroMarket B2B</span>
+          <span className="text-muted-foreground">Welcome to Harvestá B2B</span>
         </div>
         <div className="flex items-center gap-4">
           {/* Language Selector */}
@@ -60,8 +60,8 @@ export default function Header() {
         {/* Logo */}
         <div className="flex items-center gap-2 shrink-0">
           <div className="text-2xl lg:text-3xl font-bold">
-            <span className="text-primary">Agro</span>
-            <span className="text-foreground">Market</span>
+            <span className="text-primary">Harvest</span>
+            <span className="text-foreground">á</span>
           </div>
           <div className="hidden md:block w-6 h-1 bg-primary rounded-full" />
         </div>
