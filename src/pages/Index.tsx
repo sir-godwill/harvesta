@@ -1,14 +1,72 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Header from '@/components/layout/Header';
+import Sidebar from '@/components/layout/Sidebar';
+import MobileNav from '@/components/layout/MobileNav';
+import Footer from '@/components/layout/Footer';
+import CategoryGrid from '@/components/home/CategoryGrid';
+import QuickActions from '@/components/home/QuickActions';
+import DealsSection from '@/components/home/DealsSection';
+import BusinessGroups from '@/components/home/BusinessGroups';
+import WelcomePanel from '@/components/home/WelcomePanel';
+import FeaturedProducts from '@/components/home/FeaturedProducts';
+import TopSuppliers from '@/components/home/TopSuppliers';
+import HeroBanner from '@/components/home/HeroBanner';
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="flex">
+        <Sidebar />
+        
+        <main className="flex-1 pb-20 lg:pb-8">
+          {/* Mobile Quick Actions */}
+          <div className="lg:hidden px-4 py-4 bg-card border-b border-border">
+            <QuickActions />
+          </div>
+          
+          {/* Main Content */}
+          <div className="px-4 lg:px-6 py-4 lg:py-6">
+            {/* Hero Banner - Desktop */}
+            <div className="hidden lg:block mb-6">
+              <HeroBanner />
+            </div>
+            
+            {/* Desktop Layout - 3 Column Grid */}
+            <div className="hidden lg:grid lg:grid-cols-12 gap-6 mb-6">
+              {/* Categories */}
+              <div className="col-span-3">
+                <CategoryGrid />
+              </div>
+              
+              {/* Business Groups */}
+              <div className="col-span-6">
+                <BusinessGroups />
+              </div>
+              
+              {/* Welcome Panel */}
+              <div className="col-span-3">
+                <WelcomePanel />
+              </div>
+            </div>
+            
+            {/* Mobile Layout */}
+            <div className="lg:hidden space-y-4">
+              <DealsSection />
+              <CategoryGrid />
+            </div>
+            
+            {/* Featured Products */}
+            <FeaturedProducts />
+            
+            {/* Top Suppliers */}
+            <TopSuppliers />
+          </div>
+        </main>
       </div>
+      
+      <Footer />
+      <MobileNav />
     </div>
   );
-};
-
-export default Index;
+}
