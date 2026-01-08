@@ -18,6 +18,12 @@ import VerifyEmail from "./pages/auth/VerifyEmail";
 
 // Dashboard Pages
 import BuyerDashboard from "./pages/dashboard/BuyerDashboard";
+import BuyerProfile from "./pages/dashboard/BuyerProfile";
+import OrderList from "./pages/dashboard/OrderList";
+import OrderDetails from "./pages/dashboard/OrderDetails";
+import OrderConfirmation from "./pages/dashboard/OrderConfirmation";
+import SavedProducts from "./pages/dashboard/SavedProducts";
+import SavedSuppliers from "./pages/dashboard/SavedSuppliers";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +49,12 @@ const App = () => (
               
               {/* Dashboard Routes */}
               <Route path="/dashboard" element={<BuyerDashboard />} />
+              <Route path="/profile" element={<BuyerProfile />} />
+              <Route path="/orders" element={<OrderList />} />
+              <Route path="/orders/:id" element={<OrderDetails />} />
+              <Route path="/order-confirmation" element={<OrderConfirmation />} />
+              <Route path="/saved-products" element={<SavedProducts />} />
+              <Route path="/saved-suppliers" element={<SavedSuppliers />} />
               
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
