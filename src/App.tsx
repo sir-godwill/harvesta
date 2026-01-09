@@ -25,6 +25,9 @@ import OrderConfirmation from "./pages/dashboard/OrderConfirmation";
 import SavedProducts from "./pages/dashboard/SavedProducts";
 import SavedSuppliers from "./pages/dashboard/SavedSuppliers";
 
+// Marketplace Pages
+import Cart from "./pages/marketplace/Cart";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -55,6 +58,9 @@ const App = () => (
               <Route path="/order-confirmation" element={<OrderConfirmation />} />
               <Route path="/saved-products" element={<SavedProducts />} />
               <Route path="/saved-suppliers" element={<SavedSuppliers />} />
+              
+              {/* Marketplace Routes */}
+              <Route path="/cart" element={<Cart />} />
               
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
