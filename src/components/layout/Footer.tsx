@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { Facebook, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 
@@ -8,13 +9,13 @@ export default function Footer() {
     <footer className="bg-slate-900 text-white">
       {/* Main Footer */}
       <div className="container mx-auto px-4 lg:px-6 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-4 lg:mb-0">
-            <div className="text-2xl font-bold mb-4">
-              <span className="text-primary">Agro</span>
-              <span className="text-white">Market</span>
-            </div>
+          <div className="col-span-2 md:col-span-4 lg:col-span-2 mb-4 lg:mb-0">
+            <Link to="/" className="text-2xl font-bold mb-4 inline-block">
+              <span className="text-primary">Harvest</span>
+              <span className="text-white">á</span>
+            </Link>
             <p className="text-slate-400 text-sm mb-4">
               Your trusted B2B agricultural marketplace connecting farmers and buyers across Africa and beyond.
             </p>
@@ -36,13 +37,13 @@ export default function Footer() {
           
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <h4 className="font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-primary transition-colors">{t('footer.about')}</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">{t('footer.howItWorks')}</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Farmer Stories</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
+              <li><Link to="/about" className="hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
               <li><a href="#" className="hover:text-primary transition-colors">Careers</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Press</a></li>
             </ul>
           </div>
           
@@ -50,23 +51,23 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Buyer Services</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-primary transition-colors">Browse Products</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Request Quote</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Trade Assurance</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Bulk Orders</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Payment Terms</a></li>
+              <li><Link to="/search" className="hover:text-primary transition-colors">Browse Products</Link></li>
+              <li><Link to="/rfq" className="hover:text-primary transition-colors">Request Quote</Link></li>
+              <li><Link to="/buyer-protection" className="hover:text-primary transition-colors">Buyer Protection</Link></li>
+              <li><Link to="/orders" className="hover:text-primary transition-colors">My Orders</Link></li>
+              <li><Link to="/saved-products" className="hover:text-primary transition-colors">Saved Products</Link></li>
             </ul>
           </div>
           
-          {/* Supplier Services */}
+          {/* Support */}
           <div>
-            <h4 className="font-semibold mb-4">Supplier Services</h4>
+            <h4 className="font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-primary transition-colors">Become a Supplier</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Seller Center</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Advertising</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Verification</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Analytics</a></li>
+              <li><Link to="/help" className="hover:text-primary transition-colors">Help Center</Link></li>
+              <li><Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
+              <li><Link to="/refunds" className="hover:text-primary transition-colors">Refunds & Returns</Link></li>
+              <li><Link to="/trust-safety" className="hover:text-primary transition-colors">Trust & Safety</Link></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Report an Issue</a></li>
             </ul>
           </div>
           
@@ -84,7 +85,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>contact@agromarket.cm</span>
+                <span>contact@harvesta.cm</span>
               </li>
             </ul>
           </div>
@@ -95,11 +96,12 @@ export default function Footer() {
       <div className="border-t border-slate-800">
         <div className="container mx-auto px-4 lg:px-6 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <p>© 2026 AgroMarket. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-primary transition-colors">{t('footer.terms')}</a>
-              <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
+            <p>© 2026 Harvestá. All rights reserved.</p>
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
               <a href="#" className="hover:text-primary transition-colors">Cookie Policy</a>
+              <Link to="/refunds" className="hover:text-primary transition-colors">Refund Policy</Link>
             </div>
           </div>
         </div>
