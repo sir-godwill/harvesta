@@ -228,12 +228,11 @@ export default function CheckoutPage() {
           <div className="lg:w-96">
             <OrderSummaryCard
               subtotal={subtotal}
-              delivery={deliveryTotal}
-              tax={taxes}
-              total={grandTotal}
+              deliveryTotal={deliveryTotal}
+              taxes={taxes}
+              grandTotal={grandTotal}
               itemCount={itemCount}
-              onCheckout={() => {}}
-              showCheckoutButton={false}
+              isCheckoutPage={true}
             />
           </div>
         </div>
