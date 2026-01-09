@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import PublicRoute from "@/components/auth/PublicRoute";
 import Index from "./pages/Index";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
@@ -55,24 +57,9 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/dashboard" element={<BuyerDashboard />} />
-              <Route path="/profile" element={<BuyerProfile />} />
-              <Route path="/orders" element={<OrderList />} />
-              <Route path="/orders/:id" element={<OrderDetails />} />
-              <Route path="/order-confirmation" element={<OrderConfirmation />} />
-              <Route path="/saved-products" element={<SavedProducts />} />
-              <Route path="/saved-suppliers" element={<SavedSuppliers />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/rfq" element={<RFQ />} />
-              <Route path="/track/:orderId" element={<OrderTracking />} />
               <Route path="/search" element={<Search />} />
               <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
               <Route path="/about" element={<About />} />
@@ -84,6 +71,27 @@ const App = () => (
               <Route path="/refunds" element={<Refunds />} />
               <Route path="/buyer-protection" element={<BuyerProtection />} />
               <Route path="/trust-safety" element={<TrustSafety />} />
+
+              {/* Auth Routes (redirect if logged in) */}
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+              <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+
+              {/* Protected Routes (require authentication) */}
+              <Route path="/dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><BuyerProfile /></ProtectedRoute>} />
+              <Route path="/orders" element={<ProtectedRoute><OrderList /></ProtectedRoute>} />
+              <Route path="/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+              <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+              <Route path="/saved-products" element={<ProtectedRoute><SavedProducts /></ProtectedRoute>} />
+              <Route path="/saved-suppliers" element={<ProtectedRoute><SavedSuppliers /></ProtectedRoute>} />
+              <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+              <Route path="/rfq" element={<ProtectedRoute><RFQ /></ProtectedRoute>} />
+              <Route path="/track/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
