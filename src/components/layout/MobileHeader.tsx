@@ -53,28 +53,27 @@ export default function MobileHeader() {
         <div className="px-3 py-2.5">
           <div className="flex items-center gap-2">
             {/* Left Section: Logo (default) or Hamburger (scrolled) */}
-            <div className="shrink-0 w-8 h-8 flex items-center justify-center">
+            <div className={cn(
+              "shrink-0 flex items-center justify-center transition-all duration-300 ease-out",
+              isScrolled ? "w-8" : "w-auto"
+            )}>
               {/* Logo - Fades out when scrolled */}
               <Link 
                 to="/" 
                 className={cn(
-                  "absolute transition-all duration-300 ease-out",
-                  isScrolled ? "opacity-0 scale-75 pointer-events-none" : "opacity-100 scale-100"
+                  "transition-all duration-300 ease-out",
+                  isScrolled ? "opacity-0 scale-75 absolute pointer-events-none w-0" : "opacity-100 scale-100"
                 )}
               >
-                <img 
-                  src={harvestaLogo} 
-                  alt="Harvestá" 
-                  className="h-6 w-auto"
-                />
+                <span className="text-xl font-bold text-primary whitespace-nowrap">harvestá</span>
               </Link>
               
               {/* Hamburger - Fades in when scrolled */}
               <button 
                 onClick={() => setIsMenuOpen(true)}
                 className={cn(
-                  "absolute p-1 transition-all duration-300 ease-out",
-                  isScrolled ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
+                  "p-1 transition-all duration-300 ease-out",
+                  isScrolled ? "opacity-100 scale-100" : "opacity-0 scale-75 absolute pointer-events-none"
                 )}
               >
                 <Menu className="h-5 w-5 text-foreground" />
@@ -82,62 +81,70 @@ export default function MobileHeader() {
             </div>
             
             {/* Search Bar - Expands when scrolled */}
-            <form onSubmit={handleSearch} className="flex-1">
+            <form onSubmit={handleSearch} className="flex-1 min-w-0">
               <div className={cn(
-                "flex items-center bg-muted rounded-full overflow-hidden transition-all duration-400 ease-out",
-                isScrolled ? "border-2 border-success" : "border border-border"
+                "flex items-center rounded-full overflow-hidden transition-all duration-300 ease-out",
+                "border border-primary bg-muted"
               )}>
-                {/* Rotating Placeholder Icon */}
-                <div className="flex items-center pl-3">
-                  <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="1.5"/>
-                    <path d="M9 12l2 2 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                {/* Search Input Area */}
+                <div className="flex-1 flex items-center min-w-0">
+                  <div className="flex items-center pl-3">
+                    <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="11" cy="11" r="8" strokeWidth="2"/>
+                      <path d="m21 21-4.35-4.35" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  
+                  <input
+                    type="text"
+                    placeholder={isScrolled ? "What are you looking for..." : "Search"}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 px-2 py-2 text-sm bg-transparent outline-none placeholder:text-muted-foreground min-w-0"
+                  />
                 </div>
                 
-                <input
-                  type="text"
-                  placeholder="Spend & Save"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 px-2 py-2 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
-                />
-                
-                {/* Camera Icon Inside Search */}
-                <button 
-                  type="button"
-                  className="p-2"
-                >
-                  <Camera className="h-5 w-5 text-muted-foreground" />
-                </button>
-                
-                {/* GO Button */}
+                {/* Search Button */}
                 <button 
                   type="submit" 
-                  className="bg-primary text-primary-foreground px-4 py-2 text-sm font-bold rounded-full mr-0.5"
+                  className="bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold shrink-0"
                 >
-                  GO
+                  Search
                 </button>
               </div>
             </form>
             
-            {/* Right Section: Profile (default) or Camera (scrolled - hidden since camera is in search) */}
-            <div className="shrink-0 w-9 h-9 flex items-center justify-center">
+            {/* Right Section: Profile (default) or Camera (scrolled) */}
+            <div className={cn(
+              "shrink-0 flex items-center justify-center transition-all duration-300 ease-out",
+              isScrolled ? "w-9" : "w-9"
+            )}>
               {/* Profile Avatar - Fades out when scrolled */}
               <Link 
                 to={user ? "/dashboard" : "/login"} 
                 className={cn(
-                  "absolute transition-all duration-300 ease-out",
-                  isScrolled ? "opacity-0 scale-75 pointer-events-none" : "opacity-100 scale-100"
+                  "transition-all duration-300 ease-out",
+                  isScrolled ? "opacity-0 scale-75 absolute pointer-events-none" : "opacity-100 scale-100"
                 )}
               >
-                <Avatar className="h-8 w-8 border-2 border-success">
+                <Avatar className="h-8 w-8 border-2 border-primary">
                   <AvatarImage src={user ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" : undefined} />
                   <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                     {user ? 'U' : <User className="h-3 w-3" />}
                   </AvatarFallback>
                 </Avatar>
               </Link>
+              
+              {/* Camera Icon - Fades in when scrolled */}
+              <button 
+                type="button"
+                className={cn(
+                  "p-1 transition-all duration-300 ease-out",
+                  isScrolled ? "opacity-100 scale-100" : "opacity-0 scale-75 absolute pointer-events-none"
+                )}
+              >
+                <Camera className="h-6 w-6 text-muted-foreground" />
+              </button>
             </div>
           </div>
         </div>
@@ -164,11 +171,7 @@ export default function MobileHeader() {
       >
         {/* Menu Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <img 
-            src={harvestaLogo} 
-            alt="Harvestá" 
-            className="h-5 w-auto"
-          />
+          <span className="text-lg font-bold text-primary">harvestá</span>
           <button 
             onClick={() => setIsMenuOpen(false)}
             className="p-1.5 -mr-1.5 rounded-full hover:bg-muted transition-colors active:scale-90"
@@ -181,9 +184,9 @@ export default function MobileHeader() {
         <div className="p-3 border-b border-border">
           {user ? (
             <div className="flex items-center gap-3 p-2">
-              <Avatar className="h-10 w-10 border-2 border-success">
+              <Avatar className="h-10 w-10 border-2 border-primary">
                 <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" />
-                <AvatarFallback className="bg-success/10 text-success text-sm">U</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-primary text-sm">U</AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-medium text-foreground text-sm">Welcome back!</p>

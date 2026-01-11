@@ -1,6 +1,5 @@
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
-import MobileNav from '@/components/layout/MobileNav';
 import MobileHeader from '@/components/layout/MobileHeader';
 import Footer from '@/components/layout/Footer';
 import CategoryGrid from '@/components/home/CategoryGrid';
@@ -87,9 +86,6 @@ export default function Index() {
       <div className="hidden lg:block">
         <Footer />
       </div>
-      
-      {/* Mobile Bottom Navigation */}
-      <MobileNav />
     </div>
   );
 }
