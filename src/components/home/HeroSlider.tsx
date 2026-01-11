@@ -131,8 +131,8 @@ export default function HeroSlider() {
       role="region"
       aria-label="Hero carousel"
     >
-      {/* Slides Container */}
-      <div className="relative h-[200px] sm:h-[280px] lg:h-[400px]">
+      {/* Slides Container - Mobile: Square-ish aspect ratio */}
+      <div className="relative aspect-[4/3] sm:aspect-[16/9] lg:h-[400px] lg:aspect-auto">
         {slides.map((s, index) => (
           <div
             key={s.id}
@@ -160,7 +160,7 @@ export default function HeroSlider() {
               <div className="px-4 sm:px-6 lg:px-10 max-w-2xl">
                 {/* Category Label */}
                 <div className={cn(
-                  "inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-2 sm:mb-3 transition-all duration-500",
+                  "inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold mb-2 transition-all duration-500",
                   index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
                   s.accent === 'primary' && "bg-primary/20 text-primary border border-primary/30",
                   s.accent === 'success' && "bg-success/20 text-success border border-success/30",
@@ -174,7 +174,7 @@ export default function HeroSlider() {
                 {/* Headline */}
                 <h2 
                   className={cn(
-                    "text-lg sm:text-2xl lg:text-4xl font-bold text-white mb-2 sm:mb-3 leading-tight transition-all duration-500",
+                    "text-base sm:text-xl lg:text-3xl font-bold text-white mb-2 leading-tight transition-all duration-500",
                     index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                   style={{ transitionDelay: '200ms' }}
@@ -185,7 +185,7 @@ export default function HeroSlider() {
                 {/* Subtext - Hidden on mobile */}
                 <p 
                   className={cn(
-                    "hidden sm:block text-white/80 text-sm sm:text-base mb-4 sm:mb-5 line-clamp-2 transition-all duration-500",
+                    "hidden sm:block text-white/80 text-sm lg:text-base mb-4 line-clamp-2 transition-all duration-500",
                     index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                   style={{ transitionDelay: '300ms' }}
@@ -196,22 +196,22 @@ export default function HeroSlider() {
                 {/* CTAs */}
                 <div 
                   className={cn(
-                    "flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-6 transition-all duration-500",
+                    "flex flex-wrap gap-2 mb-2 sm:mb-4 transition-all duration-500",
                     index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                   style={{ transitionDelay: '400ms' }}
                 >
                   <Button 
                     size="sm" 
-                    className="bg-gradient-primary hover:opacity-90 font-semibold px-4 sm:px-6 gap-1 sm:gap-2 shadow-lg text-xs sm:text-sm h-8 sm:h-10"
+                    className="bg-gradient-primary hover:opacity-90 font-semibold px-3 sm:px-5 gap-1 shadow-lg text-xs h-7 sm:h-9"
                   >
                     {s.primaryCta.text}
-                    <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <ChevronRight className="h-3 w-3" />
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="bg-white/10 text-white border-white/30 hover:bg-white/20 font-medium text-xs sm:text-sm h-8 sm:h-10"
+                    className="bg-white/10 text-white border-white/30 hover:bg-white/20 font-medium text-xs h-7 sm:h-9"
                   >
                     {s.secondaryCta.text}
                   </Button>
@@ -220,7 +220,7 @@ export default function HeroSlider() {
                 {/* Trust Badges - Hidden on mobile */}
                 <div 
                   className={cn(
-                    "hidden sm:flex flex-wrap gap-4 transition-all duration-500",
+                    "hidden sm:flex flex-wrap gap-3 lg:gap-4 transition-all duration-500",
                     index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                   style={{ transitionDelay: '500ms' }}
@@ -228,10 +228,10 @@ export default function HeroSlider() {
                   {s.badges.map((badge, i) => (
                     <div 
                       key={i} 
-                      className="flex items-center gap-2 text-white/70 text-sm"
+                      className="flex items-center gap-1.5 text-white/70 text-xs lg:text-sm"
                     >
                       <badge.icon className={cn(
-                        "h-4 w-4",
+                        "h-3.5 w-3.5 lg:h-4 lg:w-4",
                         s.accent === 'primary' && "text-primary",
                         s.accent === 'success' && "text-success",
                         s.accent === 'warning' && "text-warning"
@@ -249,30 +249,30 @@ export default function HeroSlider() {
       {/* Navigation Arrows - Hidden on mobile */}
       <button
         onClick={prevSlide}
-        className="hidden sm:flex absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
+        className="hidden sm:flex absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 lg:w-11 lg:h-11 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
         aria-label="Previous slide"
       >
-        <ChevronLeft className="h-5 w-5 lg:h-6 lg:w-6 group-hover:-translate-x-0.5 transition-transform" />
+        <ChevronLeft className="h-4 w-4 lg:h-5 lg:w-5 group-hover:-translate-x-0.5 transition-transform" />
       </button>
       <button
         onClick={nextSlide}
-        className="hidden sm:flex absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
+        className="hidden sm:flex absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 lg:w-11 lg:h-11 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
         aria-label="Next slide"
       >
-        <ChevronRight className="h-5 w-5 lg:h-6 lg:w-6 group-hover:translate-x-0.5 transition-transform" />
+        <ChevronRight className="h-4 w-4 lg:h-5 lg:w-5 group-hover:translate-x-0.5 transition-transform" />
       </button>
 
       {/* Dots Navigation */}
-      <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
+      <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
             className={cn(
-              "h-1.5 sm:h-2 rounded-full transition-all duration-300",
+              "h-1.5 rounded-full transition-all duration-300",
               index === currentSlide 
-                ? "w-5 sm:w-8 bg-primary" 
-                : "w-1.5 sm:w-2 bg-white/50 hover:bg-white/70"
+                ? "w-5 bg-primary" 
+                : "w-1.5 bg-white/50 hover:bg-white/70"
             )}
             aria-label={`Go to slide ${index + 1}`}
             aria-current={index === currentSlide ? 'true' : 'false'}
@@ -281,7 +281,7 @@ export default function HeroSlider() {
       </div>
 
       {/* Progress Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:h-1 bg-white/10 z-20">
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10 z-20">
         <div 
           className="h-full bg-primary transition-all duration-300"
           style={{ 

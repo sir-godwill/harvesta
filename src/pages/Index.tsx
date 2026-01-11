@@ -15,7 +15,7 @@ import HeroSlider from '@/components/home/HeroSlider';
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Desktop Header */}
       <div className="hidden lg:block">
         <Header />
@@ -27,25 +27,31 @@ export default function Index() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 pb-20 lg:pb-8">
-          {/* Mobile Quick Actions */}
-          <div className="lg:hidden px-4 py-3 bg-card border-b border-border">
+        <main className="flex-1 w-full min-w-0 pb-16 lg:pb-8">
+          {/* Mobile Quick Actions - Horizontally scrollable */}
+          <div className="lg:hidden px-3 py-2 bg-card border-b border-border overflow-x-auto">
             <QuickActions />
           </div>
           
-          {/* Hero Slider - Mobile (after quick actions) */}
-          <div className="lg:hidden px-4 py-3">
+          {/* Hero Slider - Mobile */}
+          <div className="lg:hidden px-3 py-2">
             <HeroSlider />
           </div>
           
-          {/* Main Content */}
-          <div className="px-4 lg:px-6 py-3 lg:py-6">
+          {/* Mobile Content Sections */}
+          <div className="lg:hidden px-3 py-2 space-y-3">
+            <DealsSection />
+            <CategoryGrid />
+          </div>
+          
+          {/* Main Content - Desktop */}
+          <div className="px-3 lg:px-6 py-2 lg:py-6">
             {/* Hero Banner - Desktop */}
             <div className="hidden lg:block mb-6">
               <HeroBanner />
             </div>
             
-            {/* Hero Slider - Desktop (after hero banner) */}
+            {/* Hero Slider - Desktop */}
             <div className="hidden lg:block mb-6">
               <HeroSlider />
             </div>
@@ -68,12 +74,6 @@ export default function Index() {
               </div>
             </div>
             
-            {/* Mobile Layout */}
-            <div className="lg:hidden space-y-4">
-              <DealsSection />
-              <CategoryGrid />
-            </div>
-            
             {/* Featured Products */}
             <FeaturedProducts />
             
@@ -83,7 +83,12 @@ export default function Index() {
         </main>
       </div>
       
-      <Footer />
+      {/* Footer - Only visible on desktop */}
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
+      
+      {/* Mobile Bottom Navigation */}
       <MobileNav />
     </div>
   );

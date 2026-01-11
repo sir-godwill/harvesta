@@ -109,33 +109,33 @@ export default function TopSuppliers() {
         <div 
           ref={scrollRef}
           onScroll={checkScroll}
-          className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 snap-x snap-mandatory"
+          className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory min-w-0"
         >
           {topSuppliers.map((supplier) => (
             <div
               key={supplier.id}
-              className="bg-card rounded-xl p-3 border border-border min-w-[260px] snap-start"
+              className="bg-card rounded-xl p-2.5 border border-border min-w-[220px] flex-shrink-0 snap-start"
             >
               {/* Header */}
-              <div className="flex items-start gap-3 mb-3">
+              <div className="flex items-start gap-2 mb-2">
                 <img
                   src={supplier.logo}
                   alt={supplier.name}
-                  className="w-11 h-11 rounded-lg object-cover"
+                  className="w-9 h-9 rounded-lg object-cover"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-foreground text-sm line-clamp-1 mb-1">
+                  <h4 className="font-medium text-foreground text-xs line-clamp-1 mb-0.5">
                     {supplier.name}
                   </h4>
-                  <div className="flex items-center gap-1 flex-wrap">
+                  <div className="flex items-center gap-0.5 flex-wrap">
                     {supplier.verified && (
-                      <Badge variant="secondary" className="bg-success/10 text-success text-[9px] px-1 py-0 h-4">
-                        <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
+                      <Badge variant="secondary" className="bg-success/10 text-success text-[8px] px-1 py-0 h-3.5">
+                        <ShieldCheck className="h-2 w-2 mr-0.5" />
                         Verified
                       </Badge>
                     )}
                     {supplier.goldSupplier && (
-                      <Badge variant="secondary" className="bg-warning/10 text-warning text-[9px] px-1 py-0 h-4">
+                      <Badge variant="secondary" className="bg-warning/10 text-warning text-[8px] px-1 py-0 h-3.5">
                         Gold
                       </Badge>
                     )}
@@ -144,29 +144,29 @@ export default function TopSuppliers() {
               </div>
               
               {/* Stats */}
-              <div className="grid grid-cols-4 gap-1.5 mb-3 py-2 border-y border-border">
+              <div className="grid grid-cols-4 gap-1 mb-2 py-1.5 border-y border-border">
                 <div className="text-center">
-                  <p className="text-xs font-semibold text-foreground">{supplier.years}</p>
-                  <p className="text-[9px] text-muted-foreground">Years</p>
+                  <p className="text-[10px] font-semibold text-foreground">{supplier.years}</p>
+                  <p className="text-[8px] text-muted-foreground">Years</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-semibold text-foreground">{supplier.rating}</p>
-                  <p className="text-[9px] text-muted-foreground">Rating</p>
+                  <p className="text-[10px] font-semibold text-foreground">{supplier.rating}</p>
+                  <p className="text-[8px] text-muted-foreground">Rating</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-semibold text-foreground">{supplier.responseRate}%</p>
-                  <p className="text-[9px] text-muted-foreground">Response</p>
+                  <p className="text-[10px] font-semibold text-foreground">{supplier.responseRate}%</p>
+                  <p className="text-[8px] text-muted-foreground">Response</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-semibold text-foreground">{supplier.onTimeDelivery}%</p>
-                  <p className="text-[9px] text-muted-foreground">On-Time</p>
+                  <p className="text-[10px] font-semibold text-foreground">{supplier.onTimeDelivery}%</p>
+                  <p className="text-[8px] text-muted-foreground">On-Time</p>
                 </div>
               </div>
               
               {/* Products */}
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-0.5">
                 {supplier.products.slice(0, 3).map((product, index) => (
-                  <span key={index} className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                  <span key={index} className="text-[8px] bg-muted text-muted-foreground px-1 py-0.5 rounded">
                     {product}
                   </span>
                 ))}

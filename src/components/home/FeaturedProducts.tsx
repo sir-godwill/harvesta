@@ -130,19 +130,19 @@ export default function FeaturedProducts() {
   const { t } = useApp();
 
   return (
-    <section className="py-4 sm:py-6">
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <h2 className="text-base sm:text-lg lg:text-xl font-bold text-foreground">
+    <section className="py-3 sm:py-6">
+      <div className="flex items-center justify-between mb-2 sm:mb-4">
+        <h2 className="text-sm sm:text-lg lg:text-xl font-bold text-foreground">
           {t('home.featuredProducts')}
         </h2>
-        <a href="/products" className="flex items-center gap-1 text-primary text-sm font-medium hover:underline">
+        <a href="/products" className="flex items-center gap-0.5 text-primary text-xs sm:text-sm font-medium hover:underline">
           View All
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </a>
       </div>
       
       {/* Mobile 2-Column Grid */}
-      <div className="grid grid-cols-2 gap-2 sm:hidden">
+      <div className="grid grid-cols-2 gap-1.5 sm:hidden">
         {featuredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
