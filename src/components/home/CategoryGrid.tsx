@@ -30,17 +30,17 @@ export default function CategoryGrid() {
       
       {/* Mobile Horizontal Scroll */}
       <div className="sm:hidden">
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-3 px-3 snap-x snap-mandatory">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory min-w-0">
           {categories.map((category) => (
             <a
               key={category.labelKey}
               href={`/category/${category.labelKey}`}
-              className="flex flex-col items-center gap-2 min-w-[70px] snap-start"
+              className="flex flex-col items-center gap-1.5 min-w-[56px] flex-shrink-0 snap-start"
             >
-              <div className={`w-12 h-12 rounded-xl ${category.bgColor} flex items-center justify-center transition-transform active:scale-95`}>
-                <category.icon className={`h-6 w-6 ${category.color}`} />
+              <div className={`w-10 h-10 rounded-xl ${category.bgColor} flex items-center justify-center transition-transform active:scale-90`}>
+                <category.icon className={`h-5 w-5 ${category.color}`} />
               </div>
-              <span className="text-[10px] text-foreground text-center leading-tight max-w-[70px]">
+              <span className="text-[9px] text-foreground text-center leading-tight max-w-[56px]">
                 {t(category.labelKey)}
               </span>
             </a>

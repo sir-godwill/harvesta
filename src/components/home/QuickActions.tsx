@@ -22,25 +22,25 @@ const quickActions: QuickAction[] = [
 
 export default function QuickActions() {
   return (
-    <div className="flex gap-3 overflow-x-auto scrollbar-hide py-1 -mx-4 px-4 snap-x snap-mandatory">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1 snap-x snap-mandatory min-w-0">
       {quickActions.map((action, index) => (
         <a
           key={index}
           href="#"
-          className="flex flex-col items-center gap-1.5 min-w-[60px] group snap-start"
+          className="flex flex-col items-center gap-1 min-w-[56px] flex-shrink-0 group snap-start"
         >
-          <div className={`relative w-12 h-12 rounded-2xl ${action.bgColor} flex items-center justify-center shadow-md transition-transform group-active:scale-95`}>
-            <action.icon className="h-6 w-6 text-white" />
+          <div className={`relative w-10 h-10 rounded-xl ${action.bgColor} flex items-center justify-center shadow-sm transition-transform group-active:scale-90`}>
+            <action.icon className="h-5 w-5 text-white" />
             {action.badge && (
-              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold px-1 py-0.5 rounded-full">
+              <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[7px] font-bold px-1 py-0 rounded-full">
                 {action.badge}
               </span>
             )}
           </div>
           <div className="text-center">
-            <p className="text-[10px] font-medium text-foreground leading-tight">{action.label}</p>
+            <p className="text-[9px] font-medium text-foreground leading-tight">{action.label}</p>
             {action.sublabel && (
-              <p className="text-[10px] text-muted-foreground leading-tight">{action.sublabel}</p>
+              <p className="text-[9px] text-muted-foreground leading-tight">{action.sublabel}</p>
             )}
           </div>
         </a>

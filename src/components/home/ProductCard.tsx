@@ -29,50 +29,50 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="card-product group cursor-pointer h-full">
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      <div className="relative aspect-square overflow-hidden bg-muted rounded-t-lg sm:rounded-t-xl">
         <img
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         {product.discount && (
-          <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-primary text-primary-foreground text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+          <div className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-primary text-primary-foreground text-[8px] sm:text-xs font-medium px-1 sm:px-2 py-0.5 rounded">
             {product.discount}
           </div>
         )}
       </div>
       
       {/* Content */}
-      <div className="p-2 sm:p-3">
+      <div className="p-1.5 sm:p-3">
         {/* Badges - Now visible on all screen sizes */}
-        <div className="flex items-center gap-1 mb-1.5 sm:mb-2 flex-wrap">
+        <div className="flex items-center gap-0.5 sm:gap-1 mb-1 sm:mb-2 flex-wrap">
           {product.verified && (
-            <Badge variant="secondary" className="bg-success/10 text-success text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 h-4 sm:h-5">
-              <ShieldCheck className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5" />
+            <Badge variant="secondary" className="bg-success/10 text-success text-[7px] sm:text-[10px] px-0.5 sm:px-1.5 py-0 h-3.5 sm:h-5">
+              <ShieldCheck className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5" />
               {t('product.verified')}
             </Badge>
           )}
           {product.goldSupplier && (
-            <Badge variant="secondary" className="bg-warning/10 text-warning text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 h-4 sm:h-5">
+            <Badge variant="secondary" className="bg-warning/10 text-warning text-[7px] sm:text-[10px] px-0.5 sm:px-1.5 py-0 h-3.5 sm:h-5">
               {t('product.goldSupplier')}
             </Badge>
           )}
         </div>
         
         {/* Title */}
-        <h3 className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 mb-1.5 sm:mb-2 min-h-[2rem] sm:min-h-[2.5rem]">
+        <h3 className="text-[10px] sm:text-sm font-medium text-foreground line-clamp-2 mb-1 sm:mb-2 min-h-[1.75rem] sm:min-h-[2.5rem] leading-tight">
           {product.name}
         </h3>
         
         {/* Price */}
-        <div className="flex items-baseline gap-0.5 sm:gap-1 mb-0.5 sm:mb-1 flex-wrap">
-          <span className="price-primary text-sm sm:text-lg font-bold">
+        <div className="flex items-baseline gap-0.5 mb-0.5 flex-wrap">
+          <span className="price-primary text-xs sm:text-lg font-bold">
             {formatPrice(product.price)}
           </span>
           {product.priceMax && (
             <>
-              <span className="text-muted-foreground text-[10px] sm:text-sm">~</span>
-              <span className="price-primary text-sm sm:text-lg font-bold">
+              <span className="text-muted-foreground text-[8px] sm:text-sm">~</span>
+              <span className="price-primary text-xs sm:text-lg font-bold">
                 {formatPrice(product.priceMax)}
               </span>
             </>
@@ -80,14 +80,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         
         {/* MOQ - Compact on mobile */}
-        <p className="text-[9px] sm:text-xs text-muted-foreground mb-1 sm:mb-2">
+        <p className="text-[8px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-2">
           {t('product.moq')}: {product.moq} {product.unit}
         </p>
         
         {/* Rating & Sold */}
-        <div className="flex items-center gap-1 sm:gap-2 text-[9px] sm:text-xs text-muted-foreground">
+        <div className="flex items-center gap-1 text-[8px] sm:text-xs text-muted-foreground">
           <div className="flex items-center gap-0.5">
-            <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-warning text-warning" />
+            <Star className="h-2 w-2 sm:h-3 sm:w-3 fill-warning text-warning" />
             <span>{product.rating.toFixed(1)}</span>
           </div>
           <span>•</span>
