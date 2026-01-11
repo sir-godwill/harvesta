@@ -1,6 +1,7 @@
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
+import MobileHeader from '@/components/layout/MobileHeader';
 import Footer from '@/components/layout/Footer';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import QuickActions from '@/components/home/QuickActions';
@@ -15,24 +16,30 @@ import HeroSlider from '@/components/home/HeroSlider';
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* Desktop Header */}
+      <div className="hidden lg:block">
+        <Header />
+      </div>
+      
+      {/* Mobile Header */}
+      <MobileHeader />
       
       <div className="flex">
         <Sidebar />
         
         <main className="flex-1 pb-20 lg:pb-8">
           {/* Mobile Quick Actions */}
-          <div className="lg:hidden px-4 py-4 bg-card border-b border-border">
+          <div className="lg:hidden px-4 py-3 bg-card border-b border-border">
             <QuickActions />
           </div>
           
           {/* Hero Slider - Mobile (after quick actions) */}
-          <div className="lg:hidden px-4 py-4">
+          <div className="lg:hidden px-4 py-3">
             <HeroSlider />
           </div>
           
           {/* Main Content */}
-          <div className="px-4 lg:px-6 py-4 lg:py-6">
+          <div className="px-4 lg:px-6 py-3 lg:py-6">
             {/* Hero Banner - Desktop */}
             <div className="hidden lg:block mb-6">
               <HeroBanner />

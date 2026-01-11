@@ -132,7 +132,7 @@ export default function HeroSlider() {
       aria-label="Hero carousel"
     >
       {/* Slides Container */}
-      <div className="relative h-[280px] sm:h-[320px] lg:h-[400px]">
+      <div className="relative h-[200px] sm:h-[280px] lg:h-[400px]">
         {slides.map((s, index) => (
           <div
             key={s.id}
@@ -157,10 +157,10 @@ export default function HeroSlider() {
             
             {/* Content */}
             <div className="relative z-10 h-full flex items-center">
-              <div className="px-6 lg:px-10 max-w-2xl">
+              <div className="px-4 sm:px-6 lg:px-10 max-w-2xl">
                 {/* Category Label */}
                 <div className={cn(
-                  "inline-block px-3 py-1 rounded-full text-xs font-semibold mb-3 transition-all duration-500",
+                  "inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-2 sm:mb-3 transition-all duration-500",
                   index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
                   s.accent === 'primary' && "bg-primary/20 text-primary border border-primary/30",
                   s.accent === 'success' && "bg-success/20 text-success border border-success/30",
@@ -174,7 +174,7 @@ export default function HeroSlider() {
                 {/* Headline */}
                 <h2 
                   className={cn(
-                    "text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 leading-tight transition-all duration-500",
+                    "text-lg sm:text-2xl lg:text-4xl font-bold text-white mb-2 sm:mb-3 leading-tight transition-all duration-500",
                     index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                   style={{ transitionDelay: '200ms' }}
@@ -182,10 +182,10 @@ export default function HeroSlider() {
                   {s.headline}
                 </h2>
                 
-                {/* Subtext */}
+                {/* Subtext - Hidden on mobile */}
                 <p 
                   className={cn(
-                    "text-white/80 text-sm sm:text-base mb-5 line-clamp-2 transition-all duration-500",
+                    "hidden sm:block text-white/80 text-sm sm:text-base mb-4 sm:mb-5 line-clamp-2 transition-all duration-500",
                     index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                   style={{ transitionDelay: '300ms' }}
@@ -196,28 +196,28 @@ export default function HeroSlider() {
                 {/* CTAs */}
                 <div 
                   className={cn(
-                    "flex flex-wrap gap-3 mb-6 transition-all duration-500",
+                    "flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-6 transition-all duration-500",
                     index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                   style={{ transitionDelay: '400ms' }}
                 >
                   <Button 
-                    size="lg" 
-                    className="bg-gradient-primary hover:opacity-90 font-semibold px-6 gap-2 shadow-lg"
+                    size="sm" 
+                    className="bg-gradient-primary hover:opacity-90 font-semibold px-4 sm:px-6 gap-1 sm:gap-2 shadow-lg text-xs sm:text-sm h-8 sm:h-10"
                   >
                     {s.primaryCta.text}
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                   <Button 
-                    size="lg" 
+                    size="sm" 
                     variant="outline"
-                    className="bg-white/10 text-white border-white/30 hover:bg-white/20 font-medium"
+                    className="bg-white/10 text-white border-white/30 hover:bg-white/20 font-medium text-xs sm:text-sm h-8 sm:h-10"
                   >
                     {s.secondaryCta.text}
                   </Button>
                 </div>
                 
-                {/* Trust Badges */}
+                {/* Trust Badges - Hidden on mobile */}
                 <div 
                   className={cn(
                     "hidden sm:flex flex-wrap gap-4 transition-all duration-500",
@@ -246,33 +246,33 @@ export default function HeroSlider() {
         ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows - Hidden on mobile */}
       <button
         onClick={prevSlide}
-        className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
+        className="hidden sm:flex absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-5 w-5 lg:h-6 lg:w-6 group-hover:-translate-x-0.5 transition-transform" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
+        className="hidden sm:flex absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-white/30 transition-all duration-200 group"
         aria-label="Next slide"
       >
         <ChevronRight className="h-5 w-5 lg:h-6 lg:w-6 group-hover:translate-x-0.5 transition-transform" />
       </button>
 
       {/* Dots Navigation */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+      <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
             className={cn(
-              "h-2 rounded-full transition-all duration-300",
+              "h-1.5 sm:h-2 rounded-full transition-all duration-300",
               index === currentSlide 
-                ? "w-8 bg-primary" 
-                : "w-2 bg-white/50 hover:bg-white/70"
+                ? "w-5 sm:w-8 bg-primary" 
+                : "w-1.5 sm:w-2 bg-white/50 hover:bg-white/70"
             )}
             aria-label={`Go to slide ${index + 1}`}
             aria-current={index === currentSlide ? 'true' : 'false'}
@@ -281,7 +281,7 @@ export default function HeroSlider() {
       </div>
 
       {/* Progress Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-20">
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:h-1 bg-white/10 z-20">
         <div 
           className="h-full bg-primary transition-all duration-300"
           style={{ 

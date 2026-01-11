@@ -1,6 +1,8 @@
 import { ChevronRight } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import ProductCard, { Product } from './ProductCard';
+import { useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 const featuredProducts: Product[] = [
   {
@@ -128,9 +130,9 @@ export default function FeaturedProducts() {
   const { t } = useApp();
 
   return (
-    <section className="py-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg lg:text-xl font-bold text-foreground">
+    <section className="py-4 sm:py-6">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg lg:text-xl font-bold text-foreground">
           {t('home.featuredProducts')}
         </h2>
         <a href="/products" className="flex items-center gap-1 text-primary text-sm font-medium hover:underline">
@@ -139,15 +141,10 @@ export default function FeaturedProducts() {
         </a>
       </div>
       
-      {/* Mobile Masonry-like Grid */}
+      {/* Mobile 2-Column Grid */}
       <div className="grid grid-cols-2 gap-2 sm:hidden">
-        {featuredProducts.map((product, index) => (
-          <div 
-            key={product.id} 
-            className={index % 3 === 0 ? 'row-span-1' : ''}
-          >
-            <ProductCard product={product} />
-          </div>
+        {featuredProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
       
