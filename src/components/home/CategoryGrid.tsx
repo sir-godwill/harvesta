@@ -1,5 +1,7 @@
-import { Leaf, Wheat, Milk, Tractor, Sprout, Apple, Package, FlaskConical } from 'lucide-react';
+import { Leaf, Wheat, Milk, Tractor, Sprout, Apple, Package, FlaskConical, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import { useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface Category {
   icon: React.ElementType;
@@ -23,9 +25,31 @@ export default function CategoryGrid() {
   const { t } = useApp();
 
   return (
-    <div className="bg-card rounded-xl p-4 lg:p-6">
-      <h3 className="font-semibold text-foreground mb-4">{t('categories.all')}</h3>
-      <div className="grid grid-cols-4 lg:grid-cols-2 gap-3">
+    <div className="bg-card rounded-xl p-3 sm:p-4 lg:p-6">
+      <h3 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">{t('categories.all')}</h3>
+      
+      {/* Mobile Horizontal Scroll */}
+      <div className="sm:hidden">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-3 px-3 snap-x snap-mandatory">
+          {categories.map((category) => (
+            <a
+              key={category.labelKey}
+              href={`/category/${category.labelKey}`}
+              className="flex flex-col items-center gap-2 min-w-[70px] snap-start"
+            >
+              <div className={`w-12 h-12 rounded-xl ${category.bgColor} flex items-center justify-center transition-transform active:scale-95`}>
+                <category.icon className={`h-6 w-6 ${category.color}`} />
+              </div>
+              <span className="text-[10px] text-foreground text-center leading-tight max-w-[70px]">
+                {t(category.labelKey)}
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+      
+      {/* Tablet & Desktop Grid */}
+      <div className="hidden sm:grid sm:grid-cols-4 lg:grid-cols-2 gap-3">
         {categories.map((category) => (
           <a
             key={category.labelKey}
