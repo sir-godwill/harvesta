@@ -7,6 +7,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PublicRoute from "@/components/auth/PublicRoute";
+import Layout from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
@@ -56,9 +57,10 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Index />} />
+            <Layout>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Index />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/search" element={<Search />} />
               <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
@@ -92,8 +94,9 @@ const App = () => (
               <Route path="/rfq" element={<ProtectedRoute><RFQ /></ProtectedRoute>} />
               <Route path="/track/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
           </BrowserRouter>
         </TooltipProvider>
       </AppProvider>
