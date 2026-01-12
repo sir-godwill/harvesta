@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { fetchAdminProducts, AdminProduct } from '@/lib/admin-api';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -44,26 +45,7 @@ const itemVariants = {
   visible: { opacity: 1, scale: 1 },
 };
 
-interface Product {
-  id: string;
-  name: string;
-  seller: string;
-  category: string;
-  status: 'live' | 'pending' | 'draft' | 'rejected';
-  price: number;
-  stock: number;
-  qualityGrade?: string;
-  image?: string;
-}
-
-const mockProducts: Product[] = [
-  { id: '1', name: 'Organic Cocoa Beans', seller: 'Cameroon Cocoa Ltd', category: 'Cocoa', status: 'live', price: 4500, stock: 2500, qualityGrade: 'Grade A' },
-  { id: '2', name: 'Premium Coffee Arabica', seller: 'Ethiopian Coffee', category: 'Coffee', status: 'live', price: 6800, stock: 1200, qualityGrade: 'Grade A' },
-  { id: '3', name: 'Fresh Plantains', seller: 'Lagos Agro Export', category: 'Fruits', status: 'pending', price: 850, stock: 5000, qualityGrade: 'Grade B' },
-  { id: '4', name: 'Dried Pepper Mix', seller: 'Kenya Spice', category: 'Spices', status: 'live', price: 3200, stock: 800, qualityGrade: 'Grade A' },
-  { id: '5', name: 'Palm Oil 5L', seller: 'Kofi Organic Farms', category: 'Oils', status: 'draft', price: 2500, stock: 0, qualityGrade: 'Grade C' },
-  { id: '6', name: 'Cassava Flour 25kg', seller: 'Nigeria Staples', category: 'Grains', status: 'live', price: 12000, stock: 350, qualityGrade: 'Grade A' },
-];
+type Product = AdminProduct;
 
 function ProductCard({ product, view }: { product: Product; view: 'grid' | 'list' }) {
   const statusColors = {
@@ -209,10 +191,10 @@ export default function AdminProducts() {
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {
-      setProducts(mockProducts);
+    fetchAdminProducts().then((data) => {
+      setProducts(data);
       setIsLoading(false);
-    }, 500);
+    });
   }, []);
 
   const stats = {
