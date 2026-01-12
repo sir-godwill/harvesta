@@ -59,6 +59,10 @@ import AdminSettings from "./pages/admin/Settings";
 
 // Seller Dashboard
 import { SellerLayout } from "@/components/seller/SellerLayout";
+import SellerProducts from "./pages/seller/Products";
+import SellerOrders from "./pages/seller/Orders";
+import SellerAnalytics from "./pages/seller/Analytics";
+import SellerMessages from "./pages/seller/Messages";
 import SellerDashboard from "./pages/seller/Dashboard";
 
 // Logistics Dashboard
@@ -96,6 +100,10 @@ const App = () => (
               {/* Seller Dashboard Routes */}
               <Route path="/seller" element={<SellerLayout />}>
                 <Route index element={<SellerDashboard />} />
+                <Route path="products" element={<SellerProducts />} />
+                <Route path="orders" element={<SellerOrders />} />
+                <Route path="analytics" element={<SellerAnalytics />} />
+                <Route path="messages" element={<SellerMessages />} />
                 <Route path="*" element={<SellerDashboard />} />
               </Route>
 
