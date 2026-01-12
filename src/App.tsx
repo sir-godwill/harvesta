@@ -47,39 +47,6 @@ import Refunds from "./pages/info/Refunds";
 import BuyerProtection from "./pages/info/BuyerProtection";
 import TrustSafety from "./pages/info/TrustSafety";
 
-// Admin Pages
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminSellers from "./pages/admin/Sellers";
-import AdminOrders from "./pages/admin/Orders";
-import AdminBuyers from "./pages/admin/Buyers";
-import AdminProducts from "./pages/admin/Products";
-import AdminDisputes from "./pages/admin/Disputes";
-import AdminSettings from "./pages/admin/Settings";
-
-// Seller Dashboard
-import { SellerLayout } from "@/components/seller/SellerLayout";
-import SellerProducts from "./pages/seller/Products";
-import SellerOrders from "./pages/seller/OrdersPage";
-import SellerAnalytics from "./pages/seller/Analytics";
-import SellerMessages from "./pages/seller/Messages";
-import SellerDashboard from "./pages/seller/Dashboard";
-
-// Logistics Dashboard
-import { LogisticsLayout } from "@/components/logistics/LogisticsLayout";
-import LogisticsDashboard from "./pages/logistics/Dashboard";
-import ShipmentsPage from "./pages/logistics/ShipmentsPage";
-import TrackingPage from "./pages/logistics/TrackingPage";
-import AlertsPage from "./pages/logistics/AlertsPage";
-import PartnersPage from "./pages/logistics/PartnersPage";
-
-// Affiliate Dashboard
-import { ReferralLayout } from "@/components/referral/ReferralLayout";
-import AffiliateDashboard from "./pages/affiliate/Dashboard";
-
-// Chat
-import ChatPage from "./pages/messages/ChatPage";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -90,91 +57,46 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-              <Route path="/admin/sellers" element={<AdminLayout><AdminSellers /></AdminLayout>} />
-              <Route path="/admin/buyers" element={<AdminLayout><AdminBuyers /></AdminLayout>} />
-              <Route path="/admin/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
-              <Route path="/admin/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
-              <Route path="/admin/disputes" element={<AdminLayout><AdminDisputes /></AdminLayout>} />
-              <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
-              <Route path="/admin/*" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+            <Layout>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Index />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/help" element={<HelpCenter />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/refunds" element={<Refunds />} />
+              <Route path="/buyer-protection" element={<BuyerProtection />} />
+              <Route path="/trust-safety" element={<TrustSafety />} />
 
-              {/* Seller Dashboard Routes */}
-              <Route path="/seller" element={<SellerLayout />}>
-                <Route index element={<SellerDashboard />} />
-                <Route path="products" element={<SellerProducts />} />
-                <Route path="orders" element={<SellerOrders />} />
-                <Route path="analytics" element={<SellerAnalytics />} />
-                <Route path="messages" element={<SellerMessages />} />
-                <Route path="*" element={<SellerDashboard />} />
-              </Route>
+              {/* Auth Routes (redirect if logged in) */}
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+              <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
 
-              {/* Logistics Dashboard Routes */}
-              <Route path="/logistics" element={<LogisticsLayout />}>
-                <Route index element={<LogisticsDashboard />} />
-                <Route path="shipments" element={<ShipmentsPage />} />
-                <Route path="tracking" element={<TrackingPage />} />
-                <Route path="alerts" element={<AlertsPage />} />
-                <Route path="partners" element={<PartnersPage />} />
-                <Route path="*" element={<LogisticsDashboard />} />
-              </Route>
+              {/* Protected Routes (require authentication) */}
+              <Route path="/dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><BuyerProfile /></ProtectedRoute>} />
+              <Route path="/orders" element={<ProtectedRoute><OrderList /></ProtectedRoute>} />
+              <Route path="/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+              <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+              <Route path="/saved-products" element={<ProtectedRoute><SavedProducts /></ProtectedRoute>} />
+              <Route path="/saved-suppliers" element={<ProtectedRoute><SavedSuppliers /></ProtectedRoute>} />
+              <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+              <Route path="/rfq" element={<ProtectedRoute><RFQ /></ProtectedRoute>} />
+              <Route path="/track/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
 
-              {/* Affiliate Dashboard Routes */}
-              <Route path="/affiliate" element={<ReferralLayout />}>
-                <Route index element={<AffiliateDashboard />} />
-                <Route path="*" element={<AffiliateDashboard />} />
-              </Route>
-
-              {/* Chat Route */}
-              <Route path="/messages" element={<ChatPage />} />
-
-              {/* Main App Routes */}
-              <Route path="/*" element={
-                <Layout>
-                  <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/product/:id" element={<ProductDetail />} />
-                    <Route path="/search" element={<Search />} />
-                    <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/faq" element={<FAQ />} />
-                    <Route path="/help" element={<HelpCenter />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/refunds" element={<Refunds />} />
-                    <Route path="/buyer-protection" element={<BuyerProtection />} />
-                    <Route path="/trust-safety" element={<TrustSafety />} />
-
-                    {/* Auth Routes */}
-                    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-                    <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/verify-email" element={<VerifyEmail />} />
-
-                    {/* Protected Routes */}
-                    <Route path="/dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
-                    <Route path="/dashboard/profile" element={<ProtectedRoute><BuyerProfile /></ProtectedRoute>} />
-                    <Route path="/profile" element={<ProtectedRoute><BuyerProfile /></ProtectedRoute>} />
-                    <Route path="/orders" element={<ProtectedRoute><OrderList /></ProtectedRoute>} />
-                    <Route path="/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
-                    <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
-                    <Route path="/saved-products" element={<ProtectedRoute><SavedProducts /></ProtectedRoute>} />
-                    <Route path="/saved-suppliers" element={<ProtectedRoute><SavedSuppliers /></ProtectedRoute>} />
-                    <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-                    <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-                    <Route path="/rfq" element={<ProtectedRoute><RFQ /></ProtectedRoute>} />
-                    <Route path="/track/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
-
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Layout>
-              } />
-            </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
           </BrowserRouter>
         </TooltipProvider>
       </AppProvider>
