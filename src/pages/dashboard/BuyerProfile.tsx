@@ -16,7 +16,13 @@ import {
   AlertCircle,
   ArrowLeft,
   Save,
-  Edit3
+  Edit3,
+  LayoutDashboard,
+  Truck,
+  Store,
+  Users,
+  MessageSquare,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -251,6 +257,13 @@ const BuyerProfile = () => {
                 >
                   <Shield className="h-4 w-4 mr-2" />
                   Security
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="accounts"
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none pb-3 px-4"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Dashboards
                 </TabsTrigger>
               </TabsList>
 
@@ -610,6 +623,121 @@ const BuyerProfile = () => {
                       </div>
                       <Button variant="destructive">Delete Account</Button>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Accounts/Dashboards Tab */}
+              <TabsContent value="accounts" className="mt-0 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Switch Dashboard</CardTitle>
+                    <CardDescription>Access different dashboards based on your role</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Admin Dashboard */}
+                    <Link 
+                      to="/admin"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <LayoutDashboard className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Admin Dashboard</p>
+                          <p className="text-sm text-muted-foreground">Manage platform settings, users, and operations</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </Link>
+
+                    {/* Seller Dashboard */}
+                    <Link 
+                      to="/seller"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                          <Store className="h-6 w-6 text-accent" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Seller Dashboard</p>
+                          <p className="text-sm text-muted-foreground">Manage products, orders, and analytics</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </Link>
+
+                    {/* Logistics Dashboard */}
+                    <Link 
+                      to="/logistics"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+                          <Truck className="h-6 w-6 text-secondary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Logistics Dashboard</p>
+                          <p className="text-sm text-muted-foreground">Track shipments and manage deliveries</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </Link>
+
+                    {/* Affiliate/Referral Dashboard */}
+                    <Link 
+                      to="/affiliate"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Affiliate Dashboard</p>
+                          <p className="text-sm text-muted-foreground">Manage referrals, commissions, and campaigns</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </Link>
+
+                    {/* Messages/Chat */}
+                    <Link 
+                      to="/messages"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                          <MessageSquare className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Messages & Chat</p>
+                          <p className="text-sm text-muted-foreground">Communicate with buyers, sellers, and support</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Role Information</CardTitle>
+                    <CardDescription>Your current roles and access permissions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="default" className="bg-primary">Buyer</Badge>
+                      <Badge variant="secondary">Admin Access</Badge>
+                      <Badge variant="outline">Seller Access</Badge>
+                      <Badge variant="outline">Logistics Access</Badge>
+                      <Badge variant="outline">Affiliate Access</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-4">
+                      You have access to multiple dashboards. Contact support to request additional roles.
+                    </p>
                   </CardContent>
                 </Card>
               </TabsContent>
