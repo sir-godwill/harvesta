@@ -33,7 +33,7 @@ import {
   Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAllOrders as fetchSellerOrders, type Order } from "@/services/seller-api";
+import { fetchSellerOrders, type Order } from "@/services/api";
 import { formatXAF } from "@/lib/currency";
 
 const statusConfig = {

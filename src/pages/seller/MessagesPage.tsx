@@ -43,7 +43,7 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchMessages, type Message } from "@/services/seller-api";
+import { fetchMessages, type Message } from "@/services/api";
 import { toast } from "sonner";
 
 // Mock conversation messages

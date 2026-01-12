@@ -60,7 +60,7 @@ import AdminSettings from "./pages/admin/Settings";
 // Seller Dashboard
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import SellerProducts from "./pages/seller/Products";
-import SellerOrders from "./pages/seller/Orders";
+import SellerOrders from "./pages/seller/OrdersPage";
 import SellerAnalytics from "./pages/seller/Analytics";
 import SellerMessages from "./pages/seller/Messages";
 import SellerDashboard from "./pages/seller/Dashboard";
