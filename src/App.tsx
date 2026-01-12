@@ -51,6 +51,21 @@ import TrustSafety from "./pages/info/TrustSafety";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 
+// Seller Dashboard
+import { SellerLayout } from "@/components/seller/SellerLayout";
+import SellerDashboard from "./pages/seller/Dashboard";
+
+// Logistics Dashboard
+import { LogisticsLayout } from "@/components/logistics/LogisticsLayout";
+import LogisticsDashboard from "./pages/logistics/Dashboard";
+
+// Affiliate Dashboard
+import { ReferralLayout } from "@/components/referral/ReferralLayout";
+import AffiliateDashboard from "./pages/affiliate/Dashboard";
+
+// Chat
+import ChatPage from "./pages/messages/ChatPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -65,6 +80,27 @@ const App = () => (
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
               <Route path="/admin/*" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+
+              {/* Seller Dashboard Routes */}
+              <Route path="/seller" element={<SellerLayout />}>
+                <Route index element={<SellerDashboard />} />
+                <Route path="*" element={<SellerDashboard />} />
+              </Route>
+
+              {/* Logistics Dashboard Routes */}
+              <Route path="/logistics" element={<LogisticsLayout />}>
+                <Route index element={<LogisticsDashboard />} />
+                <Route path="*" element={<LogisticsDashboard />} />
+              </Route>
+
+              {/* Affiliate Dashboard Routes */}
+              <Route path="/affiliate" element={<ReferralLayout />}>
+                <Route index element={<AffiliateDashboard />} />
+                <Route path="*" element={<AffiliateDashboard />} />
+              </Route>
+
+              {/* Chat Route */}
+              <Route path="/messages" element={<ChatPage />} />
 
               {/* Main App Routes */}
               <Route path="/*" element={
