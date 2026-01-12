@@ -68,6 +68,10 @@ import SellerDashboard from "./pages/seller/Dashboard";
 // Logistics Dashboard
 import { LogisticsLayout } from "@/components/logistics/LogisticsLayout";
 import LogisticsDashboard from "./pages/logistics/Dashboard";
+import ShipmentsPage from "./pages/logistics/ShipmentsPage";
+import TrackingPage from "./pages/logistics/TrackingPage";
+import AlertsPage from "./pages/logistics/AlertsPage";
+import PartnersPage from "./pages/logistics/PartnersPage";
 
 // Affiliate Dashboard
 import { ReferralLayout } from "@/components/referral/ReferralLayout";
@@ -110,6 +114,10 @@ const App = () => (
               {/* Logistics Dashboard Routes */}
               <Route path="/logistics" element={<LogisticsLayout />}>
                 <Route index element={<LogisticsDashboard />} />
+                <Route path="shipments" element={<ShipmentsPage />} />
+                <Route path="tracking" element={<TrackingPage />} />
+                <Route path="alerts" element={<AlertsPage />} />
+                <Route path="partners" element={<PartnersPage />} />
                 <Route path="*" element={<LogisticsDashboard />} />
               </Route>
 
