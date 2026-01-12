@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Harvestá Brand Colors - Earthy, Natural, Trust-focused */
+    --background: 40 33% 98%;
+    --foreground: 25 30% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 25 30% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 30% 12%;
+
+    /* Forest Green - Primary brand color */
+    --primary: 142 45% 28%;
+    --primary-foreground: 40 33% 98%;
+
+    /* Earthy Brown - Secondary */
+    --secondary: 30 25% 92%;
+    --secondary-foreground: 25 30% 20%;
+
+    /* Muted beige tones */
+    --muted: 35 20% 94%;
+    --muted-foreground: 25 15% 45%;
+
+    /* Warm Orange Accent - Action color (inspired by 1688) */
+    --accent: 24 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success green */
+    --success: 142 70% 35%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 25 30% 12%;
+
+    --border: 30 20% 88%;
+    --input: 30 20% 88%;
+    --ring: 142 45% 28%;
+
+    --radius: 0.625rem;
+
+    /* Sidebar - Earthy tones */
+    --sidebar-background: 35 25% 96%;
+    --sidebar-foreground: 25 30% 25%;
+    --sidebar-primary: 142 45% 28%;
+    --sidebar-primary-foreground: 40 33% 98%;
+    --sidebar-accent: 30 30% 92%;
+    --sidebar-accent-foreground: 25 30% 20%;
+    --sidebar-border: 30 20% 88%;
+    --sidebar-ring: 142 45% 28%;
+
+    /* Custom Harvestá tokens */
+    --harvest-green: 142 45% 28%;
+    --harvest-green-light: 142 40% 45%;
+    --harvest-brown: 25 35% 30%;
+    --harvest-beige: 35 30% 94%;
+    --harvest-cream: 40 33% 98%;
+    --harvest-orange: 24 95% 53%;
+    --harvest-orange-light: 24 100% 60%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(142 45% 28%), hsl(142 40% 38%));
+    --gradient-accent: linear-gradient(135deg, hsl(24 95% 53%), hsl(30 95% 58%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(35 20% 98%));
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(25 30% 12% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(25 30% 12% / 0.06), 0 2px 4px -2px hsl(25 30% 12% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(25 30% 12% / 0.08), 0 4px 6px -4px hsl(25 30% 12% / 0.08);
+    --shadow-card: 0 1px 3px 0 hsl(25 30% 12% / 0.05), 0 1px 2px -1px hsl(25 30% 12% / 0.05);
+  }
+
+  .dark {
+    --background: 25 30% 8%;
+    --foreground: 40 20% 95%;
+
+    --card: 25 25% 12%;
+    --card-foreground: 40 20% 95%;
+
+    --popover: 25 25% 12%;
+    --popover-foreground: 40 20% 95%;
+
+    --primary: 142 50% 45%;
+    --primary-foreground: 25 30% 8%;
+
+    --secondary: 25 20% 18%;
+    --secondary-foreground: 40 20% 90%;
+
+    --muted: 25 20% 18%;
+    --muted-foreground: 35 15% 60%;
+
+    --accent: 24 95% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 90% 55%;
+    --warning-foreground: 25 30% 12%;
+
+    --border: 25 20% 20%;
+    --input: 25 20% 20%;
+    --ring: 142 50% 45%;
+
+    --sidebar-background: 25 25% 10%;
+    --sidebar-foreground: 40 20% 90%;
+    --sidebar-primary: 142 50% 45%;
+    --sidebar-primary-foreground: 25 30% 8%;
+    --sidebar-accent: 25 20% 16%;
+    --sidebar-accent-foreground: 40 20% 90%;
+    --sidebar-border: 25 20% 18%;
+    --sidebar-ring: 142 50% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
