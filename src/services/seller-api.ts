@@ -205,6 +205,44 @@ export async function fetchAllOrders(): Promise<Order[]> {
   return mockOrders;
 }
 
+// Additional functions needed by seller pages
+export async function fetchProductAnalytics() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return { topProducts: [{ name: 'Cocoa', sales: 5000000 }], trends: [{ month: 'Jan', revenue: 10000000 }] };
+}
+
+export async function fetchBuyerAnalytics() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return { repeatBuyers: 45, rfqResponseRate: 85, negotiationSuccess: 72 };
+}
+
+export async function fetchInventoryAnalytics() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return { stockCoverage: 85, overstockRisk: 12, lowStockItems: 5 };
+}
+
+export async function fetchDeliveries() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return [];
+}
+
+export async function fetchFinanceData() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return { revenue: 28500000, pendingPayouts: 2500000, completedPayouts: 26000000 };
+}
+
+export async function fetchMessages() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return [];
+}
+
+export interface Message {
+  id: string;
+  sender: string;
+  content: string;
+  timestamp: Date;
+}
+
 export function formatXAF(amount: number): string {
   return new Intl.NumberFormat('fr-CM', {
     style: 'currency',
