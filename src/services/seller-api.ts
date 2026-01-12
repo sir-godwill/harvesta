@@ -18,7 +18,7 @@ export interface Order {
   quantity: number;
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface Product {
@@ -63,7 +63,7 @@ const mockOrders: Order[] = [
     quantity: 500,
     total: 2500000,
     status: 'pending',
-    createdAt: new Date('2026-01-12T10:30:00'),
+    createdAt: '2026-01-12T10:30:00',
   },
   {
     id: 'ord_e5f6g7h8',
@@ -73,7 +73,7 @@ const mockOrders: Order[] = [
     quantity: 200,
     total: 1800000,
     status: 'processing',
-    createdAt: new Date('2026-01-12T09:15:00'),
+    createdAt: '2026-01-12T09:15:00',
   },
   {
     id: 'ord_i9j0k1l2',
@@ -83,7 +83,7 @@ const mockOrders: Order[] = [
     quantity: 300,
     total: 750000,
     status: 'shipped',
-    createdAt: new Date('2026-01-11T16:45:00'),
+    createdAt: '2026-01-11T16:45:00',
   },
   {
     id: 'ord_m3n4o5p6',
@@ -93,7 +93,7 @@ const mockOrders: Order[] = [
     quantity: 1000,
     total: 500000,
     status: 'delivered',
-    createdAt: new Date('2026-01-11T08:20:00'),
+    createdAt: '2026-01-11T08:20:00',
   },
 ];
 
