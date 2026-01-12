@@ -50,6 +50,12 @@ import TrustSafety from "./pages/info/TrustSafety";
 // Admin Pages
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminSellers from "./pages/admin/Sellers";
+import AdminOrders from "./pages/admin/Orders";
+import AdminBuyers from "./pages/admin/Buyers";
+import AdminProducts from "./pages/admin/Products";
+import AdminDisputes from "./pages/admin/Disputes";
+import AdminSettings from "./pages/admin/Settings";
 
 // Seller Dashboard
 import { SellerLayout } from "@/components/seller/SellerLayout";
@@ -79,6 +85,12 @@ const App = () => (
             <Routes>
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+              <Route path="/admin/sellers" element={<AdminLayout><AdminSellers /></AdminLayout>} />
+              <Route path="/admin/buyers" element={<AdminLayout><AdminBuyers /></AdminLayout>} />
+              <Route path="/admin/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
+              <Route path="/admin/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
+              <Route path="/admin/disputes" element={<AdminLayout><AdminDisputes /></AdminLayout>} />
+              <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
               <Route path="/admin/*" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
 
               {/* Seller Dashboard Routes */}
