@@ -98,10 +98,10 @@ export function getRelativeTime(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} min ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return 'À l\'instant';
+  if (diffMins < 60) return `Il y a ${diffMins} min`;
+  if (diffHours < 24) return `Il y a ${diffHours}h`;
+  if (diffDays < 7) return `Il y a ${diffDays}j`;
   return formatDate(dateString);
 }
 
@@ -120,9 +120,9 @@ export function getDaysRemaining(deadline: string): number {
  */
 export function formatDaysRemaining(deadline: string): { text: string; isUrgent: boolean } {
   const days = getDaysRemaining(deadline);
-  if (days < 0) return { text: 'Expired', isUrgent: true };
-  if (days === 0) return { text: 'Today', isUrgent: true };
-  if (days === 1) return { text: 'Tomorrow', isUrgent: true };
-  if (days <= 3) return { text: `${days} days`, isUrgent: true };
-  return { text: `${days} days`, isUrgent: false };
+  if (days < 0) return { text: 'Expiré', isUrgent: true };
+  if (days === 0) return { text: 'Aujourd\'hui', isUrgent: true };
+  if (days === 1) return { text: 'Demain', isUrgent: true };
+  if (days <= 3) return { text: `${days} jours`, isUrgent: true };
+  return { text: `${days} jours`, isUrgent: false };
 }
