@@ -62,6 +62,9 @@ export interface AdminProduct {
   createdAt: string;
 }
 
+// Alias for backward compatibility
+export type Product = AdminProduct;
+
 export interface AdminOrder {
   id: string;
   buyerName: string;
@@ -74,6 +77,9 @@ export interface AdminOrder {
   region: string;
   createdAt: string;
 }
+
+// Alias for backward compatibility
+export type Order = AdminOrder;
 
 export interface Shipment {
   id: string;
