@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { fetchAdminOrders, AdminOrder } from '@/lib/admin-api';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -39,26 +40,7 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-interface Order {
-  id: string;
-  buyerName: string;
-  sellerName: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'delayed';
-  total: number;
-  itemCount: number;
-  region: string;
-  paymentStatus: string;
-  deliveryType: string;
-  createdAt: string;
-}
-
-const mockOrders: Order[] = [
-  { id: 'ORD-4521', buyerName: 'EuroFoods GmbH', sellerName: 'Kofi Organic Farms', status: 'processing', total: 2500000, itemCount: 5, region: 'Europe', paymentStatus: 'Paid', deliveryType: 'Express', createdAt: new Date().toISOString() },
-  { id: 'ORD-4520', buyerName: 'AsiaSpice Ltd', sellerName: 'Lagos Agro Export', status: 'shipped', total: 1800000, itemCount: 3, region: 'Asia', paymentStatus: 'Paid', deliveryType: 'Standard', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'ORD-4519', buyerName: 'Fresh Imports Co', sellerName: 'Ethiopian Coffee', status: 'delayed', total: 4200000, itemCount: 8, region: 'Americas', paymentStatus: 'Pending', deliveryType: 'Express', createdAt: new Date(Date.now() - 172800000).toISOString() },
-  { id: 'ORD-4518', buyerName: 'Global Organics', sellerName: 'Cameroon Cocoa', status: 'delivered', total: 890000, itemCount: 2, region: 'Europe', paymentStatus: 'Paid', deliveryType: 'Standard', createdAt: new Date(Date.now() - 259200000).toISOString() },
-  { id: 'ORD-4517', buyerName: 'Dubai Trade Co', sellerName: 'Kenya Spice', status: 'pending', total: 3200000, itemCount: 6, region: 'Middle East', paymentStatus: 'Processing', deliveryType: 'Premium', createdAt: new Date(Date.now() - 345600000).toISOString() },
-];
+type Order = AdminOrder;
 
 function OrderCard({ order }: { order: Order }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -177,10 +159,10 @@ export default function AdminOrders() {
   const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
-    setTimeout(() => {
-      setOrders(mockOrders);
+    fetchAdminOrders().then((data) => {
+      setOrders(data);
       setIsLoading(false);
-    }, 500);
+    });
   }, []);
 
   const stats = {

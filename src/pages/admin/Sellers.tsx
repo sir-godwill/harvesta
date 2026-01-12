@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { fetchSellers, Seller } from '@/lib/admin-api';
 import { cn } from '@/lib/utils';
 
 const containerVariants = {
@@ -45,27 +46,6 @@ const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
 };
-
-interface Seller {
-  id: string;
-  businessName: string;
-  ownerName: string;
-  avatar?: string;
-  status: 'active' | 'pending' | 'suspended' | 'rejected';
-  trustScore: number;
-  region: string;
-  totalProducts: number;
-  totalOrders: number;
-  commissionRate: number;
-}
-
-const mockSellers: Seller[] = [
-  { id: '1', businessName: 'Kofi Organic Farms', ownerName: 'Kofi Mensah', status: 'active', trustScore: 95, region: 'Ashanti', totalProducts: 45, totalOrders: 234, commissionRate: 8 },
-  { id: '2', businessName: 'Lagos Agro Export', ownerName: 'Chukwu Okonkwo', status: 'active', trustScore: 88, region: 'Lagos', totalProducts: 32, totalOrders: 189, commissionRate: 10 },
-  { id: '3', businessName: 'Cameroon Fresh Produce', ownerName: 'Paul Mbeki', status: 'pending', trustScore: 0, region: 'Centre', totalProducts: 0, totalOrders: 0, commissionRate: 12 },
-  { id: '4', businessName: 'Ethiopian Coffee Ltd', ownerName: 'Alemayehu Bekele', status: 'active', trustScore: 92, region: 'Addis Ababa', totalProducts: 18, totalOrders: 567, commissionRate: 7 },
-  { id: '5', businessName: 'Kenya Spice Traders', ownerName: 'Wanjiku Kamau', status: 'suspended', trustScore: 45, region: 'Nairobi', totalProducts: 12, totalOrders: 45, commissionRate: 15 },
-];
 
 function StatCard({ title, value, icon: Icon, color, trend }: {
   title: string;
@@ -83,7 +63,7 @@ function StatCard({ title, value, icon: Icon, color, trend }: {
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</p>
               <p className="text-xl sm:text-2xl font-bold mt-1">{value}</p>
               {trend !== undefined && (
-                <div className="flex items-center gap-1 mt-1 text-xs text-green-600">
+                <div className="flex items-center gap-1 mt-1 text-xs text-emerald-500">
                   <TrendingUp className="h-3 w-3" />
                   <span>+{trend}%</span>
                 </div>
@@ -101,7 +81,7 @@ function StatCard({ title, value, icon: Icon, color, trend }: {
 
 function SellerCard({ seller, isMobile }: { seller: Seller; isMobile: boolean }) {
   const statusColors = {
-    active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    active: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
     suspended: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     rejected: 'bg-muted text-muted-foreground',
@@ -209,7 +189,7 @@ export default function AdminSellers() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -218,11 +198,10 @@ export default function AdminSellers() {
   }, []);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setSellers(mockSellers);
+    fetchSellers().then((data) => {
+      setSellers(data);
       setIsLoading(false);
-    }, 500);
+    });
   }, []);
 
   const stats = {
@@ -266,7 +245,7 @@ export default function AdminSellers() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard title="Total Sellers" value={stats.total} icon={Store} color="bg-primary" trend={12} />
-        <StatCard title="Active" value={stats.active} icon={CheckCircle2} color="bg-green-600" />
+        <StatCard title="Active" value={stats.active} icon={CheckCircle2} color="bg-emerald-600" />
         <StatCard title="Pending" value={stats.pending} icon={Clock} color="bg-yellow-500" />
         <StatCard title="Suspended" value={stats.suspended} icon={XCircle} color="bg-red-500" />
       </div>
