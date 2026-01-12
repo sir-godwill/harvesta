@@ -220,3 +220,51 @@ export async function generateReferralLink(campaignId?: string): Promise<string>
   const baseLink = `https://harvesta.cm/join?ref=${mockAgent.referralCode}`;
   return campaignId ? `${baseLink}&campaign=${campaignId}` : baseLink;
 }
+
+// Aliases for backwards compatibility with uploaded referral dashboard
+export async function fetchReferralStats() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return {
+    totalClicks: 2847,
+    totalSignups: 156,
+    buyersReferred: 89,
+    sellersOnboarded: 23,
+    conversionRate: 5.48,
+    activeReferrals: 67,
+    weeklyGrowth: 12.5,
+  };
+}
+
+export async function fetchCommissionDetails() {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return [
+    {
+      id: 'COM-001',
+      type: 'seller_referral',
+      description: 'Golden Harvest Farms - Monthly commission',
+      amount: 315000,
+      status: 'paid',
+      date: '2026-01-08',
+      seller: 'Golden Harvest Farms',
+    },
+    {
+      id: 'COM-002',
+      type: 'buyer_referral',
+      description: 'Order #ORD-2026-089 - Coffee beans purchase',
+      amount: 42500,
+      status: 'pending',
+      date: '2026-01-10',
+      buyer: 'Lagos Fresh Markets',
+    },
+  ];
+}
+
+export async function createReferralLink(campaign?: string) {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return {
+    link: `https://harvesta.app/ref/${code}`,
+    qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://harvesta.app/ref/${code}`,
+    code,
+  };
+}
