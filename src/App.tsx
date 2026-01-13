@@ -11,6 +11,7 @@ import Layout from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
+import Messages from "./pages/Messages";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -71,6 +72,7 @@ import AdminCategories from "./pages/admin/products/AdminCategories";
 import AdminPendingProducts from "./pages/admin/products/AdminPendingProducts";
 import AdminPendingOrders from "./pages/admin/orders/AdminPendingOrders";
 import AdminReturns from "./pages/admin/orders/AdminReturns";
+
 // Logistics Pages
 import { LogisticsLayout } from "@/components/logistics/LogisticsLayout";
 import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
@@ -99,8 +101,16 @@ import SellerRFQs from "./pages/seller/SellerRFQs";
 import SellerSettings from "./pages/seller/SellerSettings";
 
 // Affiliate Pages
+import { AffiliateLayout } from "@/components/affiliate/AffiliateLayout";
 import AffiliateDashboard from "./pages/affiliate/AffiliateDashboard";
 import AffiliateOnboarding from "./pages/affiliate/AffiliateOnboarding";
+import AffiliateReferrals from "./pages/affiliate/AffiliateReferrals";
+import AffiliateSellers from "./pages/affiliate/AffiliateSellers";
+import AffiliateCommissions from "./pages/affiliate/AffiliateCommissions";
+import AffiliateCampaigns from "./pages/affiliate/AffiliateCampaigns";
+import AffiliateAnalytics from "./pages/affiliate/AffiliateAnalytics";
+import AffiliatePayouts from "./pages/affiliate/AffiliatePayouts";
+import AffiliateSettings from "./pages/affiliate/AffiliateSettings";
 
 const queryClient = new QueryClient();
 
@@ -113,91 +123,74 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Messages Route - Outside Layout */}
+              <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+
               {/* Admin Routes - Outside main Layout */}
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminDashboard /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/sellers" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminSellers /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/sellers/*" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminSellers /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/products" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminProducts /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/products/*" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminProducts /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/orders" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminOrders /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/orders/*" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminOrders /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/analytics" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminAnalytics /></AdminLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/analytics/*" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminAnalytics /></AdminLayout>
-                </ProtectedRoute>
-              } />
+              <Route path="/admin" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/sellers" element={<ProtectedRoute><AdminLayout><AdminSellers /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/sellers/applications" element={<ProtectedRoute><AdminLayout><SellerApplications /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/sellers/commissions" element={<ProtectedRoute><AdminLayout><SellerCommissions /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/sellers/verification" element={<ProtectedRoute><AdminLayout><SellerVerification /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/products" element={<ProtectedRoute><AdminLayout><AdminProducts /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/products/categories" element={<ProtectedRoute><AdminLayout><AdminCategories /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/products/pending" element={<ProtectedRoute><AdminLayout><AdminPendingProducts /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/orders" element={<ProtectedRoute><AdminLayout><AdminOrders /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/orders/pending" element={<ProtectedRoute><AdminLayout><AdminPendingOrders /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/orders/returns" element={<ProtectedRoute><AdminLayout><AdminReturns /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/analytics" element={<ProtectedRoute><AdminLayout><AdminAnalytics /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/buyers" element={<ProtectedRoute><AdminLayout><AdminBuyers /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/disputes" element={<ProtectedRoute><AdminLayout><AdminDisputes /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/payments" element={<ProtectedRoute><AdminLayout><AdminPayments /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/marketing" element={<ProtectedRoute><AdminLayout><AdminMarketing /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout><AdminSettings /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/compliance" element={<ProtectedRoute><AdminLayout><AdminCompliance /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/logistics" element={<ProtectedRoute><AdminLayout><AdminLogistics /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/logistics/carriers" element={<ProtectedRoute><AdminLayout><AdminCarriers /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/logistics/zones" element={<ProtectedRoute><AdminLayout><AdminZones /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/*" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
 
-              {/* Logistics Routes */}
-              <Route path="/logistics" element={<ProtectedRoute><LogisticsDashboard /></ProtectedRoute>} />
-              <Route path="/logistics/shipments" element={<ProtectedRoute><LogisticsShipments /></ProtectedRoute>} />
-              <Route path="/logistics/tracking" element={<ProtectedRoute><LogisticsTracking /></ProtectedRoute>} />
-              <Route path="/logistics/partners" element={<ProtectedRoute><LogisticsPartners /></ProtectedRoute>} />
-              <Route path="/logistics/reports" element={<ProtectedRoute><LogisticsReports /></ProtectedRoute>} />
-              <Route path="/logistics/alerts" element={<ProtectedRoute><LogisticsAlerts /></ProtectedRoute>} />
-              <Route path="/logistics/disputes" element={<ProtectedRoute><LogisticsDisputes /></ProtectedRoute>} />
-              <Route path="/logistics/returns" element={<ProtectedRoute><LogisticsReturns /></ProtectedRoute>} />
-              <Route path="/logistics/calculator" element={<ProtectedRoute><LogisticsCalculator /></ProtectedRoute>} />
-              <Route path="/logistics/integrations" element={<ProtectedRoute><LogisticsIntegrations /></ProtectedRoute>} />
-              <Route path="/logistics/settings" element={<ProtectedRoute><LogisticsSettings /></ProtectedRoute>} />
-              <Route path="/logistics/*" element={<ProtectedRoute><LogisticsDashboard /></ProtectedRoute>} />
+              {/* Logistics Routes - With LogisticsLayout */}
+              <Route path="/logistics" element={<ProtectedRoute><LogisticsLayout><LogisticsDashboard /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/shipments" element={<ProtectedRoute><LogisticsLayout><LogisticsShipments /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/tracking" element={<ProtectedRoute><LogisticsLayout><LogisticsTracking /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/partners" element={<ProtectedRoute><LogisticsLayout><LogisticsPartners /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/reports" element={<ProtectedRoute><LogisticsLayout><LogisticsReports /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/alerts" element={<ProtectedRoute><LogisticsLayout><LogisticsAlerts /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/disputes" element={<ProtectedRoute><LogisticsLayout><LogisticsDisputes /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/returns" element={<ProtectedRoute><LogisticsLayout><LogisticsReturns /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/calculator" element={<ProtectedRoute><LogisticsLayout><LogisticsCalculator /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/integrations" element={<ProtectedRoute><LogisticsLayout><LogisticsIntegrations /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/settings" element={<ProtectedRoute><LogisticsLayout><LogisticsSettings /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/*" element={<ProtectedRoute><LogisticsLayout><LogisticsDashboard /></LogisticsLayout></ProtectedRoute>} />
 
-              {/* Seller Routes */}
+              {/* Seller Routes - SellerLayout is already inside pages */}
               <Route path="/seller" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
               <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
               <Route path="/seller/products/add" element={<ProtectedRoute><SellerProductAdd /></ProtectedRoute>} />
+              <Route path="/seller/products/edit/:id" element={<ProtectedRoute><SellerProductAdd /></ProtectedRoute>} />
               <Route path="/seller/orders" element={<ProtectedRoute><SellerOrders /></ProtectedRoute>} />
               <Route path="/seller/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
               <Route path="/seller/logistics" element={<ProtectedRoute><SellerLogistics /></ProtectedRoute>} />
+              <Route path="/seller/logistics/carriers" element={<ProtectedRoute><SellerCarriers /></ProtectedRoute>} />
               <Route path="/seller/carriers" element={<ProtectedRoute><SellerCarriers /></ProtectedRoute>} />
               <Route path="/seller/messages" element={<ProtectedRoute><SellerMessages /></ProtectedRoute>} />
               <Route path="/seller/rfqs" element={<ProtectedRoute><SellerRFQs /></ProtectedRoute>} />
               <Route path="/seller/settings" element={<ProtectedRoute><SellerSettings /></ProtectedRoute>} />
               <Route path="/seller/*" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
 
-              {/* Affiliate Routes */}
-              <Route path="/affiliate" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-              <Route path="/affiliate/onboarding" element={<ProtectedRoute><AffiliateOnboarding /></ProtectedRoute>} />
-              <Route path="/affiliate/*" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+              {/* Affiliate Routes - With AffiliateLayout */}
+              <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout><AffiliateDashboard /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/onboarding" element={<ProtectedRoute><AffiliateLayout><AffiliateOnboarding /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/referrals" element={<ProtectedRoute><AffiliateLayout><AffiliateReferrals /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/sellers" element={<ProtectedRoute><AffiliateLayout><AffiliateSellers /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/commissions" element={<ProtectedRoute><AffiliateLayout><AffiliateCommissions /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/campaigns" element={<ProtectedRoute><AffiliateLayout><AffiliateCampaigns /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/analytics" element={<ProtectedRoute><AffiliateLayout><AffiliateAnalytics /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/payouts" element={<ProtectedRoute><AffiliateLayout><AffiliatePayouts /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/settings" element={<ProtectedRoute><AffiliateLayout><AffiliateSettings /></AffiliateLayout></ProtectedRoute>} />
+              <Route path="/affiliate/*" element={<ProtectedRoute><AffiliateLayout><AffiliateDashboard /></AffiliateLayout></ProtectedRoute>} />
+
               <Route path="/*" element={
                 <Layout>
                   <Routes>
