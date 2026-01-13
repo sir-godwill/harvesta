@@ -242,3 +242,37 @@ export async function createConversation(participants: string[], context?: ChatC
   await delay(300);
   return mockConversations[0];
 }
+
+export async function fetchChatContext(conversationId: string): Promise<ChatContext | null> {
+  await delay(200);
+  const conversation = mockConversations.find(c => c.id === conversationId);
+  return conversation?.context || null;
+}
+
+export async function moderateChat(conversationId: string, action: 'freeze' | 'unfreeze' | 'warn'): Promise<{ success: boolean }> {
+  await delay(300);
+  console.log('[API] Moderating chat:', conversationId, action);
+  return { success: true };
+}
+
+export async function joinChatAsAdmin(conversationId: string): Promise<{ success: boolean }> {
+  await delay(200);
+  console.log('[API] Admin joining chat:', conversationId);
+  return { success: true };
+}
+
+export async function sendOffer(conversationId: string, offer: Omit<Offer, 'id' | 'status'>): Promise<Message> {
+  await delay(400);
+  const newMessage: Message = {
+    id: `msg_${Date.now()}`,
+    conversationId,
+    senderId: 'current-user',
+    senderRole: 'seller',
+    type: 'offer',
+    content: `Offer: ${offer.quantity} ${offer.unit} of ${offer.productName} at ${offer.pricePerUnit} ${offer.currency}/${offer.unit}`,
+    metadata: { offer },
+    status: 'sent',
+    createdAt: new Date(),
+  };
+  return newMessage;
+}
