@@ -25,6 +25,22 @@ import RFQ from "./pages/RFQ";
 import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
 
+// Seller Dashboard Pages
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerProducts from "./pages/seller/SellerProducts";
+import SellerOrders from "./pages/seller/SellerOrders";
+import SellerAnalytics from "./pages/seller/SellerAnalytics";
+import SellerLogistics from "./pages/seller/SellerLogistics";
+import SellerCarriers from "./pages/seller/SellerCarriers";
+
+// Logistics Dashboard Pages
+import LogisticsAlerts from "./pages/logistics/LogisticsAlerts";
+import LogisticsDisputes from "./pages/logistics/LogisticsDisputes";
+import LogisticsReturns from "./pages/logistics/LogisticsReturns";
+import LogisticsCalculator from "./pages/logistics/LogisticsCalculator";
+import LogisticsIntegrations from "./pages/logistics/LogisticsIntegrations";
+import LogisticsSettings from "./pages/logistics/LogisticsSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -34,6 +50,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Main Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
@@ -54,6 +71,24 @@ const App = () => (
           <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
           <Route path="/rfq" element={<RFQ />} />
           <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+          
+          {/* Seller Dashboard Routes */}
+          <Route path="/seller" element={<SellerDashboard />} />
+          <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          <Route path="/seller/products" element={<SellerProducts />} />
+          <Route path="/seller/orders" element={<SellerOrders />} />
+          <Route path="/seller/analytics" element={<SellerAnalytics />} />
+          <Route path="/seller/logistics" element={<SellerLogistics />} />
+          <Route path="/seller/logistics/carriers" element={<SellerCarriers />} />
+          
+          {/* Logistics Dashboard Routes */}
+          <Route path="/logistics/alerts" element={<LogisticsAlerts />} />
+          <Route path="/logistics/disputes" element={<LogisticsDisputes />} />
+          <Route path="/logistics/returns" element={<LogisticsReturns />} />
+          <Route path="/logistics/calculator" element={<LogisticsCalculator />} />
+          <Route path="/logistics/integrations" element={<LogisticsIntegrations />} />
+          <Route path="/logistics/settings" element={<LogisticsSettings />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
