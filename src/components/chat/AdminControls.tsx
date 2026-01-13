@@ -19,9 +19,9 @@ export function AdminControls({ conversation, onUpdate }: AdminControlsProps) {
   const { toast } = useToast();
 
   const handleFreeze = async () => { await moderateChat(conversation.id, conversation.isFrozen ? 'unfreeze' : 'freeze'); toast({ title: conversation.isFrozen ? 'Chat Unfrozen' : 'Chat Frozen' }); onUpdate(); };
-  const handleMuteUser = async () => { if (!selectedUser) return; await moderateChat(conversation.id, 'mute-user', { userId: selectedUser }); toast({ title: 'User Muted' }); };
-  const handleInjectMessage = async () => { if (!systemMessage.trim()) return; await moderateChat(conversation.id, 'inject-message', { message: systemMessage }); toast({ title: 'System Message Sent' }); setSystemMessage(''); onUpdate(); };
-  const handleJoinChat = async (visible: boolean) => { await joinChatAsAdmin(conversation.id, visible); toast({ title: visible ? 'Joined Chat Visibly' : 'Joined Chat Invisibly' }); };
+  const handleMuteUser = async () => { if (!selectedUser) return; await moderateChat(conversation.id, 'mute-user'); toast({ title: 'User Muted' }); };
+  const handleInjectMessage = async () => { if (!systemMessage.trim()) return; await moderateChat(conversation.id, 'inject-message'); toast({ title: 'System Message Sent' }); setSystemMessage(''); onUpdate(); };
+  const handleJoinChat = async (visible: boolean) => { await joinChatAsAdmin(conversation.id); toast({ title: visible ? 'Joined Chat Visibly' : 'Joined Chat Invisibly' }); };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
