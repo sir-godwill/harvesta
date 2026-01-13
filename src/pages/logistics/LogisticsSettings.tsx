@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LogisticsLayout } from '@/components/logistics/LogisticsLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,7 +70,7 @@ const LogisticsSettings = () => {
   };
 
   return (
-    <LogisticsLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Settings</h1>
@@ -499,7 +498,7 @@ const LogisticsSettings = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </LogisticsLayout>
+    </>
   );
 };
 

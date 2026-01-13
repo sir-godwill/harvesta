@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LogisticsLayout } from '@/components/logistics/LogisticsLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -176,7 +175,7 @@ const LogisticsReturns = () => {
   };
 
   return (
-    <LogisticsLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -483,7 +482,7 @@ const LogisticsReturns = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </LogisticsLayout>
+    </>
   );
 };
 

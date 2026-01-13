@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LogisticsLayout } from '@/components/logistics/LogisticsLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -143,7 +142,7 @@ const LogisticsCalculator = () => {
   };
 
   return (
-    <LogisticsLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Cost Calculator</h1>
@@ -389,7 +388,7 @@ const LogisticsCalculator = () => {
           </div>
         </div>
       </div>
-    </LogisticsLayout>
+    </>
   );
 };
 

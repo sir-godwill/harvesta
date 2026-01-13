@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LogisticsLayout } from '@/components/logistics/LogisticsLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -194,7 +193,7 @@ const LogisticsIntegrations = () => {
   const connectedCount = integrations.filter(i => i.status === 'connected').length;
 
   return (
-    <LogisticsLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -399,7 +398,7 @@ const LogisticsIntegrations = () => {
           </CardContent>
         </Card>
       </div>
-    </LogisticsLayout>
+    </>
   );
 };
 
