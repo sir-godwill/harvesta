@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   Package,
   Search,
@@ -35,7 +36,6 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { AdminAddProductModal } from '@/components/admin/modals/AdminAddProductModal';
 import { toast } from 'sonner';
 
 const containerVariants = {
@@ -222,7 +222,6 @@ export default function AdminProducts() {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [addModalOpen, setAddModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -305,8 +304,10 @@ export default function AdminProducts() {
           </h1>
           <p className="text-sm text-muted-foreground">Manage products, categories, and quality grades</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => setAddModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Product
+        <Button className="w-full sm:w-auto" asChild>
+          <Link to="/admin/products/add">
+            <Plus className="mr-2 h-4 w-4" /> Add Product
+          </Link>
         </Button>
       </motion.div>
 
@@ -393,8 +394,10 @@ export default function AdminProducts() {
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="font-semibold text-lg mb-2">No products found</h3>
           <p className="text-muted-foreground mb-4">Start by adding your first product</p>
-          <Button onClick={() => setAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Add Product
+          <Button asChild>
+            <Link to="/admin/products/add">
+              <Plus className="mr-2 h-4 w-4" /> Add Product
+            </Link>
           </Button>
         </div>
       ) : (
@@ -416,13 +419,6 @@ export default function AdminProducts() {
           ))}
         </motion.div>
       )}
-
-      {/* Add Product Modal */}
-      <AdminAddProductModal 
-        open={addModalOpen} 
-        onOpenChange={setAddModalOpen}
-        onSuccess={fetchProducts}
-      />
     </motion.div>
   );
 }
