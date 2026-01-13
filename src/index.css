@@ -4,111 +4,139 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* =================================================
+   Harvestá Design System
+   Brand: Natural green, earthy brown, beige, white
+   Enterprise-grade, African agriculture focused
+   All colors MUST be HSL.
+   ================================================= */
+
 @layer base {
   :root {
-    /* Brand Colors */
-    --primary: 14 100% 60%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 220 13% 18%;
-    
-    /* Agricultural Green Accent */
-    --accent: 95 75% 48%;
-    --accent-foreground: 0 0% 100%;
-    
-    /* Backgrounds */
-    --background: 0 0% 98%;
-    --foreground: 220 13% 18%;
-    
+    /* Harvestá Brand Colors */
+    --background: 40 33% 98%;
+    --foreground: 25 30% 12%;
+
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 18%;
-    
+    --card-foreground: 25 30% 12%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 18%;
-    
-    /* Muted */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    
-    /* Destructive */
-    --destructive: 0 84% 60%;
+    --popover-foreground: 25 30% 12%;
+
+    /* Primary: Natural Forest Green */
+    --primary: 142 45% 28%;
+    --primary-foreground: 40 33% 98%;
+
+    /* Secondary: Earthy Brown */
+    --secondary: 30 35% 25%;
+    --secondary-foreground: 40 33% 98%;
+
+    /* Muted: Warm Beige */
+    --muted: 35 30% 92%;
+    --muted-foreground: 25 15% 45%;
+
+    /* Accent: Harvest Gold */
+    --accent: 42 85% 55%;
+    --accent-foreground: 25 30% 12%;
+
+    /* Status Colors */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    
-    /* Borders & Inputs */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 14 100% 60%;
-    
-    --radius: 0.5rem;
-    
-    /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 13% 46%;
-    --sidebar-primary: 14 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 14 100% 97%;
-    --sidebar-accent-foreground: 14 100% 50%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 14 100% 60%;
-    
-    /* Custom tokens */
-    --success: 95 75% 48%;
+
+    --success: 142 70% 40%;
     --success-foreground: 0 0% 100%;
+
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --info: 199 89% 48%;
+    --warning-foreground: 25 30% 12%;
+
+    --info: 205 85% 45%;
     --info-foreground: 0 0% 100%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(14 100% 60%) 0%, hsl(25 100% 55%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(95 75% 48%) 0%, hsl(120 60% 45%) 100%);
+
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 142 45% 28%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar - Forest Theme */
+    --sidebar-background: 142 35% 18%;
+    --sidebar-foreground: 40 33% 95%;
+    --sidebar-primary: 42 85% 55%;
+    --sidebar-primary-foreground: 25 30% 12%;
+    --sidebar-accent: 142 30% 25%;
+    --sidebar-accent-foreground: 40 33% 98%;
+    --sidebar-border: 142 25% 25%;
+    --sidebar-ring: 42 85% 55%;
+    --sidebar-muted: 142 20% 35%;
+
+    /* Chart Colors */
+    --chart-1: 142 45% 35%;
+    --chart-2: 42 85% 55%;
+    --chart-3: 30 35% 35%;
+    --chart-4: 205 85% 45%;
+    --chart-5: 0 72% 51%;
+
+    /* Gradient definitions */
+    --gradient-primary: linear-gradient(135deg, hsl(142 45% 28%), hsl(142 35% 22%));
+    --gradient-accent: linear-gradient(135deg, hsl(42 85% 55%), hsl(38 92% 50%));
+    --gradient-success: linear-gradient(135deg, hsl(142 70% 40%), hsl(142 60% 35%));
     
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-card: 0 2px 8px -2px rgb(0 0 0 / 0.08);
-    --shadow-card-hover: 0 8px 25px -5px rgb(0 0 0 / 0.15);
+    --shadow-sm: 0 1px 2px 0 hsl(25 30% 12% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(25 30% 12% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(25 30% 12% / 0.1);
+    --shadow-glow: 0 0 20px hsl(142 45% 28% / 0.15);
+    --shadow-card: 0 2px 8px -2px hsl(25 30% 12% / 0.08);
+    --shadow-card-hover: 0 8px 25px -5px hsl(25 30% 12% / 0.15);
   }
 
   .dark {
-    --primary: 14 100% 60%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 220 13% 18%;
-    --secondary-foreground: 0 0% 96%;
-    
-    --accent: 95 75% 48%;
-    --accent-foreground: 0 0% 100%;
-    
-    --background: 220 15% 8%;
-    --foreground: 0 0% 95%;
-    
-    --card: 220 15% 12%;
-    --card-foreground: 0 0% 95%;
-    
-    --popover: 220 15% 12%;
-    --popover-foreground: 0 0% 95%;
-    
-    --muted: 220 15% 18%;
-    --muted-foreground: 220 9% 60%;
-    
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 95%;
-    
-    --border: 220 13% 20%;
-    --input: 220 13% 20%;
-    --ring: 14 100% 60%;
-    
-    --sidebar-background: 220 15% 10%;
-    --sidebar-foreground: 220 9% 70%;
-    --sidebar-primary: 14 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 14 100% 15%;
-    --sidebar-accent-foreground: 14 100% 70%;
-    --sidebar-border: 220 13% 20%;
-    --sidebar-ring: 14 100% 60%;
+    --background: 25 25% 8%;
+    --foreground: 40 33% 95%;
+
+    --card: 25 20% 12%;
+    --card-foreground: 40 33% 95%;
+
+    --popover: 25 20% 12%;
+    --popover-foreground: 40 33% 95%;
+
+    --primary: 142 50% 45%;
+    --primary-foreground: 25 25% 8%;
+
+    --secondary: 30 25% 35%;
+    --secondary-foreground: 40 33% 95%;
+
+    --muted: 25 15% 18%;
+    --muted-foreground: 35 15% 55%;
+
+    --accent: 42 80% 50%;
+    --accent-foreground: 25 25% 8%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 45%;
+    --success-foreground: 25 25% 8%;
+
+    --warning: 38 85% 45%;
+    --warning-foreground: 25 25% 8%;
+
+    --info: 205 75% 50%;
+    --info-foreground: 25 25% 8%;
+
+    --border: 25 15% 20%;
+    --input: 25 15% 20%;
+    --ring: 142 50% 45%;
+
+    --sidebar-background: 25 20% 6%;
+    --sidebar-foreground: 40 33% 90%;
+    --sidebar-primary: 42 80% 50%;
+    --sidebar-primary-foreground: 25 25% 8%;
+    --sidebar-accent: 25 15% 15%;
+    --sidebar-accent-foreground: 40 33% 95%;
+    --sidebar-border: 25 15% 18%;
+    --sidebar-ring: 42 80% 50%;
+    --sidebar-muted: 25 12% 25%;
   }
 }
 
@@ -123,82 +151,201 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/50 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200;
+  /* KPI Card Styles */
+  .kpi-card {
+    @apply relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5;
   }
-  
-  .btn-outline-primary {
-    @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200;
+
+  .kpi-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: var(--gradient-primary);
   }
-  
+
+  .kpi-card:hover::before {
+    @apply opacity-5;
+  }
+
+  /* Status Badge Styles */
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .status-badge-success {
+    @apply bg-success/10 text-success;
+  }
+
+  .status-badge-warning {
+    @apply bg-warning/10 text-warning;
+  }
+
+  .status-badge-danger {
+    @apply bg-destructive/10 text-destructive;
+  }
+
+  .status-badge-info {
+    @apply bg-info/10 text-info;
+  }
+
+  /* Data Table Row Hover */
+  .data-row {
+    @apply transition-colors duration-150 hover:bg-muted/50;
+  }
+
+  /* Navigation Item */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200;
+  }
+
+  .nav-item-active {
+    @apply bg-sidebar-accent text-sidebar-accent-foreground;
+  }
+
+  /* Module Section */
+  .module-section {
+    @apply rounded-xl border bg-card p-6 shadow-sm;
+  }
+
+  /* Live Feed Item */
+  .feed-item {
+    @apply flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50;
+  }
+
+  /* Pulse animation for live indicators */
+  .pulse-live {
+    @apply relative;
+  }
+
+  .pulse-live::after {
+    content: '';
+    @apply absolute top-0 right-0 h-2 w-2 rounded-full bg-success;
+    animation: pulse-ring 1.5s ease-out infinite;
+  }
+
+  /* Product Card Styles */
   .card-product {
     @apply bg-card rounded-lg overflow-hidden transition-all duration-300;
     box-shadow: var(--shadow-card);
   }
-  
+
   .card-product:hover {
     box-shadow: var(--shadow-card-hover);
     transform: translateY(-2px);
   }
-  
+
+  /* Verified Badge */
   .badge-verified {
+    @apply bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded;
+  }
+
+  .badge-gold {
     @apply bg-accent text-accent-foreground text-xs font-medium px-2 py-0.5 rounded;
   }
-  
-  .badge-gold {
-    @apply bg-warning text-warning-foreground text-xs font-medium px-2 py-0.5 rounded;
-  }
-  
+
+  /* Price Styles */
   .price-primary {
     @apply text-primary font-bold;
   }
-  
+
   .price-original {
     @apply text-muted-foreground line-through text-sm;
   }
-  
+
+  /* Nav Link */
   .nav-link {
     @apply flex items-center gap-3 px-4 py-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-colors;
   }
-  
+
   .nav-link-active {
     @apply bg-sidebar-accent text-sidebar-accent-foreground font-medium;
   }
-  
+
+  /* Search Input */
   .search-input {
     @apply flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground;
   }
-  
+
+  /* Category Card */
   .category-card {
     @apply bg-card rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
   }
 }
 
 @layer utilities {
+  /* Text gradient utility */
   .text-gradient-primary {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
   }
-  
+
+  .text-gradient-accent {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-accent);
+  }
+
+  /* Background gradients */
   .bg-gradient-primary {
     background: var(--gradient-primary);
   }
-  
+
   .bg-gradient-success {
     background: var(--gradient-success);
   }
-  
+
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-background/80 backdrop-blur-sm;
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  /* Scrollbar hide */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
