@@ -36,6 +36,7 @@ import RFQ from "./pages/marketplace/RFQ";
 import OrderTracking from "./pages/marketplace/OrderTracking";
 import Search from "./pages/marketplace/Search";
 import SupplierProfile from "./pages/marketplace/SupplierProfile";
+import Sellers from "./pages/marketplace/Sellers";
 
 // Info Pages
 import About from "./pages/info/About";
@@ -199,6 +200,7 @@ const App = () => (
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/search" element={<Search />} />
                     <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
+                    <Route path="/sellers" element={<Sellers />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/faq" element={<FAQ />} />

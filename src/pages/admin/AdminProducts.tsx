@@ -14,6 +14,7 @@ import {
   Edit,
   Trash2,
   Image as ImageIcon,
+  Plus,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,8 +33,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { fetchProducts, Product } from '@/lib/admin-api';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { AdminAddProductModal } from '@/components/admin/modals/AdminAddProductModal';
+import { toast } from 'sonner';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -45,41 +48,75 @@ const itemVariants = {
   visible: { opacity: 1, scale: 1 },
 };
 
-function ProductCard({ product, view }: { product: Product; view: 'grid' | 'list' }) {
-  const statusColors = {
-    live: 'bg-green-100 text-green-700',
+interface Product {
+  id: string;
+  name: string;
+  short_description: string | null;
+  status: string;
+  is_organic: boolean | null;
+  is_featured: boolean | null;
+  created_at: string;
+  supplier: { company_name: string } | null;
+  category: { name: string } | null;
+  images: { image_url: string; is_primary: boolean }[];
+  variants: {
+    stock_quantity: number | null;
+    grade: string | null;
+    pricing_tiers: { price_per_unit: number }[];
+  }[];
+}
+
+function ProductCard({ product, view, onRefresh }: { product: Product; view: 'grid' | 'list'; onRefresh: () => void }) {
+  const statusColors: Record<string, string> = {
+    active: 'bg-green-100 text-green-700',
     pending: 'bg-yellow-100 text-yellow-700',
     draft: 'bg-gray-100 text-gray-700',
-    rejected: 'bg-red-100 text-red-700',
+    inactive: 'bg-red-100 text-red-700',
   };
 
-  const gradeColors = {
-    'Grade A': 'bg-green-600 text-white',
-    'Grade B': 'bg-blue-600 text-white',
-    'Grade C': 'bg-yellow-600 text-white',
-  };
+  const primaryImage = product.images?.find(i => i.is_primary) || product.images?.[0];
+  const defaultVariant = product.variants?.[0];
+  const price = defaultVariant?.pricing_tiers?.[0]?.price_per_unit || 0;
+  const stock = defaultVariant?.stock_quantity || 0;
+  const grade = defaultVariant?.grade || '';
 
   const formatPrice = (price: number) => 
     new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(price);
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', product.id);
+    
+    if (error) {
+      toast.error('Failed to delete product');
+    } else {
+      toast.success('Product deleted');
+      onRefresh();
+    }
+  };
 
   if (view === 'grid') {
     return (
       <motion.div variants={itemVariants} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
         <Card className="overflow-hidden group cursor-pointer">
           <div className="aspect-square bg-muted relative overflow-hidden">
-            {product.image ? (
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            {primaryImage?.image_url ? (
+              <img src={primaryImage.image_url} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
               </div>
             )}
-            <Badge className={cn('absolute top-2 left-2', statusColors[product.status])}>
+            <Badge className={cn('absolute top-2 left-2', statusColors[product.status] || statusColors.draft)}>
               {product.status}
             </Badge>
-            {product.qualityGrade && (
-              <Badge className={cn('absolute top-2 right-2', gradeColors[product.qualityGrade as keyof typeof gradeColors])}>
-                {product.qualityGrade}
+            {grade && (
+              <Badge className="absolute top-2 right-2 bg-blue-600 text-white">
+                {grade}
               </Badge>
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -104,17 +141,20 @@ function ProductCard({ product, view }: { product: Product; view: 'grid' | 'list
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View</DropdownMenuItem>
                     <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                    <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <p className="text-xs text-muted-foreground line-clamp-1">{product.seller}</p>
+              <p className="text-xs text-muted-foreground line-clamp-1">{product.supplier?.company_name || 'Unknown Seller'}</p>
               <div className="flex items-center justify-between">
-                <p className="font-bold text-primary">{formatPrice(product.price)}</p>
-                <span className="text-xs text-muted-foreground">{product.stock} in stock</span>
+                <p className="font-bold text-primary">{formatPrice(price)}</p>
+                <span className="text-xs text-muted-foreground">{stock} in stock</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="bg-muted px-2 py-0.5 rounded">{product.category}</span>
+                <span className="bg-muted px-2 py-0.5 rounded">{product.category?.name || 'Uncategorized'}</span>
+                {product.is_organic && <Badge variant="outline" className="text-green-600 text-[10px]">Organic</Badge>}
               </div>
             </div>
           </CardContent>
@@ -129,8 +169,8 @@ function ProductCard({ product, view }: { product: Product; view: 'grid' | 'list
         <CardContent className="p-3 sm:p-4">
           <div className="flex gap-3 sm:gap-4">
             <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-              {product.image ? (
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              {primaryImage?.image_url ? (
+                <img src={primaryImage.image_url} alt={product.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <ImageIcon className="h-6 w-6 text-muted-foreground/30" />
@@ -141,10 +181,10 @@ function ProductCard({ product, view }: { product: Product; view: 'grid' | 'list
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-semibold line-clamp-1">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground">{product.seller}</p>
+                  <p className="text-sm text-muted-foreground">{product.supplier?.company_name || 'Unknown Seller'}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className={statusColors[product.status]}>{product.status}</Badge>
+                  <Badge className={statusColors[product.status] || statusColors.draft}>{product.status}</Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -154,18 +194,18 @@ function ProductCard({ product, view }: { product: Product; view: 'grid' | 'list
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View</DropdownMenuItem>
                       <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <span className="font-bold text-primary">{formatPrice(product.price)}</span>
-                <span className="text-sm text-muted-foreground">• {product.stock} in stock</span>
-                <span className="text-sm text-muted-foreground">• {product.category}</span>
-                {product.qualityGrade && (
-                  <Badge variant="outline" className="text-xs">{product.qualityGrade}</Badge>
-                )}
+                <span className="font-bold text-primary">{formatPrice(price)}</span>
+                <span className="text-sm text-muted-foreground">• {stock} in stock</span>
+                <span className="text-sm text-muted-foreground">• {product.category?.name || 'Uncategorized'}</span>
+                {grade && <Badge variant="outline" className="text-xs">{grade}</Badge>}
               </div>
             </div>
           </div>
@@ -180,7 +220,9 @@ export default function AdminProducts() {
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -188,21 +230,56 @@ export default function AdminProducts() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        short_description,
+        status,
+        is_organic,
+        is_featured,
+        created_at,
+        supplier:suppliers(company_name),
+        category:categories(name),
+        images:product_images(image_url, is_primary),
+        variants:product_variants(
+          stock_quantity,
+          grade,
+          pricing_tiers(price_per_unit)
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } else {
+      setProducts(data || []);
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    fetchProducts().then((data) => {
-      setProducts(data);
-      setIsLoading(false);
-    });
+    fetchProducts();
   }, []);
 
   const stats = {
     total: products.length,
-    live: products.filter((p) => p.status === 'live').length,
-    pending: products.filter((p) => p.status === 'pending').length,
-    draft: products.filter((p) => p.status === 'draft').length,
+    active: products.filter((p) => p.status === 'active').length,
+    pending: products.filter((p) => p.status === 'draft').length,
+    inactive: products.filter((p) => p.status === 'inactive').length,
   };
 
-  const filteredProducts = filter === 'all' ? products : products.filter((p) => p.status === filter);
+  const filteredProducts = products
+    .filter(p => {
+      const matchesFilter = filter === 'all' || p.status === filter;
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.supplier?.company_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
 
   if (isLoading) {
     return (
@@ -228,8 +305,8 @@ export default function AdminProducts() {
           </h1>
           <p className="text-sm text-muted-foreground">Manage products, categories, and quality grades</p>
         </div>
-        <Button className="w-full sm:w-auto">
-          <Package className="mr-2 h-4 w-4" /> Add Product
+        <Button className="w-full sm:w-auto" onClick={() => setAddModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </motion.div>
 
@@ -237,9 +314,9 @@ export default function AdminProducts() {
       <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'Total Products', value: stats.total, icon: Package, color: 'bg-primary' },
-          { label: 'Live', value: stats.live, icon: CheckCircle2, color: 'bg-green-600' },
-          { label: 'Pending Review', value: stats.pending, icon: Clock, color: 'bg-yellow-500' },
-          { label: 'Draft', value: stats.draft, icon: XCircle, color: 'bg-gray-500' },
+          { label: 'Active', value: stats.active, icon: CheckCircle2, color: 'bg-green-600' },
+          { label: 'Draft', value: stats.pending, icon: Clock, color: 'bg-yellow-500' },
+          { label: 'Inactive', value: stats.inactive, icon: XCircle, color: 'bg-gray-500' },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-4">
@@ -264,7 +341,12 @@ export default function AdminProducts() {
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search products..." className="pl-9" />
+                <Input 
+                  placeholder="Search products..." 
+                  className="pl-9" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <div className="flex gap-2">
                 <Select value={filter} onValueChange={setFilter}>
@@ -273,9 +355,9 @@ export default function AdminProducts() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="live">Live</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="icon" className="hidden sm:flex">
@@ -306,18 +388,41 @@ export default function AdminProducts() {
       </motion.div>
 
       {/* Products Grid/List */}
-      <motion.div
-        variants={containerVariants}
-        className={cn(
-          view === 'grid' || isMobile
-            ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4'
-            : 'space-y-3'
-        )}
-      >
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} view={isMobile ? 'grid' : view} />
-        ))}
-      </motion.div>
+      {filteredProducts.length === 0 ? (
+        <div className="text-center py-12">
+          <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-semibold text-lg mb-2">No products found</h3>
+          <p className="text-muted-foreground mb-4">Start by adding your first product</p>
+          <Button onClick={() => setAddModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Add Product
+          </Button>
+        </div>
+      ) : (
+        <motion.div
+          variants={containerVariants}
+          className={cn(
+            view === 'grid' || isMobile
+              ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4'
+              : 'space-y-3'
+          )}
+        >
+          {filteredProducts.map((product) => (
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              view={isMobile ? 'grid' : view} 
+              onRefresh={fetchProducts}
+            />
+          ))}
+        </motion.div>
+      )}
+
+      {/* Add Product Modal */}
+      <AdminAddProductModal 
+        open={addModalOpen} 
+        onOpenChange={setAddModalOpen}
+        onSuccess={fetchProducts}
+      />
     </motion.div>
   );
 }

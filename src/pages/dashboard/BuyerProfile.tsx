@@ -16,7 +16,8 @@ import {
   AlertCircle,
   ArrowLeft,
   Save,
-  Edit3
+  Edit3,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardAccessCard } from "@/components/dashboard/DashboardAccessCard";
 
 // Mock data
 const mockProfile = {
@@ -251,6 +253,13 @@ const BuyerProfile = () => {
                 >
                   <Shield className="h-4 w-4 mr-2" />
                   Security
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="dashboards"
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none pb-3 px-4"
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboards
                 </TabsTrigger>
               </TabsList>
 
@@ -612,6 +621,11 @@ const BuyerProfile = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Dashboards Tab */}
+              <TabsContent value="dashboards" className="mt-0">
+                <DashboardAccessCard />
               </TabsContent>
             </Tabs>
           </div>
