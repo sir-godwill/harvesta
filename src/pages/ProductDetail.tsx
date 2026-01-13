@@ -1,9 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ShoppingCart, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  ShoppingCart, 
+  Loader2,
+  Star,
+  ThumbsUp,
+  MessageSquare,
+  Truck,
+  Shield,
+  Package,
+  MapPin,
+  Clock,
+  CheckCircle,
+} from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 
 // Product Components
@@ -11,10 +33,6 @@ import { ProductHeader } from '@/components/product/ProductHeader';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductPricingSection } from '@/components/product/ProductPricingSection';
 import { ProductActions, ProductActionsMobile } from '@/components/product/ProductActions';
-import { ProductDescription } from '@/components/product/ProductDescription';
-import { ProductAttributes } from '@/components/product/ProductAttributes';
-import { ProductInventoryStatus } from '@/components/product/ProductInventoryStatus';
-import { ProductDeliveryConditions } from '@/components/product/ProductDeliveryConditions';
 import { ProductSellerCard } from '@/components/product/ProductSellerCard';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
 
@@ -46,7 +64,7 @@ const mockProduct: ProductDetails = {
   name: 'Premium Organic Cocoa Beans - Fair Trade Certified Export Quality',
   slug: 'premium-organic-cocoa-beans',
   shortDescription: 'High-quality organic cocoa beans sourced directly from certified farms in Cameroon.',
-  description: '<p>Premium quality organic cocoa beans sourced directly from certified farms in the fertile regions of Cameroon. Our cocoa beans are sun-dried and carefully selected to ensure the highest quality for chocolate production, baking, and confectionery applications.</p><h3>Key Features</h3><ul><li>100% Organic certified</li><li>Fair Trade certified</li><li>Export-ready packaging</li><li>Sun-dried for optimal flavor</li></ul>',
+  description: '<p>Premium quality organic cocoa beans sourced directly from certified farms in the fertile regions of Cameroon. Our cocoa beans are sun-dried and carefully selected to ensure the highest quality for chocolate production, baking, and confectionery applications.</p><h3>Key Features</h3><ul><li>100% Organic certified</li><li>Fair Trade certified</li><li>Export-ready packaging</li><li>Sun-dried for optimal flavor</li></ul><h3>Storage Instructions</h3><p>Store in a cool, dry place away from direct sunlight. Optimal temperature: 15-20°C with humidity below 70%.</p><h3>Farming Tips</h3><p>For best results in chocolate production, ferment beans for 5-7 days before drying. Sun-dry for 7-10 days until moisture content is below 7%.</p>',
   category: { id: '1', name: 'Cocoa & Coffee', slug: 'cocoa-coffee' },
   status: 'active',
   tags: ['Export-Ready', 'Fair Trade', 'Premium Quality'],
@@ -111,7 +129,7 @@ const mockSeller: SellerProfile = {
   companyName: 'Cameroon Cocoa Exports Ltd',
   logoUrl: null,
   bannerUrl: null,
-  description: 'Leading cocoa exporter from Cameroon',
+  description: 'Leading cocoa exporter from Cameroon with over 12 years of experience in agricultural exports.',
   location: { city: 'Douala', region: 'Littoral', country: 'Cameroon' },
   rating: 4.8,
   totalReviews: 342,
@@ -131,6 +149,43 @@ const mockRelated: RelatedProduct[] = [
   { id: '4', name: 'Premium Cassava Flour', image: 'https://images.unsplash.com/photo-1595475207225-428b62bda831?w=300', price: 1500, unit: 'kg', rating: 4.6, soldCount: 45000, isOrganic: false },
 ];
 
+// Mock Reviews
+const mockReviews = [
+  {
+    id: '1',
+    userName: 'Jean Pierre',
+    avatar: null,
+    rating: 5,
+    date: '2025-12-20',
+    comment: 'Excellent quality cocoa beans! The packaging was professional and beans arrived in perfect condition. Will order again.',
+    helpful: 24,
+    images: ['https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=150'],
+    verified: true,
+  },
+  {
+    id: '2',
+    userName: 'Marie Claire',
+    avatar: null,
+    rating: 4,
+    date: '2025-12-15',
+    comment: 'Good product. Delivery was on time and the quality is as described. Minor moisture issue but seller resolved it quickly.',
+    helpful: 12,
+    images: [],
+    verified: true,
+  },
+  {
+    id: '3',
+    userName: 'Emmanuel K.',
+    avatar: null,
+    rating: 5,
+    date: '2025-12-10',
+    comment: 'Best cocoa beans I\'ve purchased online. Premium grade as advertised. Great for chocolate production.',
+    helpful: 18,
+    images: [],
+    verified: true,
+  },
+];
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -139,6 +194,7 @@ export default function ProductDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(100);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [activeTab, setActiveTab] = useState('description');
   
   // Data states - using mock data for now
   const [product] = useState<ProductDetails>(mockProduct);
@@ -149,6 +205,7 @@ export default function ProductDetail() {
   const [conditions] = useState<ProductConditions>(mockConditions);
   const [seller] = useState<SellerProfile>(mockSeller);
   const [relatedProducts] = useState<RelatedProduct[]>(mockRelated);
+  const [reviews] = useState(mockReviews);
 
   useEffect(() => {
     // Simulate loading
@@ -184,6 +241,23 @@ export default function ProductDetail() {
 
   const handleVisitStore = () => {
     navigate(`/supplier/${seller.id}`);
+  };
+
+  const productTabs = [
+    { id: 'description', label: 'Description', icon: Package },
+    { id: 'attributes', label: 'Attributes', icon: CheckCircle },
+    { id: 'reviews', label: `Reviews (${reviews.length})`, icon: Star },
+    { id: 'shipping', label: 'Shipping', icon: Truck },
+    { id: 'warranty', label: 'Warranty', icon: Shield },
+  ];
+
+  // Rating breakdown
+  const ratingBreakdown = {
+    5: 65,
+    4: 20,
+    3: 10,
+    2: 3,
+    1: 2,
   };
 
   if (isLoading) {
@@ -284,37 +358,414 @@ export default function ProductDetail() {
           </div>
         </div>
         
-        {/* Bottom Sections */}
-        <div className="mt-8 space-y-6">
-          <div className="grid lg:grid-cols-2 gap-6">
-            <ProductDescription
-              shortDescription={product.shortDescription}
-              description={product.description}
-            />
-            <ProductAttributes
-              variants={variants}
-              selectedVariant={selectedVariant}
-              onVariantSelect={setSelectedVariant}
-              origin={product.origin}
-              isOrganic={product.isOrganic}
-              harvestDate={product.harvestDate}
-              expiryDate={product.expiryDate}
-              certifications={conditions.certifications}
-            />
-          </div>
-          
-          <div className="grid lg:grid-cols-2 gap-6">
-            <ProductInventoryStatus
-              inventory={inventory}
-              unit={product.unit}
-            />
-            <ProductDeliveryConditions
-              conditions={conditions}
-              unit={product.unit}
-              leadTimeDays={product.leadTimeDays}
-            />
-          </div>
-          
+        {/* Tabbed Content Section */}
+        <div className="mt-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {/* Slidable Tab List for Mobile */}
+            <ScrollArea className="w-full whitespace-nowrap">
+              <TabsList className="inline-flex h-12 w-full justify-start gap-1 bg-muted/50 p-1 lg:w-auto lg:justify-center">
+                {productTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="flex items-center gap-2 px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow"
+                  >
+                    <tab.icon className="h-4 w-4" />
+                    <span>{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
+            <AnimatePresence mode="wait">
+              {/* Description Tab */}
+              <TabsContent value="description" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="h-5 w-5 text-primary" />
+                        Product Description
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-sm max-w-none">
+                        <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                      </div>
+                      
+                      {/* Short Description */}
+                      <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                        <h4 className="font-semibold mb-2">Quick Summary</h4>
+                        <p className="text-muted-foreground">{product.shortDescription}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+
+              {/* Attributes Tab */}
+              <TabsContent value="attributes" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Product Variants */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Product Variants</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {variants.map((variant) => (
+                          <div
+                            key={variant.id}
+                            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                              selectedVariant?.id === variant.id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            onClick={() => setSelectedVariant(variant)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{variant.name}</p>
+                                <p className="text-sm text-muted-foreground">{variant.packaging}</p>
+                              </div>
+                              <Badge variant={variant.isDefault ? "default" : "outline"}>
+                                {variant.grade}
+                              </Badge>
+                            </div>
+                            <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>SKU: {variant.sku}</span>
+                              <span>•</span>
+                              <span>{variant.stockQuantity} in stock</span>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    {/* Specifications */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Specifications</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Origin Country</span>
+                            <span className="font-medium">{product.origin.country}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Region</span>
+                            <span className="font-medium">{product.origin.region}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Harvest Date</span>
+                            <span className="font-medium">{product.harvestDate}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Best Before</span>
+                            <span className="font-medium">{product.expiryDate}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Unit</span>
+                            <span className="font-medium">{product.unit}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Min. Order</span>
+                            <span className="font-medium">{product.moq} {product.unit}</span>
+                          </div>
+                          <div className="flex justify-between py-2">
+                            <span className="text-muted-foreground">Certifications</span>
+                            <div className="flex flex-wrap gap-1 justify-end">
+                              {conditions.certifications.map((cert, i) => (
+                                <Badge key={i} variant="secondary" className="text-xs">{cert}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </motion.div>
+              </TabsContent>
+
+              {/* Reviews Tab */}
+              <TabsContent value="reviews" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="grid lg:grid-cols-12 gap-6">
+                    {/* Rating Summary */}
+                    <div className="lg:col-span-4">
+                      <Card>
+                        <CardContent className="pt-6">
+                          <div className="text-center mb-6">
+                            <div className="text-5xl font-bold text-primary">{seller.rating}</div>
+                            <div className="flex items-center justify-center gap-1 my-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-5 w-5 ${
+                                    star <= Math.round(seller.rating)
+                                      ? 'text-yellow-400 fill-yellow-400'
+                                      : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{seller.totalReviews} reviews</p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {Object.entries(ratingBreakdown).reverse().map(([rating, percentage]) => (
+                              <div key={rating} className="flex items-center gap-2">
+                                <span className="text-sm w-8">{rating}★</span>
+                                <Progress value={percentage} className="flex-1 h-2" />
+                                <span className="text-sm text-muted-foreground w-10">{percentage}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Reviews List */}
+                    <div className="lg:col-span-8">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Customer Reviews</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          {reviews.map((review) => (
+                            <div key={review.id} className="border-b pb-6 last:border-0 last:pb-0">
+                              <div className="flex items-start gap-4">
+                                <Avatar>
+                                  <AvatarFallback>{review.userName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium">{review.userName}</span>
+                                    {review.verified && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                        Verified Purchase
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                          key={star}
+                                          className={`h-4 w-4 ${
+                                            star <= review.rating
+                                              ? 'text-yellow-400 fill-yellow-400'
+                                              : 'text-gray-300'
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-sm text-muted-foreground">{review.date}</span>
+                                  </div>
+                                  <p className="text-sm mb-3">{review.comment}</p>
+                                  
+                                  {review.images.length > 0 && (
+                                    <div className="flex gap-2 mb-3">
+                                      {review.images.map((img, i) => (
+                                        <img
+                                          key={i}
+                                          src={img}
+                                          alt="Review"
+                                          className="w-16 h-16 object-cover rounded-lg"
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+                                  
+                                  <Button variant="ghost" size="sm" className="text-muted-foreground">
+                                    <ThumbsUp className="h-4 w-4 mr-1" />
+                                    Helpful ({review.helpful})
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </motion.div>
+              </TabsContent>
+
+              {/* Shipping Tab */}
+              <TabsContent value="shipping" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Truck className="h-5 w-5 text-primary" />
+                          Delivery Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <p className="font-medium">Lead Time</p>
+                            <p className="text-sm text-muted-foreground">{product.leadTimeDays} days from order confirmation</p>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="flex items-start gap-3">
+                          <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <p className="font-medium">Ships From</p>
+                            <p className="text-sm text-muted-foreground">{product.origin.region}, {product.origin.country}</p>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="flex items-start gap-3">
+                          <Package className="h-5 w-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <p className="font-medium">Packaging</p>
+                            <p className="text-sm text-muted-foreground">Professional export-grade packaging in jute bags</p>
+                          </div>
+                        </div>
+                        {conditions.exportReady && (
+                          <>
+                            <Separator />
+                            <div className="p-3 bg-green-50 rounded-lg">
+                              <div className="flex items-center gap-2 text-green-700">
+                                <CheckCircle className="h-5 w-5" />
+                                <span className="font-medium">Export Ready</span>
+                              </div>
+                              <p className="text-sm text-green-600 mt-1">This product meets international export standards</p>
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Handling & Storage</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <p className="font-medium mb-2">Handling Instructions</p>
+                          <p className="text-sm text-muted-foreground">{conditions.handlingInstructions}</p>
+                        </div>
+                        <Separator />
+                        <div>
+                          <p className="font-medium mb-2">Storage Instructions</p>
+                          <p className="text-sm text-muted-foreground">{conditions.storageInstructions}</p>
+                        </div>
+                        <Separator />
+                        <div>
+                          <p className="font-medium mb-2">Order Limits</p>
+                          <div className="flex gap-4 text-sm">
+                            <div className="p-3 bg-muted rounded-lg flex-1">
+                              <p className="text-muted-foreground">Min. Order</p>
+                              <p className="font-semibold">{conditions.minOrderQuantity} {product.unit}</p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg flex-1">
+                              <p className="text-muted-foreground">Max. Order</p>
+                              <p className="font-semibold">{conditions.maxOrderQuantity} {product.unit}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </motion.div>
+              </TabsContent>
+
+              {/* Warranty Tab */}
+              <TabsContent value="warranty" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-primary" />
+                        Buyer Protection & Warranty
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                          <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
+                          <h4 className="font-semibold text-green-800">Quality Guarantee</h4>
+                          <p className="text-sm text-green-600">Full refund if product quality doesn't match description</p>
+                        </div>
+                        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <Shield className="h-8 w-8 text-blue-600 mb-2" />
+                          <h4 className="font-semibold text-blue-800">Secure Payment</h4>
+                          <p className="text-sm text-blue-600">Protected by Harvestá escrow until delivery confirmed</p>
+                        </div>
+                        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                          <MessageSquare className="h-8 w-8 text-purple-600 mb-2" />
+                          <h4 className="font-semibold text-purple-800">Dispute Resolution</h4>
+                          <p className="text-sm text-purple-600">24/7 support for any order issues</p>
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div>
+                        <h4 className="font-semibold mb-3">Return Policy</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li className="flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                            Returns accepted within 7 days of delivery for quality issues
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                            Seller covers return shipping for defective products
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                            Photo/video evidence required for quality claims
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                            Refunds processed within 3-5 business days
+                          </li>
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            </AnimatePresence>
+          </Tabs>
+        </div>
+        
+        {/* Related Products */}
+        <div className="mt-8">
           <RelatedProducts products={relatedProducts} formatPrice={formatPrice} />
         </div>
       </div>
