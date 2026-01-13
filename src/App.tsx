@@ -47,6 +47,14 @@ import Refunds from "./pages/info/Refunds";
 import BuyerProtection from "./pages/info/BuyerProtection";
 import TrustSafety from "./pages/info/TrustSafety";
 
+// Admin Pages
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminSellers from "./pages/admin/AdminSellers";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -57,46 +65,103 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Layout>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Index />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/help" element={<HelpCenter />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/refunds" element={<Refunds />} />
-              <Route path="/buyer-protection" element={<BuyerProtection />} />
-              <Route path="/trust-safety" element={<TrustSafety />} />
+            <Routes>
+              {/* Admin Routes - Outside main Layout */}
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminDashboard /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/sellers" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminSellers /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/sellers/*" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminSellers /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/products" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminProducts /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/products/*" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminProducts /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/orders" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminOrders /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/orders/*" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminOrders /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/analytics" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminAnalytics /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/analytics/*" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminAnalytics /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/*" element={
+                <ProtectedRoute>
+                  <AdminLayout><AdminDashboard /></AdminLayout>
+                </ProtectedRoute>
+              } />
 
-              {/* Auth Routes (redirect if logged in) */}
-              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-              <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
+              {/* Main Layout Routes */}
+              <Route path="/*" element={
+                <Layout>
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Index />} />
+                    <Route path="/product/:id" element={<ProductDetail />} />
+                    <Route path="/search" element={<Search />} />
+                    <Route path="/supplier/:supplierId" element={<SupplierProfile />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/help" element={<HelpCenter />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/refunds" element={<Refunds />} />
+                    <Route path="/buyer-protection" element={<BuyerProtection />} />
+                    <Route path="/trust-safety" element={<TrustSafety />} />
 
-              {/* Protected Routes (require authentication) */}
-              <Route path="/dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><BuyerProfile /></ProtectedRoute>} />
-              <Route path="/orders" element={<ProtectedRoute><OrderList /></ProtectedRoute>} />
-              <Route path="/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
-              <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
-              <Route path="/saved-products" element={<ProtectedRoute><SavedProducts /></ProtectedRoute>} />
-              <Route path="/saved-suppliers" element={<ProtectedRoute><SavedSuppliers /></ProtectedRoute>} />
-              <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-              <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-              <Route path="/rfq" element={<ProtectedRoute><RFQ /></ProtectedRoute>} />
-              <Route path="/track/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+                    {/* Auth Routes (redirect if logged in) */}
+                    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                    <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
+                    {/* Protected Routes (require authentication) */}
+                    <Route path="/dashboard" element={<ProtectedRoute><BuyerDashboard /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><BuyerProfile /></ProtectedRoute>} />
+                    <Route path="/orders" element={<ProtectedRoute><OrderList /></ProtectedRoute>} />
+                    <Route path="/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+                    <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+                    <Route path="/saved-products" element={<ProtectedRoute><SavedProducts /></ProtectedRoute>} />
+                    <Route path="/saved-suppliers" element={<ProtectedRoute><SavedSuppliers /></ProtectedRoute>} />
+                    <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+                    <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                    <Route path="/rfq" element={<ProtectedRoute><RFQ /></ProtectedRoute>} />
+                    <Route path="/track/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Layout>
+              } />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </AppProvider>
