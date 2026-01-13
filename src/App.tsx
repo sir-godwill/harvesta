@@ -60,7 +60,17 @@ import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminMarketing from "./pages/admin/AdminMarketing";
 import AdminSettings from "./pages/admin/AdminSettings";
-
+import AdminCompliance from "./pages/admin/AdminCompliance";
+// Admin Sub-pages
+import SellerApplications from "./pages/admin/sellers/SellerApplications";
+import SellerCommissions from "./pages/admin/sellers/SellerCommissions";
+import SellerVerification from "./pages/admin/sellers/SellerVerification";
+import AdminCarriers from "./pages/admin/logistics/AdminCarriers";
+import AdminZones from "./pages/admin/logistics/AdminZones";
+import AdminCategories from "./pages/admin/products/AdminCategories";
+import AdminPendingProducts from "./pages/admin/products/AdminPendingProducts";
+import AdminPendingOrders from "./pages/admin/orders/AdminPendingOrders";
+import AdminReturns from "./pages/admin/orders/AdminReturns";
 // Logistics Pages
 import { LogisticsLayout } from "@/components/logistics/LogisticsLayout";
 import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
