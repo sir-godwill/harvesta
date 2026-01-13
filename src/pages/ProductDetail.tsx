@@ -1,375 +1,333 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Star, ShieldCheck, Truck, CreditCard, Check, Heart, Share2, MessageSquare, ShoppingCart, ChevronRight, Store } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, ShoppingCart, Loader2 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import Header from '@/components/layout/Header';
-import MobileNav from '@/components/layout/MobileNav';
-import Footer from '@/components/layout/Footer';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
-// Mock product data
-const productData = {
+// Product Components
+import { ProductHeader } from '@/components/product/ProductHeader';
+import { ProductGallery } from '@/components/product/ProductGallery';
+import { ProductPricingSection } from '@/components/product/ProductPricingSection';
+import { ProductActions, ProductActionsMobile } from '@/components/product/ProductActions';
+import { ProductDescription } from '@/components/product/ProductDescription';
+import { ProductAttributes } from '@/components/product/ProductAttributes';
+import { ProductInventoryStatus } from '@/components/product/ProductInventoryStatus';
+import { ProductDeliveryConditions } from '@/components/product/ProductDeliveryConditions';
+import { ProductSellerCard } from '@/components/product/ProductSellerCard';
+import { RelatedProducts } from '@/components/product/RelatedProducts';
+
+// API
+import {
+  fetchProductById,
+  fetchProductMedia,
+  fetchProductVariants,
+  fetchProductPricing,
+  fetchInventoryLevels,
+  fetchPurchaseConditions,
+  fetchSellerProfile,
+  fetchRelatedProducts,
+  incrementProductView,
+  type ProductDetails,
+  type ProductMedia,
+  type ProductVariant,
+  type ProductPricing,
+  type ProductInventory,
+  type ProductConditions,
+  type SellerProfile,
+  type RelatedProduct,
+} from '@/lib/productApi';
+import { supabase } from '@/integrations/supabase/client';
+
+// Mock data for development
+const mockProduct: ProductDetails = {
   id: '1',
   name: 'Premium Organic Cocoa Beans - Fair Trade Certified Export Quality',
-  images: [
-    'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=600&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=600&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=600&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1610450949065-1f2841536c88?w=600&h=600&fit=crop',
-  ],
-  price: 15000,
-  priceMax: 25000,
-  originalPrice: 30000,
-  moq: 100,
+  slug: 'premium-organic-cocoa-beans',
+  shortDescription: 'High-quality organic cocoa beans sourced directly from certified farms in Cameroon.',
+  description: '<p>Premium quality organic cocoa beans sourced directly from certified farms in the fertile regions of Cameroon. Our cocoa beans are sun-dried and carefully selected to ensure the highest quality for chocolate production, baking, and confectionery applications.</p><h3>Key Features</h3><ul><li>100% Organic certified</li><li>Fair Trade certified</li><li>Export-ready packaging</li><li>Sun-dried for optimal flavor</li></ul>',
+  category: { id: '1', name: 'Cocoa & Coffee', slug: 'cocoa-coffee' },
+  status: 'active',
+  tags: ['Export-Ready', 'Fair Trade', 'Premium Quality'],
+  isOrganic: true,
+  isFeatured: true,
   unit: 'kg',
-  sold: 12500,
-  rating: 4.8,
-  reviews: 342,
-  verified: true,
-  goldSupplier: true,
-  supplier: {
-    name: 'Cameroon Cocoa Exports Ltd',
-    years: 12,
-    responseRate: 98,
-    onTimeDelivery: 95,
-    repurchaseRate: 62,
-    serviceScore: 4.5,
-  },
-  pricingTiers: [
-    { min: 100, max: 499, price: 25000 },
-    { min: 500, max: 999, price: 20000 },
-    { min: 1000, max: null, price: 15000 },
-  ],
-  attributes: [
-    { label: 'Supply Category', value: 'Spot Goods' },
-    { label: 'Brand', value: 'Cameroon Premium' },
-    { label: 'Item Number', value: 'CCE-2026-001' },
-    { label: 'Material', value: '100% Organic Cocoa' },
-    { label: 'Origin', value: 'Cameroon' },
-    { label: 'Certification', value: 'Fair Trade, Organic' },
-  ],
-  description: 'Premium quality organic cocoa beans sourced directly from certified farms in the fertile regions of Cameroon. Our cocoa beans are sun-dried and carefully selected to ensure the highest quality for chocolate production, baking, and confectionery applications.',
+  moq: 100,
+  maxOrderQuantity: 10000,
+  origin: { country: 'Cameroon', region: 'South West' },
+  harvestDate: '2025-12-15',
+  expiryDate: '2026-12-15',
+  leadTimeDays: 3,
+  viewCount: 12500,
+  orderCount: 342,
 };
 
-const relatedProducts = [
-  {
-    id: '2',
-    name: 'Fresh Arabica Coffee Beans',
-    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=300&h=300&fit=crop',
-    price: 8500,
-    sold: 8700,
-  },
-  {
-    id: '3',
-    name: 'Organic Palm Oil',
-    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&h=300&fit=crop',
-    price: 3500,
-    sold: 15200,
-  },
-  {
-    id: '4',
-    name: 'Premium Cassava Flour',
-    image: 'https://images.unsplash.com/photo-1595475207225-428b62bda831?w=300&h=300&fit=crop',
-    price: 1500,
-    sold: 45000,
-  },
+const mockMedia: ProductMedia = {
+  images: [
+    { id: '1', url: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=600', altText: 'Cocoa beans', isPrimary: true, sortOrder: 0 },
+    { id: '2', url: 'https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=600', altText: 'Cocoa processing', isPrimary: false, sortOrder: 1 },
+    { id: '3', url: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=600', altText: 'Cocoa farm', isPrimary: false, sortOrder: 2 },
+  ],
+};
+
+const mockVariants: ProductVariant[] = [
+  { id: '1', name: 'Grade A - Premium', sku: 'COC-A-001', grade: 'Premium', packaging: '50kg Jute Bags', weight: 50, weightUnit: 'kg', stockQuantity: 5000, lowStockThreshold: 500, isDefault: true },
+  { id: '2', name: 'Grade B - Standard', sku: 'COC-B-001', grade: 'Standard', packaging: '25kg Bags', weight: 25, weightUnit: 'kg', stockQuantity: 3000, lowStockThreshold: 300, isDefault: false },
+];
+
+const mockPricing: ProductPricing = {
+  domesticPrice: 25000,
+  internationalPrice: 42,
+  currency: 'XAF',
+  tiers: [
+    { id: '1', minQuantity: 100, maxQuantity: 499, pricePerUnit: 25000, discountPercentage: null },
+    { id: '2', minQuantity: 500, maxQuantity: 999, pricePerUnit: 22000, discountPercentage: 12 },
+    { id: '3', minQuantity: 1000, maxQuantity: null, pricePerUnit: 18000, discountPercentage: 28 },
+  ],
+};
+
+const mockInventory: ProductInventory = {
+  totalStock: 5000,
+  reservedStock: 500,
+  availableStock: 4500,
+  lowStockThreshold: 500,
+  isLowStock: false,
+  isOutOfStock: false,
+};
+
+const mockConditions: ProductConditions = {
+  minOrderQuantity: 100,
+  maxOrderQuantity: 10000,
+  handlingInstructions: 'Store in cool, dry place. Keep away from moisture.',
+  storageInstructions: 'Optimal storage temperature: 15-20°C with humidity below 70%.',
+  certifications: ['Organic Certified', 'Fair Trade', 'Export Grade'],
+  exportReady: true,
+  buyerRestrictions: null,
+};
+
+const mockSeller: SellerProfile = {
+  id: 'seller-1',
+  companyName: 'Cameroon Cocoa Exports Ltd',
+  logoUrl: null,
+  bannerUrl: null,
+  description: 'Leading cocoa exporter from Cameroon',
+  location: { city: 'Douala', region: 'Littoral', country: 'Cameroon' },
+  rating: 4.8,
+  totalReviews: 342,
+  totalOrders: 1250,
+  totalProducts: 24,
+  verificationStatus: 'verified',
+  responseRate: 98,
+  responseTimeHours: 2,
+  isActive: true,
+  isFeatured: true,
+  yearsInOperation: 12,
+};
+
+const mockRelated: RelatedProduct[] = [
+  { id: '2', name: 'Fresh Arabica Coffee Beans', image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=300', price: 8500, unit: 'kg', rating: 4.7, soldCount: 8700, isOrganic: false },
+  { id: '3', name: 'Organic Palm Oil', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300', price: 3500, unit: 'liter', rating: 4.5, soldCount: 15200, isOrganic: true },
+  { id: '4', name: 'Premium Cassava Flour', image: 'https://images.unsplash.com/photo-1595475207225-428b62bda831?w=300', price: 1500, unit: 'kg', rating: 4.6, soldCount: 45000, isOrganic: false },
 ];
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const { formatPrice, t } = useApp();
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [activeTab, setActiveTab] = useState<'product' | 'details' | 'reviews'>('product');
+  const navigate = useNavigate();
+  const { formatPrice } = useApp();
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [quantity, setQuantity] = useState(100);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  
+  // Data states - using mock data for now
+  const [product] = useState<ProductDetails>(mockProduct);
+  const [media] = useState<ProductMedia>(mockMedia);
+  const [variants] = useState<ProductVariant[]>(mockVariants);
+  const [pricing] = useState<ProductPricing>(mockPricing);
+  const [inventory] = useState<ProductInventory>(mockInventory);
+  const [conditions] = useState<ProductConditions>(mockConditions);
+  const [seller] = useState<SellerProfile>(mockSeller);
+  const [relatedProducts] = useState<RelatedProduct[]>(mockRelated);
 
-  const product = productData;
+  useEffect(() => {
+    // Simulate loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setSelectedVariant(variants.find(v => v.isDefault) || variants[0] || null);
+    }, 500);
+    
+    // Track view
+    if (id) {
+      incrementProductView(id);
+    }
+    
+    return () => clearTimeout(timer);
+  }, [id, variants]);
+
+  const handleAddToCart = () => {
+    if (quantity < product.moq) {
+      toast.error(`Minimum order quantity is ${product.moq} ${product.unit}`);
+      return;
+    }
+    toast.success(`Added ${quantity} ${product.unit} to cart`);
+  };
+
+  const handleRequestQuote = () => {
+    navigate('/rfq', { state: { productId: id, productName: product.name, quantity } });
+  };
+
+  const handleContactSeller = () => {
+    toast.info('Opening chat with seller...');
+    navigate('/messages', { state: { sellerId: seller.id } });
+  };
+
+  const handleVisitStore = () => {
+    navigate(`/supplier/${seller.id}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 space-y-6">
+          <Skeleton className="h-8 w-64" />
+          <div className="grid lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-5">
+              <Skeleton className="aspect-square rounded-xl" />
+            </div>
+            <div className="lg:col-span-7 space-y-4">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-48 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-background pb-24 lg:pb-8">
+      {/* Breadcrumb - Desktop */}
+      <div className="hidden lg:block bg-card border-b border-border">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link to="/" className="hover:text-primary">Home</Link>
+            <ChevronRight className="h-4 w-4" />
+            <Link to={`/search?category=${product.category.slug}`} className="hover:text-primary">{product.category.name}</Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-foreground truncate max-w-xs">{product.name}</span>
+          </div>
+        </div>
+      </div>
       
-      <main className="pb-24 lg:pb-8">
-        {/* Breadcrumb - Desktop */}
-        <div className="hidden lg:block bg-card border-b border-border">
-          <div className="container mx-auto px-6 py-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link to="/" className="hover:text-primary">Home</Link>
-              <ChevronRight className="h-4 w-4" />
-              <span>Fresh Produce</span>
-              <ChevronRight className="h-4 w-4" />
-              <span className="text-foreground">Cocoa Beans</span>
-            </div>
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-40">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1 mx-4 text-center">
+          <span className="text-sm font-medium truncate">{product.category.name}</span>
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/cart')}>
+          <ShoppingCart className="h-5 w-5" />
+        </Button>
+      </div>
+
+      <div className="container mx-auto px-4 lg:px-6 py-4 lg:py-8">
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
+          {/* Left Column - Gallery */}
+          <div className="lg:col-span-5">
+            <ProductGallery images={media.images} productName={product.name} />
+          </div>
+          
+          {/* Right Column - Product Info */}
+          <div className="lg:col-span-7 space-y-6">
+            <ProductHeader
+              name={product.name}
+              category={product.category}
+              status={product.status}
+              tags={product.tags}
+              isOrganic={product.isOrganic}
+              isFeatured={product.isFeatured}
+              rating={seller.rating}
+              reviewCount={seller.totalReviews}
+              viewCount={product.viewCount}
+              orderCount={product.orderCount}
+            />
+            
+            <ProductPricingSection
+              pricing={pricing}
+              unit={product.unit}
+              moq={product.moq}
+              maxOrderQuantity={product.maxOrderQuantity}
+              stockAvailable={inventory.availableStock}
+              quantity={quantity}
+              onQuantityChange={setQuantity}
+              formatPrice={formatPrice}
+            />
+            
+            <ProductActions
+              productId={product.id}
+              productName={product.name}
+              isOutOfStock={inventory.isOutOfStock}
+              isBelowMoq={quantity < product.moq}
+              moq={product.moq}
+              unit={product.unit}
+              quantity={quantity}
+              onAddToCart={handleAddToCart}
+              onRequestQuote={handleRequestQuote}
+              onContactSeller={handleContactSeller}
+            />
+            
+            <ProductSellerCard seller={seller} />
           </div>
         </div>
         
-        {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-40">
-          <Link to="/" className="p-2 -ml-2">
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-          <div className="flex-1 mx-4">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full bg-muted rounded-full px-4 py-2 text-sm"
+        {/* Bottom Sections */}
+        <div className="mt-8 space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <ProductDescription
+              shortDescription={product.shortDescription}
+              description={product.description}
+            />
+            <ProductAttributes
+              variants={variants}
+              selectedVariant={selectedVariant}
+              onVariantSelect={setSelectedVariant}
+              origin={product.origin}
+              isOrganic={product.isOrganic}
+              harvestDate={product.harvestDate}
+              expiryDate={product.expiryDate}
+              certifications={conditions.certifications}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <ShoppingCart className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Mobile Tabs */}
-        <div className="lg:hidden flex border-b border-border bg-card sticky top-14 z-30">
-          {(['product', 'details', 'reviews'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                activeTab === tab 
-                  ? 'text-foreground border-b-2 border-primary' 
-                  : 'text-muted-foreground'
-              }`}
-            >
-              {tab === 'product' ? 'Product' : tab === 'details' ? 'Details' : 'Reviews'}
-            </button>
-          ))}
-        </div>
-        
-        <div className="container mx-auto px-4 lg:px-6 py-4 lg:py-8">
-          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* Image Gallery */}
-            <div className="lg:col-span-5">
-              <div className="space-y-3">
-                {/* Main Image */}
-                <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
-                  <img
-                    src={product.images[selectedImage]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge className="bg-black/60 text-white text-xs">
-                      Image {selectedImage + 1}/{product.images.length}
-                    </Badge>
-                  </div>
-                </div>
-                
-                {/* Thumbnails */}
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                  {product.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                        selectedImage === index ? 'border-primary' : 'border-transparent'
-                      }`}
-                    >
-                      <img src={image} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            {/* Product Info */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Title & Badges */}
-              <div>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  {product.verified && (
-                    <Badge className="bg-success/10 text-success text-xs">
-                      <ShieldCheck className="h-3 w-3 mr-1" />
-                      {t('product.verified')}
-                    </Badge>
-                  )}
-                  {product.goldSupplier && (
-                    <Badge className="bg-warning/10 text-warning text-xs">
-                      {t('product.goldSupplier')}
-                    </Badge>
-                  )}
-                </div>
-                <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
-                  {product.name}
-                </h1>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-warning text-warning" />
-                    <span className="font-medium text-foreground">{product.rating}</span>
-                    <span>({product.reviews} reviews)</span>
-                  </div>
-                  <span>{product.sold.toLocaleString()}+ sold</span>
-                </div>
-              </div>
-              
-              {/* Pricing */}
-              <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 lg:p-6">
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-sm text-muted-foreground">Price:</span>
-                  <span className="price-primary text-2xl lg:text-3xl">
-                    {formatPrice(product.price)}
-                  </span>
-                  <span className="text-muted-foreground">~</span>
-                  <span className="price-primary text-2xl lg:text-3xl">
-                    {formatPrice(product.priceMax)}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t('product.moq')}: {product.moq} {product.unit}
-                </p>
-                
-                {/* Pricing Tiers */}
-                <div className="grid grid-cols-3 gap-2">
-                  {product.pricingTiers.map((tier, index) => (
-                    <div key={index} className="bg-white rounded-lg p-3 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {tier.min}{tier.max ? `-${tier.max}` : '+'} {product.unit}
-                      </p>
-                      <p className="font-bold text-primary">{formatPrice(tier.price)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Services */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <Check className="h-4 w-4 text-success" />
-                  <span>Free Return Shipping • 7-day no-reason return</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <CreditCard className="h-4 w-4 text-primary" />
-                  <span>E-wallet • WorldFirst • Credit Card</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Truck className="h-4 w-4 text-info" />
-                  <span>Ships within 48 hours • Douala, Cameroon</span>
-                </div>
-              </div>
-              
-              {/* Action Buttons - Desktop */}
-              <div className="hidden lg:flex gap-3">
-                <Button size="lg" className="flex-1 bg-gradient-primary hover:opacity-90 gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  {t('product.contactSupplier')}
-                </Button>
-                <Button size="lg" variant="outline" className="flex-1 border-primary text-primary hover:bg-primary hover:text-primary-foreground gap-2">
-                  <ShoppingCart className="h-5 w-5" />
-                  {t('product.addToCart')}
-                </Button>
-                <Button size="icon" variant="outline" className="h-12 w-12">
-                  <Heart className="h-5 w-5" />
-                </Button>
-                <Button size="icon" variant="outline" className="h-12 w-12">
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              {/* Supplier Card */}
-              <div className="bg-card rounded-xl border border-border p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Store className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-foreground">{product.supplier.name}</h3>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Badge className="bg-primary/10 text-primary text-[10px] px-1.5 py-0">
-                          Premium
-                        </Badge>
-                        <span>{product.supplier.years} years</span>
-                      </div>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">Visit Store</Button>
-                </div>
-                
-                <div className="grid grid-cols-4 gap-2 text-center">
-                  <div>
-                    <p className="font-semibold text-foreground">{product.supplier.repurchaseRate}%</p>
-                    <p className="text-[10px] text-muted-foreground">Repurchase<br/>Rate</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{product.supplier.serviceScore}</p>
-                    <p className="text-[10px] text-muted-foreground">Service<br/>Score</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{product.supplier.onTimeDelivery}%</p>
-                    <p className="text-[10px] text-muted-foreground">On-time<br/>Delivery</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{product.supplier.responseRate}%</p>
-                    <p className="text-[10px] text-muted-foreground">Response<br/>Rate</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          
+          <div className="grid lg:grid-cols-2 gap-6">
+            <ProductInventoryStatus
+              inventory={inventory}
+              unit={product.unit}
+            />
+            <ProductDeliveryConditions
+              conditions={conditions}
+              unit={product.unit}
+              leadTimeDays={product.leadTimeDays}
+            />
           </div>
           
-          {/* Product Attributes */}
-          <div className="mt-8 bg-card rounded-xl border border-border p-4 lg:p-6">
-            <h2 className="font-bold text-lg text-foreground mb-4">Product Attributes</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {product.attributes.map((attr, index) => (
-                <div key={index} className="flex gap-2">
-                  <span className="text-sm text-muted-foreground">{attr.label}:</span>
-                  <span className="text-sm font-medium text-foreground">{attr.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Related Products */}
-          <div className="mt-8">
-            <h2 className="font-bold text-lg text-foreground mb-4">Related Products</h2>
-            <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
-              {relatedProducts.map((item) => (
-                <Link key={item.id} to={`/product/${item.id}`} className="group">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-2">
-                    <img 
-                      src={item.image} 
-                      alt={item.name}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  </div>
-                  <p className="text-sm text-foreground line-clamp-2 mb-1">{item.name}</p>
-                  <p className="text-primary font-medium text-sm">{formatPrice(item.price)}</p>
-                  <p className="text-[10px] text-muted-foreground">{item.sold.toLocaleString()}+ sold</p>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <RelatedProducts products={relatedProducts} formatPrice={formatPrice} />
         </div>
-      </main>
+      </div>
       
       {/* Mobile Bottom Actions */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-3 flex items-center gap-2 z-50">
-        <Button variant="ghost" size="icon" className="shrink-0">
-          <Store className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="shrink-0">
-          <MessageSquare className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="shrink-0 relative">
-          <Heart className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-muted text-muted-foreground text-[10px] rounded-full flex items-center justify-center">
-            80+
-          </span>
-        </Button>
-        <Button variant="outline" className="flex-1 border-primary text-primary">
-          {t('product.addToCart')}
-        </Button>
-        <Button className="flex-1 bg-gradient-primary">
-          {t('product.orderNow')}
-        </Button>
-      </div>
-      
-      <div className="hidden lg:block">
-        <Footer />
-      </div>
+      <ProductActionsMobile
+        isOutOfStock={inventory.isOutOfStock}
+        isBelowMoq={quantity < product.moq}
+        onAddToCart={handleAddToCart}
+        onRequestQuote={handleRequestQuote}
+        onContactSeller={handleContactSeller}
+        onVisitStore={handleVisitStore}
+      />
     </div>
   );
 }
