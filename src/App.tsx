@@ -54,7 +54,12 @@ import AdminSellers from "./pages/admin/AdminSellers";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
-
+import AdminLogistics from "./pages/admin/AdminLogistics";
+import AdminBuyers from "./pages/admin/AdminBuyers";
+import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminMarketing from "./pages/admin/AdminMarketing";
+import AdminSettings from "./pages/admin/AdminSettings";
 const queryClient = new QueryClient();
 
 const App = () => (
