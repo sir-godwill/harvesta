@@ -18,6 +18,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import SellerRegister from "./pages/seller/SellerRegister";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 
 // Dashboard Pages
@@ -217,6 +218,7 @@ const App = () => (
                     {/* Auth Routes (redirect if logged in) */}
                     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                     <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                    <Route path="/register/seller" element={<PublicRoute><SellerRegister /></PublicRoute>} />
                     <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
