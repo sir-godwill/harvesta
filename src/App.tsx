@@ -73,6 +73,7 @@ import AdminCategories from "./pages/admin/products/AdminCategories";
 import AdminPendingProducts from "./pages/admin/products/AdminPendingProducts";
 import AdminPendingOrders from "./pages/admin/orders/AdminPendingOrders";
 import AdminReturns from "./pages/admin/orders/AdminReturns";
+import AdminProductAdd from "./pages/admin/AdminProductAdd";
 
 // Logistics Pages
 import { LogisticsLayout } from "@/components/logistics/LogisticsLayout";
@@ -134,6 +135,8 @@ const App = () => (
               <Route path="/admin/sellers/commissions" element={<ProtectedRoute><AdminLayout><SellerCommissions /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/sellers/verification" element={<ProtectedRoute><AdminLayout><SellerVerification /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/products" element={<ProtectedRoute><AdminLayout><AdminProducts /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/products/add" element={<ProtectedRoute><AdminLayout><AdminProductAdd /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/products/edit/:id" element={<ProtectedRoute><AdminLayout><AdminProductAdd /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/products/categories" element={<ProtectedRoute><AdminLayout><AdminCategories /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/products/pending" element={<ProtectedRoute><AdminLayout><AdminPendingProducts /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/orders" element={<ProtectedRoute><AdminLayout><AdminOrders /></AdminLayout></ProtectedRoute>} />
