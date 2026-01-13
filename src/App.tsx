@@ -89,6 +89,7 @@ import LogisticsSettings from "./pages/logistics/LogisticsSettings";
 import { SellerLayout } from "@/components/seller/SellerLayout";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
+import SellerProductAdd from "./pages/seller/SellerProductAdd";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
 import SellerLogistics from "./pages/seller/SellerLogistics";
@@ -183,6 +184,7 @@ const App = () => (
               {/* Seller Routes */}
               <Route path="/seller" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
               <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
+              <Route path="/seller/products/add" element={<ProtectedRoute><SellerProductAdd /></ProtectedRoute>} />
               <Route path="/seller/orders" element={<ProtectedRoute><SellerOrders /></ProtectedRoute>} />
               <Route path="/seller/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
               <Route path="/seller/logistics" element={<ProtectedRoute><SellerLogistics /></ProtectedRoute>} />
