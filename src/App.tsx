@@ -85,6 +85,22 @@ import LogisticsCalculator from "./pages/logistics/LogisticsCalculator";
 import LogisticsIntegrations from "./pages/logistics/LogisticsIntegrations";
 import LogisticsSettings from "./pages/logistics/LogisticsSettings";
 
+// Seller Pages
+import { SellerLayout } from "@/components/seller/SellerLayout";
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerProducts from "./pages/seller/SellerProducts";
+import SellerOrders from "./pages/seller/SellerOrders";
+import SellerAnalytics from "./pages/seller/SellerAnalytics";
+import SellerLogistics from "./pages/seller/SellerLogistics";
+import SellerCarriers from "./pages/seller/SellerCarriers";
+import SellerMessages from "./pages/seller/SellerMessages";
+import SellerRFQs from "./pages/seller/SellerRFQs";
+import SellerSettings from "./pages/seller/SellerSettings";
+
+// Affiliate Pages
+import AffiliateDashboard from "./pages/affiliate/AffiliateDashboard";
+import AffiliateOnboarding from "./pages/affiliate/AffiliateOnboarding";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -164,7 +180,22 @@ const App = () => (
               <Route path="/logistics/settings" element={<ProtectedRoute><LogisticsSettings /></ProtectedRoute>} />
               <Route path="/logistics/*" element={<ProtectedRoute><LogisticsDashboard /></ProtectedRoute>} />
 
-              {/* Main Layout Routes */}
+              {/* Seller Routes */}
+              <Route path="/seller" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
+              <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
+              <Route path="/seller/orders" element={<ProtectedRoute><SellerOrders /></ProtectedRoute>} />
+              <Route path="/seller/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
+              <Route path="/seller/logistics" element={<ProtectedRoute><SellerLogistics /></ProtectedRoute>} />
+              <Route path="/seller/carriers" element={<ProtectedRoute><SellerCarriers /></ProtectedRoute>} />
+              <Route path="/seller/messages" element={<ProtectedRoute><SellerMessages /></ProtectedRoute>} />
+              <Route path="/seller/rfqs" element={<ProtectedRoute><SellerRFQs /></ProtectedRoute>} />
+              <Route path="/seller/settings" element={<ProtectedRoute><SellerSettings /></ProtectedRoute>} />
+              <Route path="/seller/*" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
+
+              {/* Affiliate Routes */}
+              <Route path="/affiliate" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+              <Route path="/affiliate/onboarding" element={<ProtectedRoute><AffiliateOnboarding /></ProtectedRoute>} />
+              <Route path="/affiliate/*" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
               <Route path="/*" element={
                 <Layout>
                   <Routes>
