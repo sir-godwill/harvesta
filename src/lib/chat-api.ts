@@ -243,36 +243,42 @@ export async function createConversation(participants: string[], context?: ChatC
   return mockConversations[0];
 }
 
-export async function fetchChatContext(conversationId: string): Promise<ChatContext | null> {
+export async function fetchChatContext(context: ChatContext): Promise<Record<string, any> | null> {
   await delay(200);
-  const conversation = mockConversations.find(c => c.id === conversationId);
-  return conversation?.context || null;
+  // Mock data based on context type
+  if (context.type === 'product') {
+    return { name: 'Organic Cocoa Beans', rating: 4.8, price: 850, currency: 'XAF', unit: 'kg', image: '/placeholder.svg' };
+  }
+  if (context.type === 'order') {
+    return { orderNumber: 'ORD-4521', status: 'in-transit', currency: 'XAF', totalAmount: 425000 };
+  }
+  if (context.type === 'rfq') {
+    return { title: 'Organic Cocoa Request', status: 'open', quantity: 2000, unit: 'kg' };
+  }
+  if (context.type === 'delivery') {
+    return { trackingNumber: 'HRV-2024-001234', carrier: 'TransAfrica Logistics', deliveryLocation: 'Douala, Cameroon' };
+  }
+  return null;
 }
 
-export async function moderateChat(conversationId: string, action: 'freeze' | 'unfreeze' | 'warn'): Promise<{ success: boolean }> {
+export async function moderateChat(conversationId: string, action: 'freeze' | 'unfreeze' | 'warn' | 'mute-user' | 'inject-message', options?: { userId?: string; message?: string }): Promise<{ success: boolean }> {
   await delay(300);
-  console.log('[API] Moderating chat:', conversationId, action);
+  console.log('[API] Moderating chat:', conversationId, action, options);
   return { success: true };
 }
 
-export async function joinChatAsAdmin(conversationId: string): Promise<{ success: boolean }> {
+export async function joinChatAsAdmin(conversationId: string, visible?: boolean): Promise<{ success: boolean }> {
   await delay(200);
-  console.log('[API] Admin joining chat:', conversationId);
+  console.log('[API] Admin joining chat:', conversationId, 'visible:', visible);
   return { success: true };
 }
 
-export async function sendOffer(conversationId: string, offer: Omit<Offer, 'id' | 'status'>): Promise<Message> {
+export async function sendOffer(conversationId: string, offer: Omit<Offer, 'id' | 'status'>): Promise<Offer> {
   await delay(400);
-  const newMessage: Message = {
-    id: `msg_${Date.now()}`,
-    conversationId,
-    senderId: 'current-user',
-    senderRole: 'seller',
-    type: 'offer',
-    content: `Offer: ${offer.quantity} ${offer.unit} of ${offer.productName} at ${offer.pricePerUnit} ${offer.currency}/${offer.unit}`,
-    metadata: { offer },
-    status: 'sent',
-    createdAt: new Date(),
+  const newOffer: Offer = {
+    id: `offer_${Date.now()}`,
+    ...offer,
+    status: 'pending',
   };
-  return newMessage;
+  return newOffer;
 }
