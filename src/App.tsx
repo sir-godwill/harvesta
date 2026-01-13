@@ -60,6 +60,15 @@ import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminMarketing from "./pages/admin/AdminMarketing";
 import AdminSettings from "./pages/admin/AdminSettings";
+
+// Logistics Pages
+import { LogisticsLayout } from "@/components/logistics/LogisticsLayout";
+import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
+import LogisticsShipments from "./pages/logistics/LogisticsShipments";
+import LogisticsTracking from "./pages/logistics/LogisticsTracking";
+import LogisticsPartners from "./pages/logistics/LogisticsPartners";
+import LogisticsReports from "./pages/logistics/LogisticsReports";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -117,11 +126,21 @@ const App = () => (
                   <AdminLayout><AdminAnalytics /></AdminLayout>
                 </ProtectedRoute>
               } />
-              <Route path="/admin/*" element={
-                <ProtectedRoute>
-                  <AdminLayout><AdminDashboard /></AdminLayout>
-                </ProtectedRoute>
-              } />
+              <Route path="/admin/buyers" element={<ProtectedRoute><AdminLayout><AdminBuyers /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/disputes" element={<ProtectedRoute><AdminLayout><AdminDisputes /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/payments" element={<ProtectedRoute><AdminLayout><AdminPayments /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/marketing" element={<ProtectedRoute><AdminLayout><AdminMarketing /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout><AdminSettings /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/logistics" element={<ProtectedRoute><AdminLayout><AdminLogistics /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/*" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
+
+              {/* Logistics Routes */}
+              <Route path="/logistics" element={<ProtectedRoute><LogisticsLayout><LogisticsDashboard /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/shipments" element={<ProtectedRoute><LogisticsLayout><LogisticsShipments /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/tracking" element={<ProtectedRoute><LogisticsLayout><LogisticsTracking /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/partners" element={<ProtectedRoute><LogisticsLayout><LogisticsPartners /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/reports" element={<ProtectedRoute><LogisticsLayout><LogisticsReports /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/*" element={<ProtectedRoute><LogisticsLayout><LogisticsDashboard /></LogisticsLayout></ProtectedRoute>} />
 
               {/* Main Layout Routes */}
               <Route path="/*" element={
