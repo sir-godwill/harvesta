@@ -62,19 +62,19 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
           
           {/* Title */}
-          <h3 className="text-[10px] sm:text-sm font-medium text-foreground line-clamp-2 mb-1 sm:mb-2 min-h-[1.75rem] sm:min-h-[2.5rem] leading-tight">
+          <h3 className="text-xs sm:text-sm font-semibold text-foreground line-clamp-2 mb-1 sm:mb-2 min-h-[2rem] sm:min-h-[2.5rem] leading-tight">
             {product.name}
           </h3>
           
-          {/* Price */}
+          {/* Price - Show range if priceMax exists, or discounted prices */}
           <div className="flex items-baseline gap-0.5 mb-0.5 flex-wrap">
-            <span className="price-primary text-xs sm:text-lg font-bold">
+            <span className="price-primary text-sm sm:text-lg font-bold">
               {formatPrice(product.price)}
             </span>
-            {product.priceMax && (
+            {product.priceMax && product.priceMax > product.price && (
               <>
-                <span className="text-muted-foreground text-[8px] sm:text-sm">~</span>
-                <span className="price-primary text-xs sm:text-lg font-bold">
+                <span className="text-muted-foreground text-[8px] sm:text-sm">-</span>
+                <span className="price-primary text-sm sm:text-lg font-bold">
                   {formatPrice(product.priceMax)}
                 </span>
               </>

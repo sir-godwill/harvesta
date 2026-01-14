@@ -624,7 +624,30 @@ const BuyerProfile = () => {
               </TabsContent>
 
               {/* Dashboards Tab */}
-              <TabsContent value="dashboards" className="mt-0">
+              <TabsContent value="dashboards" className="mt-0 space-y-6">
+                {/* Become a Seller Card */}
+                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">Become a Seller</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Start selling your agricultural products on Harvestá. Reach buyers across Cameroon and beyond.
+                        </p>
+                      </div>
+                      <Link to="/register/seller">
+                        <Button className="bg-primary hover:bg-primary/90">
+                          Apply Now
+                          <ChevronRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+                
                 <DashboardAccessCard />
               </TabsContent>
             </Tabs>
