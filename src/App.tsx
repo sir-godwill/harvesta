@@ -95,6 +95,7 @@ import { SellerLayout } from "@/components/seller/SellerLayout";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import SellerProductAdd from "./pages/seller/SellerProductAdd";
+import SellerProductEdit from "./pages/seller/SellerProductEdit";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
 import SellerLogistics from "./pages/seller/SellerLogistics";
@@ -178,7 +179,7 @@ const App = () => (
               <Route path="/seller/onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
               <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
               <Route path="/seller/products/add" element={<ProtectedRoute><SellerProductAdd /></ProtectedRoute>} />
-              <Route path="/seller/products/edit/:id" element={<ProtectedRoute><SellerProductAdd /></ProtectedRoute>} />
+              <Route path="/seller/products/edit/:id" element={<ProtectedRoute><SellerProductEdit /></ProtectedRoute>} />
               <Route path="/seller/inventory" element={<ProtectedRoute><SellerInventory /></ProtectedRoute>} />
               <Route path="/seller/orders" element={<ProtectedRoute><SellerOrders /></ProtectedRoute>} />
               <Route path="/seller/finance" element={<ProtectedRoute><SellerFinance /></ProtectedRoute>} />

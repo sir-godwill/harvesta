@@ -1,6 +1,6 @@
-import { Leaf, Wheat, Milk, Tractor, Sprout, Apple, Package, FlaskConical, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Leaf, Wheat, Milk, Tractor, Sprout, Apple, Package, FlaskConical } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import { useRef, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -23,19 +23,63 @@ const categories: Category[] = [
 
 export default function CategoryGrid() {
   const { t } = useApp();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Auto-scroll effect for mobile
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let animationId: number;
+    let scrollPosition = 0;
+    const scrollSpeed = 0.5;
+
+    const autoScroll = () => {
+      if (!isPaused && scrollContainer) {
+        scrollPosition += scrollSpeed;
+        
+        // Reset to start when reaching the end
+        if (scrollPosition >= scrollContainer.scrollWidth / 2) {
+          scrollPosition = 0;
+        }
+        
+        scrollContainer.scrollLeft = scrollPosition;
+      }
+      animationId = requestAnimationFrame(autoScroll);
+    };
+
+    // Only auto-scroll on mobile
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      animationId = requestAnimationFrame(autoScroll);
+    }
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [isPaused]);
+
+  // Duplicate categories for seamless loop
+  const displayCategories = [...categories, ...categories];
 
   return (
     <div className="bg-card rounded-xl p-3 sm:p-4 lg:p-6">
       <h3 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">{t('categories.all')}</h3>
       
-      {/* Mobile Horizontal Scroll */}
-      <div className="sm:hidden">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory min-w-0">
-          {categories.map((category) => (
+      {/* Mobile Horizontal Scroll with Auto-scroll */}
+      <div className="sm:hidden overflow-hidden">
+        <div 
+          ref={scrollRef}
+          className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 min-w-0"
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
+        >
+          {displayCategories.map((category, index) => (
             <a
-              key={category.labelKey}
+              key={`${category.labelKey}-${index}`}
               href={`/category/${category.labelKey}`}
-              className="flex flex-col items-center gap-1.5 min-w-[56px] flex-shrink-0 snap-start"
+              className="flex flex-col items-center gap-1.5 min-w-[56px] flex-shrink-0"
             >
               <div className={`w-10 h-10 rounded-xl ${category.bgColor} flex items-center justify-center transition-transform active:scale-90`}>
                 <category.icon className={`h-5 w-5 ${category.color}`} />
