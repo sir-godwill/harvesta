@@ -14,6 +14,7 @@ import {
   Leaf,
   Info,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,15 @@ import { ProductVariantsEditor, ProductVariant } from '@/components/product-form
 import { PurchaseConditionsEditor, PurchaseCondition } from '@/components/product-form/PurchaseConditionsEditor';
 
 // API imports
-import { fetchCategories, fetchActiveSuppliers, createProduct, createProductVariant, createPricingTier } from '@/lib/productManagementApi';
+import { 
+  fetchCategories, 
+  fetchActiveSuppliers, 
+  createProduct, 
+  updateProduct,
+  createProductVariant, 
+  createPricingTier,
+  fetchProductForEdit,
+} from '@/lib/productManagementApi';
 
 const units = ['kg', 'ton', 'bag', 'piece', 'crate', 'liter', 'dozen', 'carton', '10kg', '25kg', '50kg'];
 
@@ -79,12 +88,15 @@ interface Props {
   isAdmin?: boolean;
   backLink?: string;
   Layout?: React.ComponentType<{ children: React.ReactNode }>;
+  productId?: string; // For edit mode
 }
 
-export default function AddProductPage({ isAdmin = false, backLink = '/seller/products', Layout }: Props) {
+export default function AddProductPage({ isAdmin = false, backLink = '/seller/products', Layout, productId }: Props) {
   const navigate = useNavigate();
+  const isEditMode = !!productId;
   const [activeTab, setActiveTab] = useState('basic');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [suppliers, setSuppliers] = useState<Array<{ id: string; company_name: string }>>([]);
 
@@ -140,7 +152,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
   const [enableConditions, setEnableConditions] = useState(false);
   const [conditions, setConditions] = useState<PurchaseCondition[]>([]);
 
-  // Load categories and suppliers
+  // Load categories, suppliers, and product data for edit mode
   useEffect(() => {
     const loadData = async () => {
       const [catResult, supResult] = await Promise.all([
@@ -149,9 +161,97 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
       ]);
       if (catResult.data) setCategories(catResult.data);
       if (supResult.data) setSuppliers(supResult.data);
+      
+      // Load product data for edit mode
+      if (productId) {
+        setIsLoadingProduct(true);
+        try {
+          const { data: productData, error } = await fetchProductForEdit(productId);
+          if (error) throw error;
+          
+          if (productData) {
+            // Pre-fill form with existing data
+            setProductName(productData.name || '');
+            setShortDescription(productData.short_description || '');
+            setLongDescription(productData.description || '');
+            setCategory(productData.category_id || '');
+            setSupplierId(productData.supplier_id || '');
+            setSku(productData.sku || '');
+            setUnit(productData.unit_of_measure || 'kg');
+            setStatus(productData.status as 'draft' | 'active' || 'draft');
+            setOriginCountry(productData.origin_country || 'Cameroon');
+            setOriginRegion(productData.origin_region || '');
+            setHarvestDate(productData.harvest_date ? productData.harvest_date.split('T')[0] : '');
+            setExpiryDate(productData.expiry_date ? productData.expiry_date.split('T')[0] : '');
+            setLeadTime(productData.lead_time_days?.toString() || '');
+            setIsOrganic(productData.is_organic || false);
+            setIsFeatured(productData.is_featured || false);
+            setMinOrderQuantity(productData.min_order_quantity?.toString() || '1');
+            setMaxOrderQuantity(productData.max_order_quantity?.toString() || '');
+            
+            // Load variants and pricing
+            if (productData.variants && productData.variants.length > 0) {
+              const defaultVariant = productData.variants.find((v: any) => v.is_default) || productData.variants[0];
+              setStock(defaultVariant.stock_quantity?.toString() || '');
+              setLowStockThreshold(defaultVariant.low_stock_threshold?.toString() || '10');
+              
+              // Get price from pricing tiers
+              if (defaultVariant.pricing_tiers && defaultVariant.pricing_tiers.length > 0) {
+                const baseTier = defaultVariant.pricing_tiers.find((t: any) => t.min_quantity === 1) || defaultVariant.pricing_tiers[0];
+                setDomesticPrice(baseTier.price_per_unit?.toString() || '');
+                
+                // If there are multiple tiers, enable tiered pricing
+                if (defaultVariant.pricing_tiers.length > 1) {
+                  setEnableTieredPricing(true);
+                  setPricingTiers(defaultVariant.pricing_tiers.map((t: any) => ({
+                    id: t.id,
+                    minQuantity: t.min_quantity,
+                    maxQuantity: t.max_quantity,
+                    pricePerUnit: t.price_per_unit,
+                  })));
+                }
+              }
+              
+              // If there are multiple variants, enable variant editing
+              if (productData.variants.length > 1 || !defaultVariant.is_default) {
+                setEnableVariants(true);
+                setVariants(productData.variants.map((v: any) => ({
+                  id: v.id,
+                  name: v.name || '',
+                  sku: v.sku || '',
+                  grade: v.grade || '',
+                  quality: v.quality || '',
+                  packaging: v.packaging || '',
+                  weight: v.weight || 0,
+                  weightUnit: v.weight_unit || 'kg',
+                  stockQuantity: v.stock_quantity || 0,
+                  lowStockThreshold: v.low_stock_threshold || 10,
+                  isDefault: v.is_default || false,
+                  isActive: v.is_active !== false,
+                })));
+              }
+            }
+            
+            // Load images
+            if (productData.images && productData.images.length > 0) {
+              setImages(productData.images.map((img: any) => ({
+                id: img.id,
+                url: img.image_url,
+                isPrimary: img.is_primary || false,
+                altText: img.alt_text,
+              })));
+            }
+          }
+        } catch (error) {
+          console.error('Error loading product:', error);
+          toast.error('Failed to load product data');
+        } finally {
+          setIsLoadingProduct(false);
+        }
+      }
     };
     loadData();
-  }, []);
+  }, [productId]);
 
   const toggleTag = (tagId: string) => {
     setSelectedTags(prev => 

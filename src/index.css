@@ -4,139 +4,148 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* =================================================
-   Harvestá Design System
-   Brand: Natural green, earthy brown, beige, white
-   Enterprise-grade, African agriculture focused
+/* Harvestá Design System - Agro-Commerce Marketplace
+   Brand: Vibrant Orange, Fresh Green, Earthy Tones
+   1688-inspired B2B marketplace focused on African agriculture
    All colors MUST be HSL.
-   ================================================= */
+*/
 
 @layer base {
   :root {
-    /* Harvestá Brand Colors */
-    --background: 40 33% 98%;
-    --foreground: 25 30% 12%;
+    /* Core Background & Foreground */
+    --background: 30 20% 98%;
+    --foreground: 20 20% 12%;
 
+    /* Card Surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 25 30% 12%;
+    --card-foreground: 20 20% 12%;
 
+    /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 25 30% 12%;
+    --popover-foreground: 20 20% 12%;
 
-    /* Primary: Natural Forest Green */
-    --primary: 142 45% 28%;
-    --primary-foreground: 40 33% 98%;
+    /* Primary - Vibrant Orange (1688-inspired) */
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Earthy Brown */
-    --secondary: 30 35% 25%;
-    --secondary-foreground: 40 33% 98%;
+    /* Secondary - Fresh Green (Agricultural) */
+    --secondary: 142 55% 45%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Muted: Warm Beige */
-    --muted: 35 30% 92%;
-    --muted-foreground: 25 15% 45%;
+    /* Muted */
+    --muted: 30 15% 94%;
+    --muted-foreground: 20 10% 45%;
 
-    /* Accent: Harvest Gold */
-    --accent: 42 85% 55%;
-    --accent-foreground: 25 30% 12%;
+    /* Accent - Warm Earth */
+    --accent: 38 92% 50%;
+    --accent-foreground: 20 20% 12%;
 
-    /* Status Colors */
-    --destructive: 0 72% 51%;
+    /* Destructive */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 70% 40%;
+    /* Success */
+    --success: 142 72% 42%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 25 30% 12%;
+    /* Warning */
+    --warning: 45 93% 47%;
+    --warning-foreground: 20 20% 12%;
 
-    --info: 205 85% 45%;
+    /* Info */
+    --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    --border: 35 20% 88%;
-    --input: 35 20% 88%;
-    --ring: 142 45% 28%;
+    /* Borders & Inputs */
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 24 95% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* Sidebar - Forest Theme */
+    /* Sidebar - Forest Theme for Seller Dashboard */
     --sidebar-background: 142 35% 18%;
-    --sidebar-foreground: 40 33% 95%;
-    --sidebar-primary: 42 85% 55%;
-    --sidebar-primary-foreground: 25 30% 12%;
+    --sidebar-foreground: 30 20% 95%;
+    --sidebar-primary: 24 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 142 30% 25%;
-    --sidebar-accent-foreground: 40 33% 98%;
+    --sidebar-accent-foreground: 30 20% 98%;
     --sidebar-border: 142 25% 25%;
-    --sidebar-ring: 42 85% 55%;
+    --sidebar-ring: 24 95% 53%;
     --sidebar-muted: 142 20% 35%;
 
     /* Chart Colors */
-    --chart-1: 142 45% 35%;
-    --chart-2: 42 85% 55%;
-    --chart-3: 30 35% 35%;
-    --chart-4: 205 85% 45%;
-    --chart-5: 0 72% 51%;
+    --chart-1: 24 95% 53%;
+    --chart-2: 142 55% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 199 89% 48%;
+    --chart-5: 0 84% 60%;
 
-    /* Gradient definitions */
-    --gradient-primary: linear-gradient(135deg, hsl(142 45% 28%), hsl(142 35% 22%));
-    --gradient-accent: linear-gradient(135deg, hsl(42 85% 55%), hsl(38 92% 50%));
-    --gradient-success: linear-gradient(135deg, hsl(142 70% 40%), hsl(142 60% 35%));
-    
+    /* Custom Marketplace Colors */
+    --vendor: 215 80% 50%;
+    --vendor-foreground: 0 0% 100%;
+    --tier-1: 24 95% 53%;
+    --tier-2: 24 85% 58%;
+    --tier-3: 24 75% 63%;
+    --verified: 142 72% 42%;
+    --moq-warning: 45 93% 47%;
+
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(25 30% 12% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(25 30% 12% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(25 30% 12% / 0.1);
-    --shadow-glow: 0 0 20px hsl(142 45% 28% / 0.15);
-    --shadow-card: 0 2px 8px -2px hsl(25 30% 12% / 0.08);
-    --shadow-card-hover: 0 8px 25px -5px hsl(25 30% 12% / 0.15);
+    --shadow-sm: 0 1px 2px 0 hsl(20 20% 12% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(20 20% 12% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(20 20% 12% / 0.1);
+    --shadow-glow: 0 0 20px hsl(24 95% 53% / 0.15);
+    --shadow-card: 0 2px 8px -2px hsl(20 20% 12% / 0.08);
+    --shadow-card-hover: 0 8px 25px -5px hsl(20 20% 12% / 0.15);
   }
 
   .dark {
-    --background: 25 25% 8%;
-    --foreground: 40 33% 95%;
+    --background: 20 15% 8%;
+    --foreground: 30 15% 95%;
 
-    --card: 25 20% 12%;
-    --card-foreground: 40 33% 95%;
+    --card: 20 15% 12%;
+    --card-foreground: 30 15% 95%;
 
-    --popover: 25 20% 12%;
-    --popover-foreground: 40 33% 95%;
+    --popover: 20 15% 12%;
+    --popover-foreground: 30 15% 95%;
 
-    --primary: 142 50% 45%;
-    --primary-foreground: 25 25% 8%;
+    --primary: 24 95% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 25% 35%;
-    --secondary-foreground: 40 33% 95%;
+    --secondary: 142 55% 40%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 25 15% 18%;
-    --muted-foreground: 35 15% 55%;
+    --muted: 20 15% 18%;
+    --muted-foreground: 30 10% 60%;
 
-    --accent: 42 80% 50%;
-    --accent-foreground: 25 25% 8%;
+    --accent: 38 92% 55%;
+    --accent-foreground: 20 20% 12%;
 
-    --destructive: 0 62% 40%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 60% 45%;
-    --success-foreground: 25 25% 8%;
+    --success-foreground: 20 15% 8%;
 
-    --warning: 38 85% 45%;
-    --warning-foreground: 25 25% 8%;
+    --warning: 45 85% 45%;
+    --warning-foreground: 20 15% 8%;
 
-    --info: 205 75% 50%;
-    --info-foreground: 25 25% 8%;
+    --info: 199 75% 50%;
+    --info-foreground: 20 15% 8%;
 
-    --border: 25 15% 20%;
-    --input: 25 15% 20%;
-    --ring: 142 50% 45%;
+    --border: 20 15% 22%;
+    --input: 20 15% 22%;
+    --ring: 24 95% 55%;
 
-    --sidebar-background: 25 20% 6%;
-    --sidebar-foreground: 40 33% 90%;
-    --sidebar-primary: 42 80% 50%;
-    --sidebar-primary-foreground: 25 25% 8%;
-    --sidebar-accent: 25 15% 15%;
-    --sidebar-accent-foreground: 40 33% 95%;
-    --sidebar-border: 25 15% 18%;
-    --sidebar-ring: 42 80% 50%;
-    --sidebar-muted: 25 12% 25%;
+    --sidebar-background: 20 15% 6%;
+    --sidebar-foreground: 30 15% 90%;
+    --sidebar-primary: 24 95% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 20 15% 15%;
+    --sidebar-accent-foreground: 30 15% 95%;
+    --sidebar-border: 20 15% 18%;
+    --sidebar-ring: 24 95% 55%;
+    --sidebar-muted: 20 12% 25%;
   }
 }
 
@@ -146,12 +155,16 @@
   }
 
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
   }
 
   /* Custom scrollbar for webkit browsers */
@@ -174,19 +187,118 @@
 }
 
 @layer components {
-  /* KPI Card Styles */
-  .kpi-card {
-    @apply relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5;
+  /* Gradient backgrounds */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-primary to-accent;
   }
 
-  .kpi-card::before {
-    content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: var(--gradient-primary);
+  .gradient-success {
+    @apply bg-gradient-to-r from-secondary to-green-400;
   }
 
-  .kpi-card:hover::before {
-    @apply opacity-5;
+  /* Trust badge styles */
+  .trust-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .trust-badge-verified {
+    @apply trust-badge bg-green-100 text-green-700;
+  }
+
+  .trust-badge-quality {
+    @apply trust-badge bg-blue-100 text-blue-700;
+  }
+
+  .trust-badge-seller {
+    @apply trust-badge bg-orange-100 text-orange-700;
+  }
+
+  /* Tier pricing styles */
+  .tier-active {
+    @apply bg-primary/10 border-primary text-primary font-semibold;
+  }
+
+  .tier-inactive {
+    @apply bg-muted border-border text-muted-foreground;
+  }
+
+  /* Product Card Styles */
+  .card-product {
+    @apply bg-card rounded-lg overflow-hidden transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-product:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  /* Vendor card header */
+  .vendor-header {
+    @apply flex items-center gap-3 p-4 bg-gradient-to-r from-muted/50 to-transparent border-b;
+  }
+
+  /* Step indicator */
+  .step-active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .step-completed {
+    @apply bg-secondary text-secondary-foreground;
+  }
+
+  .step-pending {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  /* Price display */
+  .price-primary {
+    @apply text-primary font-bold;
+  }
+
+  .price-main {
+    @apply text-2xl font-bold text-primary;
+  }
+
+  .price-original {
+    @apply text-sm text-muted-foreground line-through;
+  }
+
+  .price-tier {
+    @apply text-sm text-primary font-medium;
+  }
+
+  /* Verified Badge */
+  .badge-verified {
+    @apply bg-secondary text-secondary-foreground text-xs font-medium px-2 py-0.5 rounded;
+  }
+
+  .badge-gold {
+    @apply bg-accent text-accent-foreground text-xs font-medium px-2 py-0.5 rounded;
+  }
+
+  /* Action buttons */
+  .btn-checkout {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl;
+  }
+
+  .btn-secondary-action {
+    @apply border-2 border-primary text-primary hover:bg-primary/5 font-medium px-6 py-2.5 rounded-lg transition-all duration-200;
+  }
+
+  /* Quantity input */
+  .quantity-input {
+    @apply w-20 text-center border-2 border-border rounded-lg py-2 font-medium focus:border-primary focus:outline-none transition-colors;
+  }
+
+  /* MOQ warning */
+  .moq-warning {
+    @apply text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-md;
   }
 
   /* Status Badge Styles */
@@ -210,11 +322,6 @@
     @apply bg-info/10 text-info;
   }
 
-  /* Data Table Row Hover */
-  .data-row {
-    @apply transition-colors duration-150 hover:bg-muted/50;
-  }
-
   /* Navigation Item */
   .nav-item {
     @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200;
@@ -224,9 +331,38 @@
     @apply bg-sidebar-accent text-sidebar-accent-foreground;
   }
 
+  /* Nav Link */
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-colors;
+  }
+
+  .nav-link-active {
+    @apply bg-sidebar-accent text-sidebar-accent-foreground font-medium;
+  }
+
+  /* KPI Card Styles */
+  .kpi-card {
+    @apply relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  /* Data Table Row Hover */
+  .data-row {
+    @apply transition-colors duration-150 hover:bg-muted/50;
+  }
+
   /* Module Section */
   .module-section {
     @apply rounded-xl border bg-card p-6 shadow-sm;
+  }
+
+  /* Search Input */
+  .search-input {
+    @apply flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground;
+  }
+
+  /* Category Card */
+  .category-card {
+    @apply bg-card rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1;
   }
 
   /* Live Feed Item */
@@ -245,54 +381,6 @@
     animation: pulse-ring 1.5s ease-out infinite;
   }
 
-  /* Product Card Styles */
-  .card-product {
-    @apply bg-card rounded-lg overflow-hidden transition-all duration-300;
-    box-shadow: var(--shadow-card);
-  }
-
-  .card-product:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-2px);
-  }
-
-  /* Verified Badge */
-  .badge-verified {
-    @apply bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded;
-  }
-
-  .badge-gold {
-    @apply bg-accent text-accent-foreground text-xs font-medium px-2 py-0.5 rounded;
-  }
-
-  /* Price Styles */
-  .price-primary {
-    @apply text-primary font-bold;
-  }
-
-  .price-original {
-    @apply text-muted-foreground line-through text-sm;
-  }
-
-  /* Nav Link */
-  .nav-link {
-    @apply flex items-center gap-3 px-4 py-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-colors;
-  }
-
-  .nav-link-active {
-    @apply bg-sidebar-accent text-sidebar-accent-foreground font-medium;
-  }
-
-  /* Search Input */
-  .search-input {
-    @apply flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground;
-  }
-
-  /* Category Card */
-  .category-card {
-    @apply bg-card rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1;
-  }
-
   @keyframes pulse-ring {
     0% {
       transform: scale(1);
@@ -306,28 +394,41 @@
 }
 
 @layer utilities {
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-pulse-soft {
+    animation: pulseSoft 2s infinite;
+  }
+
   /* Text gradient utility */
   .text-gradient-primary {
     @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-primary);
+    background-image: linear-gradient(135deg, hsl(24 95% 53%), hsl(38 92% 50%));
   }
 
   .text-gradient-accent {
     @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-accent);
+    background-image: linear-gradient(135deg, hsl(142 55% 45%), hsl(142 72% 42%));
   }
 
   /* Background gradients */
   .bg-gradient-primary {
-    background: var(--gradient-primary);
+    background: linear-gradient(135deg, hsl(24 95% 53%), hsl(38 92% 50%));
   }
 
   .bg-gradient-success {
-    background: var(--gradient-success);
+    background: linear-gradient(135deg, hsl(142 55% 45%), hsl(142 72% 42%));
   }
 
   .bg-gradient-accent {
-    background: var(--gradient-accent);
+    background: linear-gradient(135deg, hsl(38 92% 50%), hsl(45 93% 47%));
   }
 
   /* Glass morphism */
@@ -348,5 +449,40 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulseSoft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Auto-scroll animation for categories */
+  @keyframes scroll-left {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll-left {
+    animation: scroll-left 20s linear infinite;
   }
 }

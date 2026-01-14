@@ -59,6 +59,12 @@ interface NavItem {
   children?: { title: string; href: string }[];
 }
 
+import {
+  Wallet,
+  GraduationCap,
+  Boxes,
+} from 'lucide-react';
+
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/seller', icon: LayoutDashboard },
   { 
@@ -67,7 +73,7 @@ const navItems: NavItem[] = [
     children: [
       { title: 'All Products', href: '/seller/products' },
       { title: 'Add Product', href: '/seller/products/add' },
-      { title: 'Inventory', href: '/seller/products/inventory' },
+      { title: 'Inventory', href: '/seller/inventory' },
     ],
   },
   { 
@@ -83,6 +89,15 @@ const navItems: NavItem[] = [
   },
   { title: 'Analytics', href: '/seller/analytics', icon: BarChart3 },
   { 
+    title: 'Finance', 
+    icon: Wallet,
+    children: [
+      { title: 'Wallet', href: '/seller/finance' },
+      { title: 'Withdrawals', href: '/seller/finance/withdrawals' },
+      { title: 'Transactions', href: '/seller/finance/transactions' },
+    ],
+  },
+  { 
     title: 'Logistics', 
     icon: Truck,
     children: [
@@ -93,6 +108,8 @@ const navItems: NavItem[] = [
   },
   { title: 'Messages', href: '/seller/messages', icon: MessageSquare, badge: 3 },
   { title: 'RFQs', href: '/seller/rfqs', icon: FileText, badge: 2 },
+  { title: 'Onboarding', href: '/seller/onboarding', icon: GraduationCap },
+  { title: 'Profile', href: '/seller/profile', icon: User },
   { title: 'Settings', href: '/seller/settings', icon: Settings },
 ];
 
