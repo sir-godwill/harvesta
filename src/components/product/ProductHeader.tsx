@@ -83,26 +83,27 @@ export function ProductHeader({
       )}
 
       {/* Product Name */}
-      <h1 className="text-xl lg:text-2xl font-bold text-foreground leading-tight">
+      <h1 className="text-lg lg:text-2xl font-bold text-foreground leading-tight">
         {name}
       </h1>
 
-      {/* Stats Row */}
-      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+      {/* Stats Row - Smaller on mobile */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
         {rating > 0 && (
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+          <div className="flex items-center gap-0.5 sm:gap-1">
+            <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-amber-400 text-amber-400" />
             <span className="font-semibold text-foreground">{rating.toFixed(1)}</span>
-            <span>({reviewCount} reviews)</span>
+            <span className="hidden sm:inline">({reviewCount} reviews)</span>
+            <span className="sm:hidden">({reviewCount})</span>
           </div>
         )}
-        <div className="flex items-center gap-1">
-          <Eye className="w-4 h-4" />
-          <span>{viewCount.toLocaleString()} views</span>
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span>{viewCount >= 1000 ? `${(viewCount/1000).toFixed(1)}K` : viewCount}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <ShoppingBag className="w-4 h-4" />
-          <span>{orderCount.toLocaleString()} sold</span>
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span>{orderCount >= 1000 ? `${(orderCount/1000).toFixed(1)}K` : orderCount} sold</span>
         </div>
       </div>
     </div>

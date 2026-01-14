@@ -53,7 +53,8 @@ const dashboardLinks: DashboardLink[] = [
     description: 'Track referrals and commissions',
     path: '/affiliate',
     icon: Users,
-    requiredRoles: ['buyer_individual', 'buyer_business', 'supplier', 'admin'],
+    // All roles including admin can access affiliate dashboard
+    requiredRoles: ['buyer_individual', 'buyer_business', 'supplier', 'admin', 'logistics_partner'],
     color: 'bg-purple-600',
   },
 ];

@@ -132,7 +132,7 @@ export function TieredPricingEditor({
           <div>
             <p className="font-medium">Bulk Pricing Tiers</p>
             <p className="text-sm text-muted-foreground">
-              Offer discounts for larger orders (like 1688.com)
+              Offer discounts for larger orders
             </p>
           </div>
         </div>
@@ -232,15 +232,20 @@ export function TieredPricingEditor({
                       />
                     </div>
                     <div className="col-span-3 relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none">
                         {currencySymbol}
                       </span>
                       <Input
-                        type="number"
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={tier.pricePerUnit || ''}
-                        onChange={(e) => updateTier(tier.id, { pricePerUnit: parseInt(e.target.value) || 0 })}
-                        className="h-9 pl-12"
+                        placeholder="0"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          updateTier(tier.id, { pricePerUnit: value ? parseInt(value) : 0 });
+                        }}
+                        className="h-9 pl-10"
                       />
                     </div>
                     <div className="col-span-2">
