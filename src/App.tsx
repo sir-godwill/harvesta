@@ -102,6 +102,10 @@ import SellerCarriers from "./pages/seller/SellerCarriers";
 import SellerMessages from "./pages/seller/SellerMessages";
 import SellerRFQs from "./pages/seller/SellerRFQs";
 import SellerSettings from "./pages/seller/SellerSettings";
+import SellerFinance from "./pages/seller/SellerFinance";
+import SellerInventory from "./pages/seller/SellerInventory";
+import SellerOnboarding from "./pages/seller/SellerOnboarding";
+import SellerProfile from "./pages/seller/SellerProfile";
 
 // Affiliate Pages
 import { AffiliateLayout } from "@/components/affiliate/AffiliateLayout";
@@ -171,16 +175,20 @@ const App = () => (
 
               {/* Seller Routes - SellerLayout is already inside pages */}
               <Route path="/seller" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
+              <Route path="/seller/onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
               <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
               <Route path="/seller/products/add" element={<ProtectedRoute><SellerProductAdd /></ProtectedRoute>} />
               <Route path="/seller/products/edit/:id" element={<ProtectedRoute><SellerProductAdd /></ProtectedRoute>} />
+              <Route path="/seller/inventory" element={<ProtectedRoute><SellerInventory /></ProtectedRoute>} />
               <Route path="/seller/orders" element={<ProtectedRoute><SellerOrders /></ProtectedRoute>} />
+              <Route path="/seller/finance" element={<ProtectedRoute><SellerFinance /></ProtectedRoute>} />
               <Route path="/seller/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
               <Route path="/seller/logistics" element={<ProtectedRoute><SellerLogistics /></ProtectedRoute>} />
               <Route path="/seller/logistics/carriers" element={<ProtectedRoute><SellerCarriers /></ProtectedRoute>} />
               <Route path="/seller/carriers" element={<ProtectedRoute><SellerCarriers /></ProtectedRoute>} />
               <Route path="/seller/messages" element={<ProtectedRoute><SellerMessages /></ProtectedRoute>} />
               <Route path="/seller/rfqs" element={<ProtectedRoute><SellerRFQs /></ProtectedRoute>} />
+              <Route path="/seller/profile" element={<ProtectedRoute><SellerProfile /></ProtectedRoute>} />
               <Route path="/seller/settings" element={<ProtectedRoute><SellerSettings /></ProtectedRoute>} />
               <Route path="/seller/*" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
 
