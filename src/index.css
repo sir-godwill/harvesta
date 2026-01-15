@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* Harvestá Design System - Agro-Commerce Marketplace
    Brand: Vibrant Orange, Fresh Green, Earthy Tones
@@ -64,7 +64,7 @@
     --radius: 0.75rem;
 
     /* Sidebar - Earthy Neutral Theme for Seller Dashboard */
-    --sidebar-background: 30 15% 12%; 
+    --sidebar-background: 30 15% 12%;
     --sidebar-foreground: 30 20% 95%;
     --sidebar-primary: 24 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -163,7 +163,12 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 
@@ -187,6 +192,7 @@
 }
 
 @layer components {
+
   /* Gradient backgrounds */
   .gradient-primary {
     @apply bg-gradient-to-r from-primary to-accent;
@@ -386,6 +392,7 @@
       transform: scale(1);
       opacity: 1;
     }
+
     100% {
       transform: scale(2);
       opacity: 0;
@@ -394,6 +401,7 @@
 }
 
 @layer utilities {
+
   /* Animations */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
@@ -452,24 +460,37 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
-    from { 
+    from {
       opacity: 0;
       transform: translateY(10px);
     }
-    to { 
+
+    to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 
   @keyframes pulseSoft {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.7;
+    }
   }
 
   /* Auto-scroll animation for categories */
@@ -477,6 +498,7 @@
     0% {
       transform: translateX(0);
     }
+
     100% {
       transform: translateX(-50%);
     }

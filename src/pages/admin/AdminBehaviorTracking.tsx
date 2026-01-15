@@ -246,15 +246,15 @@ export default function AdminBehaviorTracking() {
                         </div>
                         <div className="grid grid-cols-3 gap-4 mt-6">
                             <div className="text-center p-3 rounded-lg bg-orange-50">
-                                <p className="text-xs text-orange-600 font-bold uppercase">Entry -> Product</p>
+                                <p className="text-xs text-orange-600 font-bold uppercase">{"Entry -> Product"}</p>
                                 <p className="text-lg font-bold text-orange-700">{dropOffs?.viewToProduct.toFixed(1)}% Drop-off</p>
                             </div>
                             <div className="text-center p-3 rounded-lg bg-orange-50">
-                                <p className="text-xs text-orange-600 font-bold uppercase">Product -> Cart</p>
+                                <p className="text-xs text-orange-600 font-bold uppercase">{"Product -> Cart"}</p>
                                 <p className="text-lg font-bold text-orange-700">{dropOffs?.productToCart.toFixed(1)}% Drop-off</p>
                             </div>
                             <div className="text-center p-3 rounded-lg bg-orange-50">
-                                <p className="text-xs text-orange-600 font-bold uppercase">Cart -> Buy</p>
+                                <p className="text-xs text-orange-600 font-bold uppercase">{"Cart -> Buy"}</p>
                                 <p className="text-lg font-bold text-orange-700">{dropOffs?.cartToPurchase.toFixed(1)}% Drop-off</p>
                             </div>
                         </div>
