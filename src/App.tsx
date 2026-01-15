@@ -64,6 +64,10 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminMarketing from "./pages/admin/AdminMarketing";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminCompliance from "./pages/admin/AdminCompliance";
+import AdminApiManagement from "./pages/admin/AdminApiManagement";
+import AdminBehaviorTracking from "./pages/admin/AdminBehaviorTracking";
+import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
+import AdminSystemHealth from "./pages/admin/AdminSystemHealth";
 // Admin Sub-pages
 import SellerApplications from "./pages/admin/sellers/SellerApplications";
 import SellerCommissions from "./pages/admin/sellers/SellerCommissions";
@@ -89,6 +93,7 @@ import LogisticsReturns from "./pages/logistics/LogisticsReturns";
 import LogisticsCalculator from "./pages/logistics/LogisticsCalculator";
 import LogisticsIntegrations from "./pages/logistics/LogisticsIntegrations";
 import LogisticsSettings from "./pages/logistics/LogisticsSettings";
+import LogisticsApplication from "./pages/logistics/LogisticsApplication";
 
 // Seller Pages
 import { SellerLayout } from "@/components/seller/SellerLayout";
@@ -156,6 +161,10 @@ const App = () => (
               <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout><AdminSettings /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/compliance" element={<ProtectedRoute><AdminLayout><AdminCompliance /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/logistics" element={<ProtectedRoute><AdminLayout><AdminLogistics /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/api-management" element={<ProtectedRoute><AdminLayout><AdminApiManagement /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/behavior" element={<ProtectedRoute><AdminLayout><AdminBehaviorTracking /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/logs" element={<ProtectedRoute><AdminLayout><AdminAuditLogs /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/health" element={<ProtectedRoute><AdminLayout><AdminSystemHealth /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/logistics/carriers" element={<ProtectedRoute><AdminLayout><AdminCarriers /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/logistics/zones" element={<ProtectedRoute><AdminLayout><AdminZones /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/*" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
@@ -172,6 +181,7 @@ const App = () => (
               <Route path="/logistics/calculator" element={<ProtectedRoute><LogisticsLayout><LogisticsCalculator /></LogisticsLayout></ProtectedRoute>} />
               <Route path="/logistics/integrations" element={<ProtectedRoute><LogisticsLayout><LogisticsIntegrations /></LogisticsLayout></ProtectedRoute>} />
               <Route path="/logistics/settings" element={<ProtectedRoute><LogisticsLayout><LogisticsSettings /></LogisticsLayout></ProtectedRoute>} />
+              <Route path="/logistics/apply" element={<ProtectedRoute><LogisticsApplication /></ProtectedRoute>} />
               <Route path="/logistics/*" element={<ProtectedRoute><LogisticsLayout><LogisticsDashboard /></LogisticsLayout></ProtectedRoute>} />
 
               {/* Seller Routes - SellerLayout is already inside pages */}

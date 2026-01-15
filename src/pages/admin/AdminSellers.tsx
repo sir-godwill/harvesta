@@ -34,7 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { fetchSellers, Seller } from '@/lib/admin-api';
+import { fetchSellers, Seller, approveSeller, rejectSeller, suspendSeller } from '@/lib/admin-api';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 const containerVariants = {
@@ -79,7 +80,7 @@ function StatCard({ title, value, icon: Icon, color, trend }: {
   );
 }
 
-function SellerCard({ seller, isMobile }: { seller: Seller; isMobile: boolean }) {
+function SellerCard({ seller, isMobile, onAction }: { seller: Seller; isMobile: boolean; onAction: (action: 'approve' | 'reject' | 'suspend', id: string) => void }) {
   const statusColors = {
     active: 'bg-green-100 text-green-700',
     pending: 'bg-yellow-100 text-yellow-700',
@@ -179,8 +180,27 @@ function SellerCard({ seller, isMobile }: { seller: Seller; isMobile: boolean })
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View Details</DropdownMenuItem>
+            {seller.status === 'pending' && (
+              <>
+                <DropdownMenuItem className="text-green-600" onClick={() => onAction('approve', seller.id)}>
+                  <CheckCircle2 className="mr-2 h-4 w-4" /> Approve
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600" onClick={() => onAction('reject', seller.id)}>
+                  <XCircle className="mr-2 h-4 w-4" /> Reject
+                </DropdownMenuItem>
+              </>
+            )}
+            {seller.status === 'active' && (
+              <DropdownMenuItem className="text-red-600" onClick={() => onAction('suspend', seller.id)}>
+                <Ban className="mr-2 h-4 w-4" /> Suspend
+              </DropdownMenuItem>
+            )}
+            {seller.status === 'suspended' && (
+              <DropdownMenuItem className="text-green-600" onClick={() => onAction('approve', seller.id)}>
+                <CheckCircle2 className="mr-2 h-4 w-4" /> Reactivate
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit Seller</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600"><Ban className="mr-2 h-4 w-4" /> Suspend</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </td>
@@ -201,11 +221,34 @@ export default function AdminSellers() {
   }, []);
 
   useEffect(() => {
-    fetchSellers().then((data) => {
-      setSellers(data);
-      setIsLoading(false);
-    });
+    loadSellers();
   }, []);
+
+  const loadSellers = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchSellers();
+      setSellers(data);
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to load sellers');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAction = async (action: 'approve' | 'reject' | 'suspend', sellerId: string) => {
+    try {
+      if (action === 'approve') await approveSeller(sellerId);
+      if (action === 'reject') await rejectSeller(sellerId, 'Admin rejected');
+      if (action === 'suspend') await suspendSeller(sellerId, 'Admin suspended');
+
+      toast.success(`Seller ${action}ed successfully`);
+      loadSellers();
+    } catch (e) {
+      toast.error(`Failed to ${action} seller`);
+    }
+  };
 
   const stats = {
     total: sellers.length,
@@ -288,7 +331,7 @@ export default function AdminSellers() {
         {isMobile ? (
           <div className="space-y-3">
             {filteredSellers.map((seller) => (
-              <SellerCard key={seller.id} seller={seller} isMobile />
+              <SellerCard key={seller.id} seller={seller} isMobile onAction={handleAction} />
             ))}
           </div>
         ) : (
@@ -310,7 +353,7 @@ export default function AdminSellers() {
                   </thead>
                   <motion.tbody variants={containerVariants}>
                     {filteredSellers.map((seller) => (
-                      <SellerCard key={seller.id} seller={seller} isMobile={false} />
+                      <SellerCard key={seller.id} seller={seller} isMobile={false} onAction={handleAction} />
                     ))}
                   </motion.tbody>
                 </table>

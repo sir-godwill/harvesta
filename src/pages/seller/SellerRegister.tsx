@@ -16,6 +16,7 @@ import {
   Upload,
   Globe,
   Shield,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { ProfileImageUploader } from '@/components/seller/ProfileImageUploader';
 
 const steps = [
   { id: 1, title: 'Account', icon: User, description: 'Create your account' },
@@ -86,6 +88,7 @@ export default function SellerRegister() {
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   // Step 3: Products
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -176,10 +179,39 @@ export default function SellerRegister() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Create supplier profile
+        let logoUrl = null;
+
+        // 2. Upload Logo if exists
+        if (logoFile) {
+          try {
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `${authData.user.id}/logo.${fileExt}`;
+
+            const { error: uploadError, data: uploadData } = await supabase.storage
+              .from('public') // Assuming 'public' bucket exists, or change to suitable one
+              .upload(fileName, logoFile, {
+                upsert: true
+              });
+
+            if (!uploadError && uploadData) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('public')
+                .getPublicUrl(fileName);
+              logoUrl = publicUrl;
+            }
+          } catch (storageError) {
+            console.error('Logo upload failed:', storageError);
+            // Continue without logo
+          }
+        }
+
+        // 3. Create supplier profile (Approved & Active)
+        const slug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Math.random().toString(36).substring(2, 6);
+
         const { error: supplierError } = await supabase.from('suppliers').insert({
           user_id: authData.user.id,
           company_name: companyName,
+          slug,
           description,
           email,
           phone,
@@ -188,13 +220,18 @@ export default function SellerRegister() {
           city,
           address,
           company_registration_number: registrationNumber || null,
-          verification_status: 'pending',
-          is_active: false,
+          logo_url: logoUrl,
+          verification_status: 'verified', // Auto-approve
+          is_active: true, // Immediate access
+          // Add default ratings/stats if needed
+          rating: 5.0,
+          response_rate: 100,
         });
 
         if (supplierError) throw supplierError;
 
-        toast.success('Registration successful! Please check your email to verify your account.');
+        toast.success('Registration successful! Welcome to Harvestá.');
+        // Navigate immediately to dashboard since it's auto-approved
         navigate('/seller');
       }
     } catch (error) {
@@ -238,13 +275,12 @@ export default function SellerRegister() {
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <div
-                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                    currentStep > step.id
-                      ? 'bg-primary border-primary text-primary-foreground'
-                      : currentStep === step.id
+                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${currentStep > step.id
+                    ? 'bg-primary border-primary text-primary-foreground'
+                    : currentStep === step.id
                       ? 'border-primary text-primary'
                       : 'border-muted-foreground/30 text-muted-foreground'
-                  }`}
+                    }`}
                 >
                   {currentStep > step.id ? (
                     <Check className="h-5 w-5" />
@@ -254,9 +290,8 @@ export default function SellerRegister() {
                 </div>
                 {index < steps.length - 1 && (
                   <div
-                    className={`w-full h-1 mx-2 rounded ${
-                      currentStep > step.id ? 'bg-primary' : 'bg-muted'
-                    }`}
+                    className={`w-full h-1 mx-2 rounded ${currentStep > step.id ? 'bg-primary' : 'bg-muted'
+                      }`}
                     style={{ width: '60px' }}
                   />
                 )}
@@ -368,6 +403,17 @@ export default function SellerRegister() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+
+                {/* Logo Upload */}
+                <div className="mb-6">
+                  <Label className="mb-2 block">Company Logo / Farm Image</Label>
+                  <ProfileImageUploader
+                    image={logoFile ? URL.createObjectURL(logoFile) : null}
+                    onImageChange={setLogoFile}
+                    label="Upload Logo"
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Business/Farm Name *</Label>
@@ -593,6 +639,7 @@ export default function SellerRegister() {
                       <p><span className="text-muted-foreground">Company:</span> {companyName}</p>
                       <p><span className="text-muted-foreground">Location:</span> {city}, {country}</p>
                       <p><span className="text-muted-foreground">Type:</span> {businessType}</p>
+                      {logoFile && <p><span className="text-muted-foreground">Logo:</span> Included</p>}
                     </div>
                   </div>
                 </div>
@@ -655,7 +702,7 @@ export default function SellerRegister() {
         {/* Navigation Buttons */}
         <div className="flex justify-between mt-6">
           {currentStep > 1 ? (
-            <Button variant="outline" onClick={prevStep}>
+            <Button variant="outline" onClick={prevStep} disabled={isSubmitting}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
@@ -676,8 +723,17 @@ export default function SellerRegister() {
               disabled={isSubmitting}
               className="bg-primary hover:bg-primary/90"
             >
-              {isSubmitting ? 'Creating Account...' : 'Complete Registration'}
-              <Check className="h-4 w-4 ml-2" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  Complete Registration
+                  <Check className="h-4 w-4 ml-2" />
+                </>
+              )}
             </Button>
           )}
         </div>

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, ShoppingBag, Minus, Plus, Heart, X } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Trash2, ShoppingBag, Minus, Plus, Heart, X, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -9,14 +10,42 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/marketplace/EmptyState';
-import { mockCartGroups } from '@/lib/mockData';
+import { fetchCartItems, updateCartItemQuantity, removeCartItem } from '@/lib/marketplaceApi';
 import type { CartGroup, DeliveryOption } from '@/types/marketplace';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const [cartGroups, setCartGroups] = useState<CartGroup[]>(mockCartGroups);
+  const queryClient = useQueryClient();
   const [vendorNotes, setVendorNotes] = useState<Record<string, string>>({});
+
+  // 1. Fetch real cart data
+  const { data: cartResponse, isLoading } = useQuery({
+    queryKey: ['cart'],
+    queryFn: fetchCartItems,
+  });
+
+  const cartGroups = useMemo(() => cartResponse?.data || [], [cartResponse]);
+
+  // 2. Mutations for updates
+  const updateMutation = useMutation({
+    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) =>
+      updateCartItemQuantity(productId, quantity),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+    onError: (err: any) => toast.error('Failed to update quantity: ' + err.message)
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (itemId: string) => removeCartItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast.success('Item removed from cart');
+    },
+    onError: (err: any) => toast.error('Failed to remove item: ' + err.message)
+  });
 
   const calculateTotals = () => {
     let subtotal = 0;
@@ -25,7 +54,7 @@ export default function CartPage() {
 
     cartGroups.forEach(group => {
       group.items.forEach(item => {
-        const tier = item.product.pricingTiers.find(
+        const tier = item.product.pricingTiers?.find(
           t => item.quantity >= t.minQuantity && (t.maxQuantity === null || item.quantity <= t.maxQuantity)
         );
         const price = tier?.pricePerUnit || item.product.currentPrice;
@@ -34,15 +63,17 @@ export default function CartPage() {
       });
 
       if (group.selectedDeliveryOption) {
-        const isFree = group.selectedDeliveryOption.freeAbove && 
-                       group.subtotal >= group.selectedDeliveryOption.freeAbove;
+        const isFree = group.selectedDeliveryOption.freeAbove &&
+          group.subtotal >= group.selectedDeliveryOption.freeAbove;
         if (!isFree) {
           deliveryTotal += group.selectedDeliveryOption.cost;
         }
+      } else {
+        deliveryTotal += 2500; // Default estimation
       }
     });
 
-    const taxes = subtotal * 0.08;
+    const taxes = subtotal * 0.18;
     const grandTotal = subtotal + deliveryTotal + taxes;
 
     return { subtotal, deliveryTotal, taxes, grandTotal, itemCount };
@@ -50,40 +81,36 @@ export default function CartPage() {
 
   const { subtotal, deliveryTotal, taxes, grandTotal, itemCount } = calculateTotals();
 
-  const handleQuantityChange = (groupIndex: number, itemIndex: number, delta: number) => {
-    setCartGroups(prev => {
-      const updated = [...prev];
-      const newQty = Math.max(1, updated[groupIndex].items[itemIndex].quantity + delta);
-      updated[groupIndex].items[itemIndex].quantity = newQty;
-      updated[groupIndex].subtotal = updated[groupIndex].items.reduce((sum, item) => {
-        const tier = item.product.pricingTiers.find(
-          t => item.quantity >= t.minQuantity && (t.maxQuantity === null || item.quantity <= t.maxQuantity)
-        );
-        const price = tier?.pricePerUnit || item.product.currentPrice;
-        return sum + price * item.quantity;
-      }, 0);
-      return updated;
-    });
+  const handleQuantityMutation = (itemId: string, currentQty: number, delta: number) => {
+    const newQty = Math.max(1, currentQty + delta);
+    if (newQty === currentQty) return;
+    updateMutation.mutate({ productId: itemId, quantity: newQty });
   };
 
-  const handleRemoveItem = (groupIndex: number, itemIndex: number) => {
-    setCartGroups(prev => {
-      const updated = [...prev];
-      updated[groupIndex].items.splice(itemIndex, 1);
-      if (updated[groupIndex].items.length === 0) {
-        updated.splice(groupIndex, 1);
-      }
-      return updated;
-    });
+  const handleRemove = (itemId: string) => {
+    removeMutation.mutate(itemId);
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('fr-CM', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
+      currency: 'XAF',
+      maximumFractionDigits: 0
     }).format(price);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-20 flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Gathering your items...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (cartGroups.length === 0) {
     return (
@@ -100,10 +127,8 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
-      {/* Mobile-optimized container */}
+
       <div className="container px-3 sm:px-4 py-4 sm:py-8">
-        {/* Back button - Mobile friendly */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 sm:mb-6">
           <Link to="/" className="hover:text-primary transition-colors flex items-center gap-1">
             <ArrowLeft className="w-4 h-4" />
@@ -112,7 +137,6 @@ export default function CartPage() {
           </Link>
         </div>
 
-        {/* Title with item count */}
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
@@ -123,8 +147,8 @@ export default function CartPage() {
               </span>
             </h1>
           </div>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs sm:text-sm"
           >
@@ -135,11 +159,9 @@ export default function CartPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-          {/* Cart Items - Mobile optimized */}
           <div className="flex-1 space-y-4">
-            {cartGroups.map((group, groupIndex) => (
+            {cartGroups.map((group) => (
               <Card key={group.vendor.id} className="overflow-hidden">
-                {/* Vendor Header - Compact on mobile */}
                 <div className="bg-muted/50 px-3 sm:px-4 py-2 sm:py-3 border-b">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs sm:text-sm">
@@ -157,21 +179,18 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* Cart Items */}
                 <CardContent className="p-0 divide-y">
-                  {group.items.map((item, itemIndex) => (
+                  {group.items.map((item) => (
                     <div key={item.id} className="p-3 sm:p-4">
                       <div className="flex gap-3">
-                        {/* Product Image - Smaller on mobile */}
                         <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                          <img 
-                            src={item.product.image} 
+                          <img
+                            src={item.product.image}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
 
-                        {/* Product Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
@@ -182,38 +201,37 @@ export default function CartPage() {
                                 {item.product.origin} • {item.product.grade}
                               </p>
                             </div>
-                            {/* Remove button - Icon only on mobile */}
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="icon"
                               className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive -mr-2"
-                              onClick={() => handleRemoveItem(groupIndex, itemIndex)}
+                              onClick={() => handleRemove(item.id)}
                             >
                               <X className="w-4 h-4" />
                             </Button>
                           </div>
 
-                          {/* Price and Quantity - Stacked on mobile */}
                           <div className="mt-2 sm:mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            {/* Quantity Controls */}
                             <div className="flex items-center gap-2">
                               <div className="flex items-center border rounded-lg">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="h-8 w-8 sm:h-9 sm:w-9 rounded-r-none"
-                                  onClick={() => handleQuantityChange(groupIndex, itemIndex, -1)}
+                                  onClick={() => handleQuantityMutation(item.id, item.quantity, -1)}
+                                  disabled={updateMutation.isPending}
                                 >
                                   <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </Button>
                                 <span className="w-10 sm:w-12 text-center text-sm font-medium">
-                                  {item.quantity}
+                                  {updateMutation.isPending ? '...' : item.quantity}
                                 </span>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="h-8 w-8 sm:h-9 sm:w-9 rounded-l-none"
-                                  onClick={() => handleQuantityChange(groupIndex, itemIndex, 1)}
+                                  onClick={() => handleQuantityMutation(item.id, item.quantity, 1)}
+                                  disabled={updateMutation.isPending}
                                 >
                                   <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </Button>
@@ -223,7 +241,6 @@ export default function CartPage() {
                               </span>
                             </div>
 
-                            {/* Price */}
                             <div className="flex items-center justify-between sm:justify-end gap-2">
                               <span className="text-xs text-muted-foreground sm:hidden">Price:</span>
                               <span className="font-bold text-primary text-sm sm:text-base">
@@ -232,10 +249,9 @@ export default function CartPage() {
                             </div>
                           </div>
 
-                          {/* Save for later - Mobile */}
-                          <Button 
-                            variant="link" 
-                            size="sm" 
+                          <Button
+                            variant="link"
+                            size="sm"
                             className="h-auto p-0 text-xs text-muted-foreground mt-2 sm:hidden"
                           >
                             <Heart className="w-3 h-3 mr-1" />
@@ -247,7 +263,6 @@ export default function CartPage() {
                   ))}
                 </CardContent>
 
-                {/* Vendor Notes - Collapsible on mobile */}
                 <div className="px-3 sm:px-4 py-3 bg-muted/30 border-t">
                   <Textarea
                     placeholder="Add note for seller (optional)..."
@@ -263,13 +278,12 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* Order Summary - Sticky on mobile */}
           <div className="lg:w-80">
             <div className="lg:sticky lg:top-4">
               <Card>
                 <CardContent className="p-4 sm:p-6 space-y-4">
                   <h2 className="font-bold text-base sm:text-lg">Order Summary</h2>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal ({itemCount} items)</span>
@@ -292,15 +306,15 @@ export default function CartPage() {
                     <span className="font-bold text-lg sm:text-xl text-primary">{formatPrice(grandTotal)}</span>
                   </div>
 
-                  <Button 
+                  <Button
                     className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold"
                     onClick={() => navigate('/checkout')}
                   >
                     Proceed to Checkout
                   </Button>
 
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full text-sm"
                     onClick={() => navigate('/rfq')}
                   >
@@ -316,7 +330,7 @@ export default function CartPage() {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );

@@ -4,6 +4,11 @@ import { Search, Camera, ShoppingCart, MessageSquare, User, FileText, Sparkles, 
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchNotifications } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
+import { NotificationBell } from '@/components/chat/NotificationBell';
+import { NotificationCard } from '@/components/common/NotificationCard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +21,42 @@ export default function Header() {
   const { language, setLanguage, currency, setCurrency, t } = useApp();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Notifications logic
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: fetchNotifications,
+    enabled: !!user
+  });
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Real-time subscription for notifications
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +94,7 @@ export default function Header() {
               <DropdownMenuItem onClick={() => setLanguage('fr')}>Français</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           {/* Currency Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -69,12 +109,12 @@ export default function Header() {
               <DropdownMenuItem onClick={() => setCurrency('EUR')}>EUR (€)</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           <Link to="/rfq" className="text-muted-foreground hover:text-primary transition-colors">Request Quote</Link>
           <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Supplier Center</a>
         </div>
       </div>
-      
+
       {/* Main Header */}
       <div className="flex items-center justify-between px-4 lg:px-6 py-3 gap-4">
         {/* Logo */}
@@ -85,7 +125,7 @@ export default function Header() {
           </div>
           <div className="hidden md:block w-6 h-1 bg-primary rounded-full" />
         </Link>
-        
+
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="flex-1 max-w-3xl">
           <div className="flex items-center bg-background border-2 border-primary rounded-full overflow-hidden">
@@ -108,7 +148,7 @@ export default function Header() {
             </button>
           </div>
         </form>
-        
+
         {/* Right Actions */}
         <div className="hidden lg:flex items-center gap-1">
           <Button variant="ghost" size="sm" className="flex-col h-auto py-2 px-3 gap-1" asChild>
@@ -134,7 +174,55 @@ export default function Header() {
             <MessageSquare className="h-5 w-5" />
             <span className="text-xs">{t('nav.messages')}</span>
           </Button>
-          
+
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center">
+                  <NotificationBell count={unreadCount} />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden">
+                <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
+                  <h3 className="font-semibold text-sm">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <Button variant="ghost" size="sm" className="text-xs h-7 text-primary hover:text-primary/80">
+                      Mark all as read
+                    </Button>
+                  )}
+                </div>
+                <div className="max-h-[400px] overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    <div className="flex flex-col">
+                      {notifications.map((n) => (
+                        <NotificationCard
+                          key={n.id}
+                          id={n.id}
+                          type={n.type}
+                          title={n.title}
+                          message={n.message}
+                          timestamp={n.timestamp}
+                          isRead={n.isRead}
+                          className="border-0 border-b last:border-b-0 rounded-none shadow-none hover:bg-muted/30 cursor-pointer"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center bg-background">
+                      <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-20" />
+                      <p className="text-sm text-muted-foreground">All caught up!</p>
+                    </div>
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <Button variant="ghost" className="w-full rounded-none border-t text-xs h-10 font-normal hover:bg-muted/50" asChild>
+                    <Link to="/dashboard">View all notifications</Link>
+                  </Button>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -172,7 +260,7 @@ export default function Header() {
             </Button>
           )}
         </div>
-        
+
         {/* Mobile Actions */}
         <div className="flex lg:hidden items-center gap-2">
           <Button variant="ghost" size="icon" asChild>
@@ -187,7 +275,7 @@ export default function Header() {
           </Button>
         </div>
       </div>
-      
+
       {/* Category Navigation - Desktop */}
       <nav className="hidden lg:flex items-center justify-center gap-8 px-6 py-2 border-t border-border bg-card">
         <Link to="/search" className="text-primary font-medium text-sm hover:text-primary/80 transition-colors">Find Products</Link>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -24,6 +24,9 @@ import {
   Sun,
   Globe,
   HelpCircle,
+  AlertTriangle,
+  Lock,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +53,9 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import '@/styles/dashboard-theme.css';
+import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface NavItem {
   title: string;
@@ -67,8 +73,8 @@ import {
 
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/seller', icon: LayoutDashboard },
-  { 
-    title: 'Products', 
+  {
+    title: 'Products',
     icon: Package,
     children: [
       { title: 'All Products', href: '/seller/products' },
@@ -76,8 +82,8 @@ const navItems: NavItem[] = [
       { title: 'Inventory', href: '/seller/inventory' },
     ],
   },
-  { 
-    title: 'Orders', 
+  {
+    title: 'Orders',
     icon: ShoppingCart,
     badge: 5,
     children: [
@@ -88,8 +94,8 @@ const navItems: NavItem[] = [
     ],
   },
   { title: 'Analytics', href: '/seller/analytics', icon: BarChart3 },
-  { 
-    title: 'Finance', 
+  {
+    title: 'Finance',
     icon: Wallet,
     children: [
       { title: 'Wallet', href: '/seller/finance' },
@@ -97,8 +103,8 @@ const navItems: NavItem[] = [
       { title: 'Transactions', href: '/seller/finance/transactions' },
     ],
   },
-  { 
-    title: 'Logistics', 
+  {
+    title: 'Logistics',
     icon: Truck,
     children: [
       { title: 'Shipments', href: '/seller/logistics' },
@@ -117,12 +123,48 @@ interface SellerLayoutProps {
   children: React.ReactNode;
 }
 
+type VerificationStatus = Database['public']['Enums']['verification_status'];
+
 export function SellerLayout({ children }: SellerLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>(['Products']);
   const [isDark, setIsDark] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<VerificationStatus | null>(null);
+  const [supplierName, setSupplierName] = useState<string>('Seller');
+
+  useEffect(() => {
+    checkStatus();
+  }, []);
+
+  const checkStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('verification_status, company_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) {
+        setStatus(data.verification_status);
+        if (data.company_name) setSupplierName(data.company_name);
+      }
+    } catch (error) {
+      console.error('Error checking seller status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleGroup = (title: string) => {
     setOpenGroups((prev) =>
@@ -143,12 +185,28 @@ export function SellerLayout({ children }: SellerLayoutProps) {
     document.documentElement.classList.toggle('dark');
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
   const notifications = [
     { id: 1, title: 'New order received', time: '2 min ago', unread: true },
     { id: 2, title: 'Product approved', time: '15 min ago', unread: true },
   ];
 
   const unreadCount = notifications.filter((n) => n.unread).length;
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show verification banner but allow access
+  const showVerificationBanner = status && status !== 'verified';
 
   return (
     <div className="dashboard-theme min-h-screen bg-background">
@@ -515,26 +573,64 @@ export function SellerLayout({ children }: SellerLayoutProps) {
                 <Button variant="ghost" className="gap-2 pl-2 pr-2 sm:pr-3">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                      SF
+                      {supplierName.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:block text-sm font-medium">Seller Farm</span>
+                  <span className="hidden md:block text-sm font-medium">{supplierName}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem><User className="mr-2 h-4 w-4" /> Profile</DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/seller/profile"><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>
                 <DropdownMenuItem><Store className="mr-2 h-4 w-4" /> View Store</DropdownMenuItem>
                 <DropdownMenuItem><Settings className="mr-2 h-4 w-4" /> Settings</DropdownMenuItem>
                 <DropdownMenuItem><HelpCircle className="mr-2 h-4 w-4" /> Help Center</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive"><LogOut className="mr-2 h-4 w-4" /> Sign Out</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive" onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
+
+        {/* Verification Status Banner */}
+        {showVerificationBanner && (
+          <Alert className={cn(
+            "mx-4 sm:mx-6 mt-4 border-l-4",
+            status === 'rejected' ? "border-l-red-500 bg-red-50" : "border-l-yellow-500 bg-yellow-50"
+          )}>
+            <div className="flex items-start gap-3">
+              {status === 'rejected' ? (
+                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+              ) : (
+                <ShieldCheck className="h-5 w-5 text-yellow-600 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <h3 className="font-semibold">
+                  {status === 'rejected' ? 'Verification Rejected' : 'Verification Pending'}
+                </h3>
+                <p className="text-sm mt-1">
+                  {status === 'rejected'
+                    ? 'Your verification was rejected. Please review and resubmit your documents.'
+                    : 'Your account is under review. Complete verification to unlock all features.'}
+                </p>
+                <Button
+                  size="sm"
+                  variant={status === 'rejected' ? 'destructive' : 'default'}
+                  className="mt-2"
+                  asChild
+                >
+                  <Link to="/seller/verification">
+                    {status === 'rejected' ? 'Resubmit Documents' : 'Complete Verification'}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </Alert>
+        )}
 
         {/* Page Content */}
         <main className="p-4 sm:p-6">{children}</main>

@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
-import { 
-  CheckCircle2, 
-  Package, 
-  Truck, 
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import {
+  CheckCircle2,
+  Package,
+  Truck,
   Download,
   ArrowRight,
   Copy,
@@ -11,71 +11,52 @@ import {
   Mail,
   Calendar,
   MapPin,
-  ShoppingBag
+  ShoppingBag,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock confirmed order data
-const confirmedOrder = {
-  id: "ORD-2026-001235",
-  date: "2026-01-08T16:45:00",
-  vendor: {
-    name: "Green Valley Farms",
-    isVerified: true
-  },
-  items: [
-    { 
-      name: "Organic Tomatoes (Fresh)", 
-      quantity: 500, 
-      unit: "kg",
-      unitPrice: 250,
-      totalPrice: 125000
-    },
-    { 
-      name: "Fresh Bell Peppers (Mixed Colors)", 
-      quantity: 200, 
-      unit: "kg",
-      unitPrice: 300,
-      totalPrice: 60000
-    }
-  ],
-  subtotal: 185000,
-  deliveryFee: 5000,
-  discount: 15000,
-  total: 175000,
-  currency: "XAF",
-  deliveryAddress: {
-    label: "Main Warehouse",
-    address: "123 Boulevard de la Liberté, Yaoundé, Centre, Cameroon"
-  },
-  deliveryMethod: "Express Shipping",
-  estimatedDelivery: "January 12, 2026",
-  paymentMethod: "Mobile Money (MTN)",
-  paymentStatus: "paid"
-};
+import type { Order } from "@/types/marketplace";
+import { cn } from "@/lib/utils";
 
 const OrderConfirmation = () => {
+  const { state } = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  const order: Order | null = state?.order || null;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-CM', {
       style: 'currency',
-      currency: confirmedOrder.currency,
+      currency: order?.currency || 'XAF',
       minimumFractionDigits: 0
     }).format(amount);
   };
 
   const copyOrderId = () => {
-    navigator.clipboard.writeText(confirmedOrder.id);
+    if (!order) return;
+    navigator.clipboard.writeText(order.orderNumber);
     toast({
       title: "Copied!",
       description: "Order ID copied to clipboard",
     });
   };
+
+  if (!order) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground mb-4">No order details found.</p>
+        <Link to="/orders">
+          <Button variant="outline">Go to My Orders</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-background">
@@ -89,14 +70,14 @@ const OrderConfirmation = () => {
           <p className="text-muted-foreground">
             Thank you for your order. We've received your purchase.
           </p>
-          
+
           {/* Order ID */}
           <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-background border rounded-lg">
             <span className="text-sm text-muted-foreground">Order ID:</span>
-            <code className="font-mono font-semibold">{confirmedOrder.id}</code>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <code className="font-mono font-semibold">{order.orderNumber}</code>
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-6 w-6"
               onClick={copyOrderId}
             >
@@ -118,7 +99,7 @@ const OrderConfirmation = () => {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card className="text-center hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="pt-6">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
@@ -130,7 +111,7 @@ const OrderConfirmation = () => {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card className="text-center hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="pt-6">
               <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
@@ -138,7 +119,7 @@ const OrderConfirmation = () => {
               </div>
               <h3 className="font-medium">Contact Vendor</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Message {confirmedOrder.vendor.name}
+                Message {order.groups[0]?.vendor.name || 'Vendor'}
               </p>
             </CardContent>
           </Card>
@@ -154,37 +135,41 @@ const OrderConfirmation = () => {
           </CardHeader>
           <CardContent>
             {/* Vendor Badge */}
-            <div className="flex items-center gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary font-semibold">
-                  {confirmedOrder.vendor.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <p className="font-medium">{confirmedOrder.vendor.name}</p>
-                {confirmedOrder.vendor.isVerified && (
-                  <Badge variant="secondary" className="text-xs">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Verified Supplier
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            {/* Items */}
-            <div className="space-y-3">
-              {confirmedOrder.items.map((item, index) => (
-                <div key={index} className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.quantity} {item.unit} × {formatCurrency(item.unitPrice)}
-                    </p>
+            {order.groups.map((group, gIdx) => (
+              <div key={group.vendor.id} className={cn("mb-6", gIdx !== 0 && "pt-6 border-t")}>
+                <div className="flex items-center gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-semibold">
+                      {group.vendor.name.charAt(0)}
+                    </span>
                   </div>
-                  <p className="font-medium">{formatCurrency(item.totalPrice)}</p>
+                  <div>
+                    <p className="font-medium">{group.vendor.name}</p>
+                    {group.vendor.isVerified && (
+                      <Badge variant="secondary" className="text-xs">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Verified Supplier
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Items */}
+                <div className="space-y-3">
+                  {group.items.map((item, index) => (
+                    <div key={index} className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{item.product.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.quantity} {item.product.unit} × {formatCurrency(item.product.currentPrice)}
+                        </p>
+                      </div>
+                      <p className="font-medium">{formatCurrency(item.product.currentPrice * item.quantity)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
 
             <Separator className="my-4" />
 
@@ -192,22 +177,22 @@ const OrderConfirmation = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatCurrency(confirmedOrder.subtotal)}</span>
+                <span>{formatCurrency(order.subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Delivery Fee</span>
-                <span>{formatCurrency(confirmedOrder.deliveryFee)}</span>
+                <span>{formatCurrency(order.deliveryTotal)}</span>
               </div>
-              {confirmedOrder.discount > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Discount Applied</span>
-                  <span>-{formatCurrency(confirmedOrder.discount)}</span>
+              {order.taxes > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Taxes</span>
+                  <span>{formatCurrency(order.taxes)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-bold">
                 <span>Total Paid</span>
-                <span className="text-primary">{formatCurrency(confirmedOrder.total)}</span>
+                <span className="text-primary">{formatCurrency(order.grandTotal)}</span>
               </div>
             </div>
 
@@ -218,7 +203,7 @@ const OrderConfirmation = () => {
                 Payment Confirmed
               </Badge>
               <span className="text-sm text-muted-foreground">
-                via {confirmedOrder.paymentMethod}
+                via {order.paymentMethod.name}
               </span>
             </div>
           </CardContent>
@@ -234,9 +219,9 @@ const OrderConfirmation = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="font-medium">{confirmedOrder.deliveryAddress.label}</p>
+              <p className="font-medium">{order.deliveryAddress.street}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                {confirmedOrder.deliveryAddress.address}
+                {order.deliveryAddress.city}, {order.deliveryAddress.state}, {order.deliveryAddress.country}
               </p>
             </CardContent>
           </Card>
@@ -249,9 +234,9 @@ const OrderConfirmation = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="font-medium text-primary">{confirmedOrder.estimatedDelivery}</p>
+              <p className="font-medium text-primary">January 15, 2026</p>
               <p className="text-sm text-muted-foreground mt-1">
-                {confirmedOrder.deliveryMethod}
+                Standard Shipping
               </p>
             </CardContent>
           </Card>
@@ -321,7 +306,7 @@ const OrderConfirmation = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to={`/orders/${confirmedOrder.id}`}>
+          <Link to={`/orders/${order.id}`}>
             <Button size="lg" className="w-full sm:w-auto">
               <Truck className="h-4 w-4 mr-2" />
               Track Your Order

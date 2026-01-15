@@ -1,284 +1,527 @@
-/**
- * Harvestá Chat API Layer
- * All functions are API-ready placeholders for Supabase integration
- */
+import { supabase } from "@/integrations/supabase/client";
 
-// ============ TYPES ============
-
-export type UserRole = 'buyer' | 'seller' | 'logistics' | 'admin' | 'system';
-export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
-export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'document' | 'location' | 'contact' | 'product' | 'offer' | 'counter-offer' | 'quote' | 'invoice' | 'delivery-update' | 'system' | 'voice-call' | 'video-call';
-export type ChatContext = { type: 'product'; productId: string } | { type: 'order'; orderId: string } | { type: 'rfq'; rfqId: string } | { type: 'delivery'; deliveryId: string } | { type: 'dispute'; disputeId: string } | { type: 'general' };
-export type ConversationType = 'direct' | 'group' | 'rfq' | 'order' | 'support';
-
-export interface User {
+export interface Conversation {
   id: string;
-  name: string;
-  avatar?: string;
-  role: UserRole;
-  isOnline: boolean;
-  lastSeen?: Date;
-  isVerified?: boolean;
-  phone?: string;
+  type: 'direct' | 'group' | 'support';
+  title?: string;
+  created_at: string;
+  updated_at: string;
+  last_message_at: string;
+  metadata?: any;
+  participants?: ConversationParticipant[];
+  last_message?: Message;
+  unreadCount?: number;
+  isArchived?: boolean;
+  isPinned?: boolean;
+  isFrozen?: boolean;
+  context?: any;
 }
 
-export interface SellerProfile {
+export interface ConversationParticipant {
   id: string;
-  name: string;
-  avatar?: string;
-  companyName?: string;
-  location: string;
-  country: string;
-  isVerified: boolean;
-  rating: number;
-  reviewCount: number;
-  responseTime: string;
-  reliabilityScore: number;
-  yearsActive: number;
-  certifications: string[];
-  products: ProductPreview[];
-}
-
-export interface ProductPreview {
-  id: string;
-  name: string;
-  image: string;
-  price: number;
-  currency: string;
-  unit: string;
+  conversation_id: string;
+  user_id: string;
+  role: 'member' | 'admin';
+  joined_at: string;
+  left_at?: string;
+  muted: boolean;
+  pinned: boolean;
+  user?: any;
 }
 
 export interface Message {
   id: string;
-  conversationId: string;
-  senderId: string;
-  senderRole: UserRole;
-  type: MessageType;
-  content: string;
-  metadata?: Record<string, any>;
-  replyTo?: string;
-  replyToMessage?: Message;
-  status: MessageStatus;
-  createdAt: Date;
-  updatedAt?: Date;
-  reactions?: Array<{ userId: string; emoji: string }>;
+  conversation_id: string;
+  sender_id: string;
+  content?: string;
+  type: 'text' | 'image' | 'document' | 'product' | 'quote' | 'system' | 'order';
+  metadata?: any;
+  created_at: string;
+  edited_at?: string;
+  deleted_at?: string;
+  sender?: any;
+  attachments?: MessageAttachment[];
+  is_read?: boolean;
 }
 
-export interface Conversation {
+export interface MessageAttachment {
   id: string;
-  type: ConversationType;
-  title?: string;
-  participants: User[];
-  context?: ChatContext;
-  lastMessage?: Message;
-  unreadCount: number;
-  isPinned: boolean;
-  isArchived: boolean;
-  isFrozen: boolean;
-  isMuted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  message_id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size?: number;
+  thumbnail_url?: string;
 }
 
-export interface Offer {
-  id: string;
-  productId: string;
-  productName: string;
-  productImage?: string;
-  quantity: number;
-  unit: string;
-  pricePerUnit: number;
-  currency: string;
-  totalPrice: number;
-  deliveryTerms?: string;
-  validUntil: Date;
-  status: 'pending' | 'accepted' | 'rejected' | 'countered' | 'expired';
+export interface UserPresence {
+  user_id: string;
+  status: 'online' | 'offline' | 'away';
+  last_seen: string;
+  typing_in?: string;
 }
 
-// ============ MOCK DATA ============
+/**
+ * Create a new conversation
+ */
+export async function createConversation(
+  participantIds: string[],
+  type: Conversation['type'] = 'direct',
+  title?: string
+): Promise<{ data: Conversation | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
 
-const mockUsers: User[] = [
-  { id: 'user_1', name: 'Kofi Asante', role: 'seller', isOnline: true, isVerified: true },
-  { id: 'user_2', name: 'Amina Diallo', role: 'buyer', isOnline: false, lastSeen: new Date(Date.now() - 3600000) },
-  { id: 'user_3', name: 'TransAfrica Logistics', role: 'logistics', isOnline: true },
-  { id: 'user_4', name: 'Support Team', role: 'admin', isOnline: true },
-];
+    // Create conversation
+    const { data: conversation, error: convError } = await supabase
+      .from('conversations')
+      .insert({
+        type,
+        title,
+        metadata: {}
+      })
+      .select()
+      .single();
 
-const mockConversations: Conversation[] = [
-  {
-    id: 'conv_1',
-    type: 'direct',
-    participants: [mockUsers[0], { id: 'current-user', name: 'You', role: 'buyer', isOnline: true }],
-    context: { type: 'product', productId: 'prod_1' },
-    lastMessage: { id: 'm1', conversationId: 'conv_1', senderId: 'user_1', senderRole: 'seller', type: 'text', content: 'Yes, we can offer bulk pricing for orders above 500kg', status: 'delivered', createdAt: new Date(Date.now() - 300000) },
-    unreadCount: 2,
-    isPinned: true,
-    isArchived: false,
-    isFrozen: false,
-    isMuted: false,
-    createdAt: new Date(Date.now() - 86400000 * 3),
-    updatedAt: new Date(Date.now() - 300000),
-  },
-  {
-    id: 'conv_2',
-    type: 'rfq',
-    title: 'RFQ: Organic Cocoa Beans',
-    participants: [mockUsers[0], mockUsers[1], { id: 'current-user', name: 'You', role: 'buyer', isOnline: true }],
-    context: { type: 'rfq', rfqId: 'rfq_123' },
-    lastMessage: { id: 'm2', conversationId: 'conv_2', senderId: 'user_2', senderRole: 'buyer', type: 'quote', content: 'Quote submitted: 850 XAF/kg for 2000kg', status: 'read', createdAt: new Date(Date.now() - 7200000) },
-    unreadCount: 0,
-    isPinned: false,
-    isArchived: false,
-    isFrozen: false,
-    isMuted: false,
-    createdAt: new Date(Date.now() - 86400000 * 5),
-    updatedAt: new Date(Date.now() - 7200000),
-  },
-  {
-    id: 'conv_3',
-    type: 'order',
-    title: 'Order #ORD-4521',
-    participants: [mockUsers[2], { id: 'current-user', name: 'You', role: 'buyer', isOnline: true }],
-    context: { type: 'order', orderId: 'ORD-4521' },
-    lastMessage: { id: 'm3', conversationId: 'conv_3', senderId: 'user_3', senderRole: 'logistics', type: 'delivery-update', content: 'Your shipment is now in transit. ETA: 2 days', status: 'read', createdAt: new Date(Date.now() - 14400000) },
-    unreadCount: 0,
-    isPinned: false,
-    isArchived: false,
-    isFrozen: false,
-    isMuted: false,
-    createdAt: new Date(Date.now() - 86400000 * 2),
-    updatedAt: new Date(Date.now() - 14400000),
-  },
-];
+    if (convError) throw convError;
 
-const mockMessages: Message[] = [
-  { id: 'm1', conversationId: 'conv_1', senderId: 'current-user', senderRole: 'buyer', type: 'text', content: 'Hello! I\'m interested in your organic cocoa beans', status: 'read', createdAt: new Date(Date.now() - 86400000) },
-  { id: 'm2', conversationId: 'conv_1', senderId: 'user_1', senderRole: 'seller', type: 'text', content: 'Welcome! Our premium cocoa is harvested fresh from Cameroon farms.', status: 'read', createdAt: new Date(Date.now() - 86400000 + 60000) },
-  { id: 'm3', conversationId: 'conv_1', senderId: 'current-user', senderRole: 'buyer', type: 'text', content: 'What\'s your pricing for bulk orders?', status: 'read', createdAt: new Date(Date.now() - 86400000 + 120000) },
-  { id: 'm4', conversationId: 'conv_1', senderId: 'user_1', senderRole: 'seller', type: 'text', content: 'Yes, we can offer bulk pricing for orders above 500kg', status: 'delivered', createdAt: new Date(Date.now() - 300000) },
-];
+    // Add participants
+    const participants = [user.id, ...participantIds].map(userId => ({
+      conversation_id: conversation.id,
+      user_id: userId,
+      role: userId === user.id ? 'admin' : 'member'
+    }));
 
-const mockSellerProfile: SellerProfile = {
-  id: 'user_1',
-  name: 'Kofi Asante',
-  companyName: 'Asante Organic Farms',
-  location: 'Kumasi',
-  country: 'Ghana',
-  isVerified: true,
-  rating: 4.8,
-  reviewCount: 127,
-  responseTime: 'Usually responds within 1 hour',
-  reliabilityScore: 96,
-  yearsActive: 4,
-  certifications: ['Organic Certified', 'Export Ready', 'Fair Trade'],
-  products: [
-    { id: 'p1', name: 'Organic Cocoa Beans', image: '/placeholder.svg', price: 850, currency: 'XAF', unit: 'kg' },
-    { id: 'p2', name: 'Raw Shea Butter', image: '/placeholder.svg', price: 1200, currency: 'XAF', unit: 'kg' },
-  ],
-};
+    const { error: partError } = await supabase
+      .from('conversation_participants')
+      .insert(participants);
 
-// ============ API FUNCTIONS ============
+    if (partError) throw partError;
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-export async function fetchConversations(filters?: { type?: ConversationType; unreadOnly?: boolean }): Promise<Conversation[]> {
-  await delay(300);
-  let results = [...mockConversations];
-  if (filters?.type) results = results.filter(c => c.type === filters.type);
-  if (filters?.unreadOnly) results = results.filter(c => c.unreadCount > 0);
-  return results;
+    return { data: conversation, error: null };
+  } catch (error) {
+    console.error('Error creating conversation:', error);
+    return { data: null, error };
+  }
 }
 
-export async function fetchMessages(conversationId: string): Promise<Message[]> {
-  await delay(250);
-  return mockMessages.filter(m => m.conversationId === conversationId);
+/**
+ * Fetch user's conversations
+ */
+export async function fetchConversations(
+  userId?: string
+): Promise<{ data: Conversation[] | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const targetUserId = userId || user?.id;
+    if (!targetUserId) throw new Error('User ID required');
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .select(`
+        *,
+        participants:conversation_participants(
+          *,
+          user:user_profiles(*)
+        )
+      `)
+      .in('id',
+        supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', targetUserId)
+      )
+      .order('last_message_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Fetch unread counts and last messages
+    const conversationsWithExtras = await Promise.all(
+      (data || []).map(async (conv) => {
+        const { data: unreadData } = await supabase
+          .from('messages')
+          .select('id')
+          .eq('conversation_id', conv.id)
+          .not('sender_id', 'eq', targetUserId)
+          .not('id', 'in',
+            supabase
+              .from('message_read_status')
+              .select('message_id')
+              .eq('user_id', targetUserId)
+          );
+
+        const { data: lastMessage } = await supabase
+          .from('messages')
+          .select('*, sender:user_profiles(*)')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        return {
+          ...conv,
+          unread_count: unreadData?.length || 0,
+          last_message: lastMessage
+        };
+      })
+    );
+
+    return { data: conversationsWithExtras, error: null };
+  } catch (error) {
+    console.error('Error fetching conversations:', error);
+    return { data: null, error };
+  }
 }
 
-export async function sendMessage(conversationId: string, message: { type: MessageType; content: string; metadata?: Record<string, any> }): Promise<Message> {
-  await delay(200);
-  const newMessage: Message = {
-    id: `msg_${Date.now()}`,
-    conversationId,
-    senderId: 'current-user',
-    senderRole: 'buyer',
-    type: message.type,
-    content: message.content,
-    metadata: message.metadata,
-    status: 'sent',
-    createdAt: new Date(),
-  };
-  return newMessage;
+/**
+ * Send a message
+ */
+export async function sendMessage(
+  conversationId: string,
+  content: string,
+  type: Message['type'] = 'text',
+  metadata?: any
+): Promise<{ data: Message | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content,
+        type,
+        metadata: metadata || {}
+      })
+      .select('*, sender:user_profiles(*)')
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return { data: null, error };
+  }
 }
 
-export async function fetchSellerProfile(sellerId: string): Promise<SellerProfile> {
-  await delay(300);
-  return mockSellerProfile;
+/**
+ * Fetch messages for a conversation
+ */
+export async function fetchMessages(
+  conversationId: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<{ data: Message[] | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select(`
+        *,
+        sender:user_profiles(*),
+        attachments:message_attachments(*)
+      `)
+      .eq('conversation_id', conversationId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    // Check read status for each message
+    const messagesWithReadStatus = await Promise.all(
+      (data || []).map(async (msg) => {
+        const { data: readStatus } = await supabase
+          .from('message_read_status')
+          .select('id')
+          .eq('message_id', msg.id)
+          .eq('user_id', user.id)
+          .single();
+
+        return {
+          ...msg,
+          is_read: !!readStatus
+        };
+      })
+    );
+
+    return { data: messagesWithReadStatus.reverse(), error: null };
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    return { data: null, error };
+  }
 }
 
+/**
+ * Mark message as read
+ */
+export async function markAsRead(
+  messageId: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('message_read_status')
+      .insert({
+        message_id: messageId,
+        user_id: user.id
+      })
+      .select()
+      .single();
+
+    if (error && error.code !== '23505') throw error; // Ignore duplicate key error
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error marking message as read:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Mark all messages in conversation as read
+ */
+export async function markConversationAsRead(
+  conversationId: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get all unread messages
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('id')
+      .eq('conversation_id', conversationId)
+      .not('sender_id', 'eq', user.id);
+
+    if (!messages || messages.length === 0) {
+      return { data: null, error: null };
+    }
+
+    // Mark all as read
+    const readStatuses = messages.map(msg => ({
+      message_id: msg.id,
+      user_id: user.id
+    }));
+
+    const { data, error } = await supabase
+      .from('message_read_status')
+      .upsert(readStatuses);
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error marking conversation as read:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Search conversations by title or participant name
+ */
 export async function searchConversations(query: string): Promise<Conversation[]> {
-  await delay(200);
-  return mockConversations.filter(c =>
-    c.title?.toLowerCase().includes(query.toLowerCase()) ||
-    c.participants.some(p => p.name.toLowerCase().includes(query.toLowerCase()))
-  );
-}
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
 
-export async function escalateChat(conversationId: string, reason: string): Promise<{ success: boolean; ticketId: string }> {
-  await delay(400);
-  console.log('[API] Escalating chat:', conversationId, reason);
-  return { success: true, ticketId: `ticket_${Date.now()}` };
-}
+    const { data, error } = await supabase
+      .from('conversations')
+      .select(`
+        *,
+        participants:conversation_participants(
+          *,
+          user:user_profiles(*)
+        )
+      `)
+      .in('id',
+        supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', user.id)
+      )
+      .or(`title.ilike.%${query}%`); // Better search would include participant names
 
-export async function updateTypingStatus(conversationId: string, isTyping: boolean): Promise<void> {
-  console.log('[API] Typing status:', conversationId, isTyping);
-}
+    if (error) throw error;
 
-export async function markAsRead(conversationId: string): Promise<void> {
-  await delay(100);
-  console.log('[API] Marking as read:', conversationId);
-}
-
-export async function createConversation(participants: string[], context?: ChatContext): Promise<Conversation> {
-  await delay(300);
-  return mockConversations[0];
-}
-
-export async function fetchChatContext(context: ChatContext): Promise<Record<string, any> | null> {
-  await delay(200);
-  // Mock data based on context type
-  if (context.type === 'product') {
-    return { name: 'Organic Cocoa Beans', rating: 4.8, price: 850, currency: 'XAF', unit: 'kg', image: '/placeholder.svg' };
+    return (data || []).map(conv => ({
+      ...conv,
+      unreadCount: 0 // Mock for now or fetch properly
+    }));
+  } catch (error) {
+    console.error('Error searching conversations:', error);
+    return [];
   }
-  if (context.type === 'order') {
-    return { orderNumber: 'ORD-4521', status: 'in-transit', currency: 'XAF', totalAmount: 425000 };
-  }
-  if (context.type === 'rfq') {
-    return { title: 'Organic Cocoa Request', status: 'open', quantity: 2000, unit: 'kg' };
-  }
-  if (context.type === 'delivery') {
-    return { trackingNumber: 'HRV-2024-001234', carrier: 'TransAfrica Logistics', deliveryLocation: 'Douala, Cameroon' };
-  }
-  return null;
 }
 
-export async function moderateChat(conversationId: string, action: 'freeze' | 'unfreeze' | 'warn' | 'mute-user' | 'inject-message', options?: { userId?: string; message?: string }): Promise<{ success: boolean }> {
-  await delay(300);
-  console.log('[API] Moderating chat:', conversationId, action, options);
-  return { success: true };
+/**
+ * Update user presence
+ */
+export async function updatePresence(
+  status: UserPresence['status'],
+  typingIn?: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('user_presence')
+      .upsert({
+        user_id: user.id,
+        status,
+        typing_in: typingIn,
+        last_seen: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating presence:', error);
+    return { data: null, error };
+  }
 }
 
-export async function joinChatAsAdmin(conversationId: string, visible?: boolean): Promise<{ success: boolean }> {
-  await delay(200);
-  console.log('[API] Admin joining chat:', conversationId, 'visible:', visible);
-  return { success: true };
+/**
+ * Upload chat attachment
+ */
+export async function uploadChatAttachment(
+  file: File,
+  conversationId: string
+): Promise<{ data: string | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${conversationId}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('chat-attachments')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('chat-attachments')
+      .getPublicUrl(fileName);
+
+    return { data: publicUrl, error: null };
+  } catch (error) {
+    console.error('Error uploading attachment:', error);
+    return { data: null, error };
+  }
 }
 
-export async function sendOffer(conversationId: string, offer: Omit<Offer, 'id' | 'status'>): Promise<Offer> {
-  await delay(400);
-  const newOffer: Offer = {
-    id: `offer_${Date.now()}`,
-    ...offer,
-    status: 'pending',
-  };
-  return newOffer;
+/**
+ * Search messages
+ */
+export async function searchMessages(
+  query: string,
+  conversationId?: string
+): Promise<{ data: Message[] | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    let queryBuilder = supabase
+      .from('messages')
+      .select(`
+        *,
+        sender:user_profiles(*),
+        conversation:conversations(*)
+      `)
+      .ilike('content', `%${query}%`)
+      .is('deleted_at', null);
+
+    if (conversationId) {
+      queryBuilder = queryBuilder.eq('conversation_id', conversationId);
+    } else {
+      // Only search in user's conversations
+      queryBuilder = queryBuilder.in('conversation_id',
+        supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', user.id)
+      );
+    }
+
+    const { data, error } = await queryBuilder
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error searching messages:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Delete message
+ */
+export async function deleteMessage(
+  messageId: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('messages')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', messageId)
+      .eq('sender_id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Edit message
+ */
+export async function editMessage(
+  messageId: string,
+  newContent: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('messages')
+      .update({
+        content: newContent,
+        edited_at: new Date().toISOString()
+      })
+      .eq('id', messageId)
+      .eq('sender_id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error editing message:', error);
+    return { data: null, error };
+  }
 }

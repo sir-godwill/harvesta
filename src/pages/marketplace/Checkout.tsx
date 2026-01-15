@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
   ArrowLeft, User, MapPin, CreditCard, FileCheck,
-  Building2, Check, ChevronDown, ChevronUp, Plus, Phone
+  Building2, Check, ChevronDown, ChevronUp, Plus, Phone, Loader2
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -16,13 +17,16 @@ import { OrderSummaryCard } from '@/components/marketplace/OrderSummaryCard';
 import { VendorCardHeader } from '@/components/marketplace/VendorCard';
 import { DeliveryEstimateDisplay } from '@/components/marketplace/DeliveryEstimator';
 import { cn } from '@/lib/utils';
-import { mockCartGroups, mockPaymentMethods, mockBuyerInfo, mockDeliveryAddress } from '@/lib/mockData';
+import { fetchCartItems, createOrder } from '@/lib/marketplaceApi';
+import { mockPaymentMethods, mockBuyerInfo, mockDeliveryAddress } from '@/lib/mockData';
 import type { BuyerInfo, DeliveryAddress, PaymentMethod } from '@/types/marketplace';
+import { toast } from 'sonner';
 
 type CheckoutStep = 'buyer' | 'delivery' | 'payment' | 'review';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('buyer');
   const [buyerType, setBuyerType] = useState<'individual' | 'business'>('business');
   const [buyerInfo, setBuyerInfo] = useState<Partial<BuyerInfo>>(mockBuyerInfo);
@@ -30,12 +34,47 @@ export default function CheckoutPage() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(mockPaymentMethods[0]);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const cartGroups = mockCartGroups;
-  const subtotal = cartGroups.reduce((sum, g) => sum + g.subtotal, 0);
-  const deliveryTotal = 70;
-  const taxes = subtotal * 0.08;
-  const grandTotal = subtotal + deliveryTotal + taxes;
-  const itemCount = cartGroups.reduce((sum, g) => sum + g.items.length, 0);
+  // 1. Fetch cart data
+  const { data: cartResponse, isLoading: cartLoading } = useQuery({
+    queryKey: ['cart'],
+    queryFn: fetchCartItems,
+  });
+
+  const cartGroups = useMemo(() => cartResponse?.data || [], [cartResponse]);
+
+  // 2. Totals calculation
+  const { subtotal, deliveryTotal, taxes, grandTotal, itemCount } = useMemo(() => {
+    const sub = cartGroups.reduce((sum, g) => sum + g.subtotal, 0);
+    const delivery = cartGroups.length * 2500; // Demo flat fee per vendor
+    const tax = sub * 0.18;
+    return {
+      subtotal: sub,
+      deliveryTotal: delivery,
+      taxes: tax,
+      grandTotal: sub + delivery + tax,
+      itemCount: cartGroups.reduce((sum, g) => sum + g.items.length, 0)
+    };
+  }, [cartGroups]);
+
+  // 3. Order creation mutation
+  const createOrderMutation = useMutation({
+    mutationFn: () => createOrder(
+      cartGroups,
+      buyerInfo as BuyerInfo,
+      deliveryAddress as DeliveryAddress,
+      selectedPayment
+    ),
+    onSuccess: (res) => {
+      if (res.success) {
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
+        toast.success('Order placed successfully!');
+        navigate('/order-confirmation', { state: { order: res.data } });
+      } else {
+        toast.error('Failed to place order: ' + res.error);
+      }
+    },
+    onError: (err: any) => toast.error('Error creating order: ' + err.message)
+  });
 
   const steps: { id: CheckoutStep; label: string; icon: any }[] = [
     { id: 'buyer', label: 'Buyer Info', icon: User },
@@ -54,7 +93,15 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = () => {
-    navigate('/order-confirmation');
+    createOrderMutation.mutate();
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-CM', {
+      style: 'currency',
+      currency: 'XAF',
+      maximumFractionDigits: 0
+    }).format(price);
   };
 
   const StepAccordion = ({ step, children }: { step: CheckoutStep; children: React.ReactNode }) => {
@@ -123,6 +170,13 @@ export default function CheckoutPage() {
           <div className="flex-1 space-y-4">
             <h1 className="text-2xl font-bold mb-6">Secure Checkout</h1>
 
+            {cartLoading && (
+              <div className="flex items-center gap-2 text-muted-foreground animate-pulse mb-4">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Updating totals...
+              </div>
+            )}
+
             <StepAccordion step="buyer">
               <div className="space-y-6 pt-4">
                 <div className="flex gap-4 p-1 bg-muted rounded-lg">
@@ -184,7 +238,7 @@ export default function CheckoutPage() {
 
             <StepAccordion step="payment">
               <div className="space-y-6 pt-4">
-                <RadioGroup value={selectedPayment.id} onValueChange={(value) => { const p = mockPaymentMethods.find(m => m.id === value); if(p) setSelectedPayment(p); }} className="space-y-3">
+                <RadioGroup value={selectedPayment.id} onValueChange={(value) => { const p = mockPaymentMethods.find(m => m.id === value); if (p) setSelectedPayment(p); }} className="space-y-3">
                   {mockPaymentMethods.map((method) => (
                     <Label key={method.id} htmlFor={method.id} className={cn('flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all', selectedPayment.id === method.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50')}>
                       <RadioGroupItem value={method.id} id={method.id} />
@@ -218,8 +272,20 @@ export default function CheckoutPage() {
                   <span className="text-sm text-muted-foreground">I agree to the <Link to="/terms" className="text-primary hover:underline">Terms & Conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link></span>
                 </label>
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setCurrentStep('payment')}>Back</Button>
-                  <Button onClick={handlePlaceOrder} disabled={!agreedToTerms} className="flex-1">Place Order • ${grandTotal.toFixed(2)}</Button>
+                  <Button
+                    onClick={handlePlaceOrder}
+                    disabled={!agreedToTerms || createOrderMutation.isPending || cartLoading}
+                    className="flex-1"
+                  >
+                    {createOrderMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      `Place Order • ${formatPrice(grandTotal)}`
+                    )}
+                  </Button>
                 </div>
               </div>
             </StepAccordion>

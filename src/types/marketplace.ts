@@ -101,6 +101,7 @@ export interface Order {
   deliveryTotal: number;
   taxes: number;
   grandTotal: number;
+  currency: string;
   paymentMethod: PaymentMethod;
 }
 

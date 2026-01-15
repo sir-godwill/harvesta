@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  ShoppingCart, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  ShoppingCart,
   Loader2,
   Star,
   ThumbsUp,
@@ -190,56 +190,177 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { formatPrice } = useApp();
-  
+
   const [isLoading, setIsLoading] = useState(true);
-  const [quantity, setQuantity] = useState(100);
+  const [error, setError] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [activeTab, setActiveTab] = useState('description');
-  
-  // Data states - using mock data for now
-  const [product] = useState<ProductDetails>(mockProduct);
-  const [media] = useState<ProductMedia>(mockMedia);
-  const [variants] = useState<ProductVariant[]>(mockVariants);
-  const [pricing] = useState<ProductPricing>(mockPricing);
-  const [inventory] = useState<ProductInventory>(mockInventory);
-  const [conditions] = useState<ProductConditions>(mockConditions);
-  const [seller] = useState<SellerProfile>(mockSeller);
-  const [relatedProducts] = useState<RelatedProduct[]>(mockRelated);
+
+  // Data states
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [media, setMedia] = useState<ProductMedia>({ images: [] });
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [pricing, setPricing] = useState<ProductPricing | null>(null);
+  const [inventory, setInventory] = useState<ProductInventory | null>(null);
+  const [conditions, setConditions] = useState<ProductConditions | null>(null);
+  const [seller, setSeller] = useState<SellerProfile | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [reviews] = useState(mockReviews);
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      setSelectedVariant(variants.find(v => v.isDefault) || variants[0] || null);
-    }, 500);
-    
-    // Track view
-    if (id) {
-      incrementProductView(id);
-    }
-    
-    return () => clearTimeout(timer);
-  }, [id, variants]);
+    async function loadProductData() {
+      if (!id) return;
 
-  const handleAddToCart = () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const details = await fetchProductById(id);
+        if (!details) {
+          setError('Product not found');
+          setIsLoading(false);
+          return;
+        }
+        setProduct(details);
+        setQuantity(details.moq);
+
+        const [productMedia, productVariants, productConditions] = await Promise.all([
+          fetchProductMedia(id),
+          fetchProductVariants(id),
+          fetchPurchaseConditions(id),
+        ]);
+
+        setMedia(productMedia);
+        setVariants(productVariants);
+        setConditions(productConditions);
+
+        const defaultVariant = productVariants.find(v => v.isDefault) || productVariants[0];
+        if (defaultVariant) {
+          setSelectedVariant(defaultVariant);
+
+          const [variantPricing, variantInventory] = await Promise.all([
+            fetchProductPricing(defaultVariant.id),
+            fetchInventoryLevels(defaultVariant.id),
+          ]);
+
+          setPricing(variantPricing);
+          setInventory(variantInventory);
+        }
+
+        // Fetch seller profile if supplier_id is available
+        const supplierId = (details as any).supplier_id || (details as any).supplier?.id;
+        if (supplierId) {
+          const [sellerProfile, related] = await Promise.all([
+            fetchSellerProfile(supplierId),
+            fetchRelatedProducts(id, details.category.id, supplierId),
+          ]);
+          setSeller(sellerProfile);
+          setRelatedProducts(related);
+        }
+
+        incrementProductView(id);
+      } catch (err) {
+        console.error('Error loading product details:', err);
+        setError('Failed to load product details');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadProductData();
+  }, [id]);
+
+  // Update pricing and inventory when variant changes
+  useEffect(() => {
+    async function updateVariantData() {
+      if (!selectedVariant) return;
+
+      const [variantPricing, variantInventory] = await Promise.all([
+        fetchProductPricing(selectedVariant.id),
+        fetchInventoryLevels(selectedVariant.id),
+      ]);
+
+      setPricing(variantPricing);
+      setInventory(variantInventory);
+    }
+
+    if (selectedVariant && !isLoading) {
+      updateVariantData();
+    }
+  }, [selectedVariant]);
+
+  const handleAddToCart = async () => {
+    if (!product || !selectedVariant) return;
+
     if (quantity < product.moq) {
       toast.error(`Minimum order quantity is ${product.moq} ${product.unit}`);
       return;
     }
-    toast.success(`Added ${quantity} ${product.unit} to cart`);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please login to add to cart');
+        navigate('/login');
+        return;
+      }
+
+      // Check if user has an active cart
+      let { data: cart } = await supabase
+        .from('carts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      if (!cart) {
+        const { data: newCart, error: cartError } = await supabase
+          .from('carts')
+          .insert({ user_id: user.id, status: 'active' })
+          .select()
+          .single();
+
+        if (cartError) throw cartError;
+        cart = newCart;
+      }
+
+      // Add item to cart
+      const { error: itemError } = await supabase
+        .from('cart_items')
+        .insert({
+          cart_id: cart.id,
+          product_variant_id: selectedVariant.id,
+          quantity: quantity
+        });
+
+      if (itemError) throw itemError;
+
+      toast.success(`Added ${quantity} ${product.unit} to cart`, {
+        action: {
+          label: 'View Cart',
+          onClick: () => navigate('/cart')
+        }
+      });
+    } catch (err: any) {
+      console.error('Error adding to cart:', err);
+      toast.error(err.message || 'Failed to add item to cart');
+    }
   };
 
   const handleRequestQuote = () => {
+    if (!product) return;
     navigate('/rfq', { state: { productId: id, productName: product.name, quantity } });
   };
 
   const handleContactSeller = () => {
+    if (!seller) return;
     toast.info('Opening chat with seller...');
     navigate('/messages', { state: { sellerId: seller.id } });
   };
 
   const handleVisitStore = () => {
+    if (!seller) return;
     navigate(`/supplier/${seller.id}`);
   };
 
@@ -294,7 +415,7 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-      
+
       {/* Mobile Header */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-40">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -314,7 +435,7 @@ export default function ProductDetail() {
           <div className="lg:col-span-5">
             <ProductGallery images={media.images} productName={product.name} />
           </div>
-          
+
           {/* Right Column - Product Info */}
           <div className="lg:col-span-7 space-y-6">
             <ProductHeader
@@ -329,7 +450,7 @@ export default function ProductDetail() {
               viewCount={product.viewCount}
               orderCount={product.orderCount}
             />
-            
+
             <ProductPricingSection
               pricing={pricing}
               unit={product.unit}
@@ -340,7 +461,7 @@ export default function ProductDetail() {
               onQuantityChange={setQuantity}
               formatPrice={formatPrice}
             />
-            
+
             <ProductActions
               productId={product.id}
               productName={product.name}
@@ -353,11 +474,11 @@ export default function ProductDetail() {
               onRequestQuote={handleRequestQuote}
               onContactSeller={handleContactSeller}
             />
-            
+
             <ProductSellerCard seller={seller} />
           </div>
         </div>
-        
+
         {/* Tabbed Content Section */}
         <div className="mt-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -398,7 +519,7 @@ export default function ProductDetail() {
                       <div className="prose prose-sm max-w-none">
                         <div dangerouslySetInnerHTML={{ __html: product.description }} />
                       </div>
-                      
+
                       {/* Short Description */}
                       <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                         <h4 className="font-semibold mb-2">Quick Summary</h4>
@@ -427,11 +548,10 @@ export default function ProductDetail() {
                         {variants.map((variant) => (
                           <div
                             key={variant.id}
-                            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                              selectedVariant?.id === variant.id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                            }`}
+                            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedVariant?.id === variant.id
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                              }`}
                             onClick={() => setSelectedVariant(variant)}
                           >
                             <div className="flex items-center justify-between">
@@ -518,17 +638,16 @@ export default function ProductDetail() {
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star
                                   key={star}
-                                  className={`h-5 w-5 ${
-                                    star <= Math.round(seller.rating)
-                                      ? 'text-yellow-400 fill-yellow-400'
-                                      : 'text-gray-300'
-                                  }`}
+                                  className={`h-5 w-5 ${star <= Math.round(seller.rating)
+                                    ? 'text-yellow-400 fill-yellow-400'
+                                    : 'text-gray-300'
+                                    }`}
                                 />
                               ))}
                             </div>
                             <p className="text-sm text-muted-foreground">{seller.totalReviews} reviews</p>
                           </div>
-                          
+
                           <div className="space-y-2">
                             {Object.entries(ratingBreakdown).reverse().map(([rating, percentage]) => (
                               <div key={rating} className="flex items-center gap-2">
@@ -570,18 +689,17 @@ export default function ProductDetail() {
                                       {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
                                           key={star}
-                                          className={`h-4 w-4 ${
-                                            star <= review.rating
-                                              ? 'text-yellow-400 fill-yellow-400'
-                                              : 'text-gray-300'
-                                          }`}
+                                          className={`h-4 w-4 ${star <= review.rating
+                                            ? 'text-yellow-400 fill-yellow-400'
+                                            : 'text-gray-300'
+                                            }`}
                                         />
                                       ))}
                                     </div>
                                     <span className="text-sm text-muted-foreground">{review.date}</span>
                                   </div>
                                   <p className="text-sm mb-3">{review.comment}</p>
-                                  
+
                                   {review.images.length > 0 && (
                                     <div className="flex gap-2 mb-3">
                                       {review.images.map((img, i) => (
@@ -594,7 +712,7 @@ export default function ProductDetail() {
                                       ))}
                                     </div>
                                   )}
-                                  
+
                                   <Button variant="ghost" size="sm" className="text-muted-foreground">
                                     <ThumbsUp className="h-4 w-4 mr-1" />
                                     Helpful ({review.helpful})
@@ -732,9 +850,9 @@ export default function ProductDetail() {
                           <p className="text-sm text-purple-600">24/7 support for any order issues</p>
                         </div>
                       </div>
-                      
+
                       <Separator />
-                      
+
                       <div>
                         <h4 className="font-semibold mb-3">Return Policy</h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
@@ -763,13 +881,13 @@ export default function ProductDetail() {
             </AnimatePresence>
           </Tabs>
         </div>
-        
+
         {/* Related Products */}
         <div className="mt-8">
           <RelatedProducts products={relatedProducts} formatPrice={formatPrice} />
         </div>
       </div>
-      
+
       {/* Mobile Bottom Actions */}
       <ProductActionsMobile
         isOutOfStock={inventory.isOutOfStock}

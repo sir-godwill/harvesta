@@ -17,7 +17,7 @@ export interface ProductFormData {
   sku?: string;
   unit_of_measure: string;
   status: 'draft' | 'active' | 'inactive' | 'out_of_stock' | 'discontinued';
-  
+
   // Attributes
   is_organic: boolean;
   is_featured: boolean;
@@ -26,18 +26,18 @@ export interface ProductFormData {
   harvest_date?: string;
   expiry_date?: string;
   lead_time_days?: number;
-  
+
   // Order Limits
   min_order_quantity: number;
   max_order_quantity?: number;
-  
+
   // Supplier
   supplier_id: string;
-  
+
   // Tags & Labels
   tags: string[];
   labels: string[];
-  
+
   // B2B/B2C Settings
   enable_b2b: boolean;
   enable_b2c: boolean;
@@ -115,7 +115,7 @@ export interface Tag {
 
 export async function createProduct(data: ProductFormData) {
   const slug = data.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  
+
   const { data: product, error } = await supabase
     .from('products')
     .insert({
@@ -216,7 +216,7 @@ export async function fetchCategories(): Promise<{ data: Category[] | null; erro
 
 export async function createCategory(name: string, parentId?: string) {
   const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  
+
   const { data, error } = await supabase
     .from('categories')
     .insert({
@@ -244,7 +244,7 @@ export async function fetchTags(): Promise<{ data: Tag[] | null; error: any }> {
     { id: '7', name: 'Certified', slug: 'certified', color: '#14b8a6' },
     { id: '8', name: 'Bulk Only', slug: 'bulk-only', color: '#6366f1' },
   ];
-  
+
   return { data: predefinedTags, error: null };
 }
 
@@ -363,7 +363,7 @@ export async function deletePricingTier(tierId: string) {
 
 export function calculateTieredPricing(quantity: number, tiers: PricingTier[]) {
   const sortedTiers = [...tiers].sort((a, b) => a.min_quantity - b.min_quantity);
-  
+
   for (const tier of sortedTiers.reverse()) {
     if (quantity >= tier.min_quantity) {
       if (!tier.max_quantity || quantity <= tier.max_quantity) {
@@ -376,7 +376,7 @@ export function calculateTieredPricing(quantity: number, tiers: PricingTier[]) {
       }
     }
   }
-  
+
   return {
     tier: sortedTiers[0],
     pricePerUnit: sortedTiers[0]?.price_per_unit || 0,
@@ -419,23 +419,38 @@ export async function uploadProductImage(
   isPrimary: boolean = false,
   sortOrder: number = 0
 ) {
-  // In a real implementation, this would upload to Supabase Storage
-  // For now, return a placeholder
-  const mockUrl = URL.createObjectURL(file);
-  
-  const { data, error } = await supabase
-    .from('product_images')
-    .insert({
-      product_id: productId,
-      image_url: mockUrl,
-      alt_text: file.name,
-      is_primary: isPrimary,
-      sort_order: sortOrder,
-    })
-    .select()
-    .single();
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${productId}/${Date.now()}.${fileExt}`;
+    const filePath = `product-images/${fileName}`;
 
-  return { data, error };
+    const { error: uploadError } = await supabase.storage
+      .from('public') // Using 'public' bucket as seen in other migrations
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('public')
+      .getPublicUrl(filePath);
+
+    const { data, error } = await supabase
+      .from('product_images')
+      .insert({
+        product_id: productId,
+        image_url: publicUrl,
+        alt_text: file.name,
+        is_primary: isPrimary,
+        sort_order: sortOrder,
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  } catch (error) {
+    console.error('Error uploading product image:', error);
+    return { data: null, error };
+  }
 }
 
 export async function deleteProductImage(imageId: string) {
@@ -454,7 +469,7 @@ export async function reorderProductImages(images: { id: string; sort_order: num
       .update({ sort_order: img.sort_order })
       .eq('id', img.id)
   );
-  
+
   await Promise.all(promises);
   return { error: null };
 }
@@ -465,7 +480,7 @@ export async function setPrimaryImage(imageId: string, productId: string) {
     .from('product_images')
     .update({ is_primary: false })
     .eq('product_id', productId);
-  
+
   // Then set the new primary
   const { data, error } = await supabase
     .from('product_images')
@@ -517,14 +532,14 @@ export async function fetchExchangeRates(baseCurrency: string = 'XAF') {
     GHS: 0.019,
     KES: 0.23,
   };
-  
+
   return { data: rates, error: null };
 }
 
 export function convertCurrency(amount: number, fromCurrency: string, toCurrency: string, rates: Record<string, number>) {
   const fromRate = rates[fromCurrency] || 1;
   const toRate = rates[toCurrency] || 1;
-  
+
   // Convert to base (XAF) then to target
   const baseAmount = amount / fromRate;
   return baseAmount * toRate;

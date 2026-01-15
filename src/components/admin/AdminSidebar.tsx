@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Leaf,
   Menu,
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -86,7 +87,7 @@ const navItems: NavItem[] = [
     icon: Truck,
     module: 'logistics',
     children: [
-      { title: 'Shipments', href: '/admin/logistics', module: 'logistics' },
+      { title: 'Operations', href: '/admin/logistics', module: 'logistics' },
       { title: 'Delivery Zones', href: '/admin/logistics/zones', module: 'logistics' },
       { title: 'Carriers', href: '/admin/logistics/carriers', module: 'logistics' },
       { title: 'Exceptions', href: '/admin/logistics/exceptions', module: 'logistics' },
@@ -126,6 +127,7 @@ const navItems: NavItem[] = [
     module: 'analytics',
     children: [
       { title: 'Overview', href: '/admin/analytics', module: 'analytics' },
+      { title: 'Behavior Tracking', href: '/admin/behavior', module: 'analytics' },
       { title: 'Sales Reports', href: '/admin/analytics/sales', module: 'analytics' },
       { title: 'Regional', href: '/admin/analytics/regional', module: 'analytics' },
       { title: 'AI Insights', href: '/admin/analytics/ai', module: 'analytics' },
@@ -157,9 +159,19 @@ const navItems: NavItem[] = [
     module: 'settings',
     children: [
       { title: 'General', href: '/admin/settings', module: 'settings' },
+      { title: 'API Integrations', href: '/admin/api-management', module: 'settings' },
       { title: 'Team', href: '/admin/settings/team', module: 'settings' },
       { title: 'Roles', href: '/admin/settings/roles', module: 'settings' },
       { title: 'Integrations', href: '/admin/settings/integrations', module: 'settings' },
+    ],
+  },
+  {
+    title: 'Infrastructure',
+    icon: Activity,
+    module: 'settings',
+    children: [
+      { title: 'System Logs', href: '/admin/logs', module: 'settings' },
+      { title: 'Platform Health', href: '/admin/health', module: 'settings' },
     ],
   },
 ];

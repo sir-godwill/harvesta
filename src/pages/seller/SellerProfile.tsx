@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SellerLayout } from '@/components/seller/SellerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,54 +13,162 @@ import {
   Phone,
   Mail,
   Globe,
-  Instagram,
-  Facebook,
-  Camera,
-  Edit,
   Shield,
   Star,
   Award,
   Save,
-  Building2,
+  Edit,
   User,
-  Calendar,
   Package,
   TrendingUp,
+  Loader2,
+  Copy,
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { ProfileImageUploader } from '@/components/seller/ProfileImageUploader';
+import { Database } from '@/integrations/supabase/types';
 
-// Mock profile data
-const mockProfile = {
-  companyName: 'Golden Harvest Farms',
-  ownerName: 'Kwame Asante',
-  initials: 'GH',
-  verified: true,
-  rating: 4.8,
-  reviewCount: 156,
-  memberSince: 'January 2024',
-  about: 'Golden Harvest Farms is a family-owned agricultural enterprise specializing in premium cocoa, coffee, and organic produce. Established in 2010, we are committed to sustainable farming practices and fair trade principles.',
-  location: {
-    region: 'Ashanti Region',
-    city: 'Kumasi',
-    country: 'Ghana',
-  },
-  contact: {
-    phone: '+233 24 123 4567',
-    email: 'contact@goldenharvestfarms.com',
-    website: 'www.goldenharvestfarms.com',
-  },
-  social: {
-    instagram: '@goldenharvestgh',
-    facebook: 'GoldenHarvestFarms',
-  },
-  certifications: ['Organic Certified', 'Fair Trade', 'Ghana COCOBOD'],
-  stats: {
-    products: 24,
-    orders: 342,
-    revenue: '45.2M XAF',
-  },
-};
+type Supplier = Database['public']['Tables']['suppliers']['Row'];
 
 export default function SellerProfile() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<Supplier | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    company_name: '',
+    description: '',
+    phone: '',
+    email: '',
+    website: '',
+    country: '',
+    region: '',
+    city: '',
+    address: '',
+  });
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile(data);
+        setFormData({
+          company_name: data.company_name || '',
+          description: data.description || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          website: data.website || '',
+          country: data.country || '',
+          region: data.region || '',
+          city: data.city || '',
+          address: data.address || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast.error('Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleCreateLogoPath = (userId: string, file: File) => {
+    const fileExt = file.name.split('.').pop();
+    return `${userId}/logo_${Date.now()}.${fileExt}`;
+  };
+
+  const handleSave = async () => {
+    if (!profile) return;
+    setSaving(true);
+
+    try {
+      let logo_url = profile.logo_url;
+
+      // Upload new logo if selected
+      if (logoFile) {
+        const filePath = handleCreateLogoPath(profile.user_id || 'unknown', logoFile);
+        const { error: uploadError } = await supabase.storage
+          .from('public')
+          .upload(filePath, logoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('public')
+          .getPublicUrl(filePath);
+
+        logo_url = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('suppliers')
+        .update({
+          ...formData,
+          logo_url,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      toast.success('Profile updated successfully');
+      fetchProfile(); // Refresh data
+      setLogoFile(null); // Reset file input
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('ID copied to clipboard');
+  };
+
+  if (loading) {
+    return (
+      <SellerLayout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <SellerLayout>
+        <div className="text-center py-12">
+          <p>Profile not found.</p>
+        </div>
+      </SellerLayout>
+    );
+  }
+
   return (
     <SellerLayout>
       <div className="space-y-6">
@@ -69,8 +178,8 @@ export default function SellerProfile() {
             <h1 className="text-2xl font-bold text-foreground">Seller Profile</h1>
             <p className="text-muted-foreground">Manage your public store profile</p>
           </div>
-          <Button>
-            <Save className="w-4 h-4 mr-2" />
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Save Changes
           </Button>
         </div>
@@ -83,20 +192,39 @@ export default function SellerProfile() {
           >
             <Card>
               <CardContent className="pt-6">
-                {/* Profile Image */}
+                {/* Profile Image View */}
                 <div className="text-center mb-6">
                   <div className="relative inline-block">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-3xl font-bold text-primary-foreground">
-                      {mockProfile.initials}
-                    </div>
-                    <button className="absolute bottom-0 right-0 p-2 rounded-full bg-accent text-accent-foreground shadow-md hover:bg-accent/90 transition-colors">
-                      <Camera className="w-4 h-4" />
-                    </button>
+                    {profile.logo_url ? (
+                      <img
+                        src={profile.logo_url}
+                        alt={profile.company_name}
+                        className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-3xl font-bold text-primary-foreground">
+                        {profile.company_name.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-xl font-bold text-foreground mt-4">{mockProfile.companyName}</h3>
-                  <p className="text-sm text-muted-foreground">{mockProfile.ownerName}</p>
+                  <h3 className="text-xl font-bold text-foreground mt-4">{profile.company_name}</h3>
+
+                  {/* Seller ID Display */}
+                  <div className="flex items-center justify-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <span>ID: {profile.id.substring(0, 8)}...</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => copyToClipboard(profile.id)}
+                      title="Copy full ID"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+
                   <div className="flex items-center justify-center gap-2 mt-2">
-                    {mockProfile.verified && (
+                    {profile.verification_status === 'verified' && (
                       <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
                         <Shield className="w-3 h-3" />
                         Verified Seller
@@ -105,64 +233,35 @@ export default function SellerProfile() {
                   </div>
                 </div>
 
-                {/* Rating */}
+                {/* Rating (Read only for now) */}
                 <div className="flex items-center justify-center gap-1 mb-6">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-5 h-5 ${star <= Math.floor(mockProfile.rating) ? 'text-warning fill-warning' : 'text-muted'}`}
-                    />
-                  ))}
-                  <span className="ml-2 text-sm font-medium text-foreground">{mockProfile.rating}</span>
-                  <span className="text-sm text-muted-foreground">({mockProfile.reviewCount} reviews)</span>
+                  <Star className="w-5 h-5 text-warning fill-warning" />
+                  <span className="ml-2 text-sm font-medium text-foreground">{profile.rating || 0}</span>
+                  <span className="text-sm text-muted-foreground">({profile.total_reviews || 0} reviews)</span>
                 </div>
 
-                {/* Certifications */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">Certifications</p>
-                  <div className="flex flex-wrap gap-2">
-                    {mockProfile.certifications.map((cert, index) => (
-                      <Badge key={index} variant="outline" className="bg-success/10 text-success border-success/20 gap-1">
-                        <Award className="w-3 h-3" />
-                        {cert}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Contact Info */}
+                {/* Contact Info Preview */}
                 <div className="mt-6 space-y-3">
                   <div className="flex items-center gap-3 text-sm">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      {mockProfile.location.city}, {mockProfile.location.region}, {mockProfile.location.country}
+                      {profile.city}, {profile.country}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{mockProfile.contact.phone}</span>
+                    <span className="text-muted-foreground">{profile.phone}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Mail className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{mockProfile.contact.email}</span>
+                    <span className="text-muted-foreground">{profile.email}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Member since {mockProfile.memberSince}</span>
-                  </div>
-                </div>
-
-                {/* Social Links */}
-                <div className="mt-6 flex items-center justify-center gap-3">
-                  <Button variant="outline" size="icon" className="rounded-full">
-                    <Globe className="w-4 h-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="rounded-full">
-                    <Instagram className="w-4 h-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="rounded-full">
-                    <Facebook className="w-4 h-4" />
-                  </Button>
+                  {profile.website && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">{profile.website}</span>
+                    </div>
+                  )}
                 </div>
 
                 <Separator className="my-6" />
@@ -171,17 +270,17 @@ export default function SellerProfile() {
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <Package className="w-5 h-5 mx-auto text-primary mb-1" />
-                    <p className="text-lg font-bold">{mockProfile.stats.products}</p>
+                    <p className="text-lg font-bold">{profile.total_products || 0}</p>
                     <p className="text-xs text-muted-foreground">Products</p>
                   </div>
                   <div>
                     <TrendingUp className="w-5 h-5 mx-auto text-primary mb-1" />
-                    <p className="text-lg font-bold">{mockProfile.stats.orders}</p>
+                    <p className="text-lg font-bold">{profile.total_orders || 0}</p>
                     <p className="text-xs text-muted-foreground">Orders</p>
                   </div>
                   <div>
                     <Star className="w-5 h-5 mx-auto text-primary mb-1" />
-                    <p className="text-lg font-bold">{mockProfile.rating}</p>
+                    <p className="text-lg font-bold">{profile.rating || 0}</p>
                     <p className="text-xs text-muted-foreground">Rating</p>
                   </div>
                 </div>
@@ -204,24 +303,38 @@ export default function SellerProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+
+                {/* Logo Editor */}
+                <div>
+                  <Label className="mb-2 block">Logo</Label>
+                  <div className="max-w-xs">
+                    <ProfileImageUploader
+                      image={logoFile ? URL.createObjectURL(logoFile) : profile.logo_url}
+                      onImageChange={setLogoFile}
+                      label="Change Logo"
+                    />
+                  </div>
+                </div>
+
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="farmName">Farm/Company Name</Label>
-                    <Input id="farmName" defaultValue={mockProfile.companyName} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerName">Owner Name</Label>
-                    <Input id="ownerName" defaultValue={mockProfile.ownerName} />
+                    <Label htmlFor="company_name">Farm/Company Name</Label>
+                    <Input
+                      id="company_name"
+                      value={formData.company_name}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="about">About Your Farm</Label>
+                  <Label htmlFor="description">About Your Farm</Label>
                   <Textarea
-                    id="about"
+                    id="description"
                     rows={4}
-                    defaultValue={mockProfile.about}
+                    value={formData.description}
+                    onChange={handleInputChange}
                   />
                 </div>
 
@@ -229,15 +342,27 @@ export default function SellerProfile() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="region">Region</Label>
-                    <Input id="region" defaultValue={mockProfile.location.region} />
+                    <Input
+                      id="region"
+                      value={formData.region}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
-                    <Input id="city" defaultValue={mockProfile.location.city} />
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="country">Country</Label>
-                    <Input id="country" defaultValue={mockProfile.location.country} />
+                    <Input
+                      id="country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
 
@@ -245,37 +370,42 @@ export default function SellerProfile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" defaultValue={mockProfile.contact.phone} />
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" defaultValue={mockProfile.contact.email} />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
 
-                {/* Social Media */}
-                <div className="space-y-4">
-                  <Label>Social Media Links</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Input placeholder="Website URL" defaultValue={mockProfile.contact.website} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Instagram className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Input placeholder="Instagram handle" defaultValue={mockProfile.social.instagram} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Facebook className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Input placeholder="Facebook page" defaultValue={mockProfile.social.facebook} />
-                    </div>
+                {/* Website */}
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="website"
+                      className="pl-9"
+                      placeholder="https://..."
+                      value={formData.website}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>
-                    <Save className="w-4 h-4 mr-2" />
+                  <Button variant="outline" onClick={() => fetchProfile()}>Reset Changes</Button>
+                  <Button onClick={handleSave} disabled={saving}>
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                     Save Changes
                   </Button>
                 </div>

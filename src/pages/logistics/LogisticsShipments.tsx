@@ -1,42 +1,185 @@
-import { useState } from "react";
-import { Package, Search, MoreHorizontal, RefreshCw, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { StatusBadge, RiskBadge } from "@/components/logistics/StatusBadge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CreateShipmentModal } from "@/components/logistics/CreateShipmentModal";
-import { mockShipments } from "@/data/logistics-mock-data";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Package,
+  Search,
+  Filter,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  Truck,
+  AlertTriangle,
+  ChevronRight,
+  MoreVertical,
+  Download,
+  Calendar
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  getAssignedDeliveries,
+  updateDeliveryStatus,
+  getLogisticsProfile
+} from '@/lib/logistics-api';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 export default function LogisticsShipments() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedShipments, setSelectedShipments] = useState<string[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredShipments = mockShipments.filter((shipment) => {
-    const matchesSearch = shipment.id.toLowerCase().includes(searchQuery.toLowerCase()) || shipment.vendorName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || shipment.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  useEffect(() => {
+    loadDeliveries();
+  }, []);
+
+  const loadDeliveries = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await getAssignedDeliveries();
+      if (error) throw error;
+      setDeliveries(data || []);
+    } catch (error) {
+      toast.error('Failed to load shipments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: any) => {
+    try {
+      const { error } = await updateDeliveryStatus(id, newStatus, `Status updated to ${newStatus}`);
+      if (error) throw error;
+      toast.success(`Shipment marked as ${newStatus.replace('_', ' ')}`);
+      loadDeliveries();
+    } catch (error) {
+      toast.error('Update failed');
+    }
+  };
+
+  const filteredDeliveries = deliveries.filter(d => {
+    const matchesStatus = statusFilter === 'all' || d.status === statusFilter;
+    const matchesSearch = d.tracking_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.delivery_address?.city?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
   });
 
-  const toggleSelect = (id: string) => setSelectedShipments((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div><h1 className="text-2xl font-bold">All Shipments</h1><p className="text-muted-foreground">Central control of all shipments</p></div>
-      
-      <Card><CardContent className="p-3 md:p-4"><div className="flex flex-col sm:flex-row gap-3"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search shipments..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" /></div><div className="flex flex-wrap gap-2"><Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-[120px]"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All Status</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="picked-up">Picked Up</SelectItem><SelectItem value="in-transit">In Transit</SelectItem><SelectItem value="delayed">Delayed</SelectItem><SelectItem value="delivered">Delivered</SelectItem></SelectContent></Select><Button variant="outline" size="icon"><RefreshCw className="h-4 w-4" /></Button><Button onClick={() => setShowCreateModal(true)}><Plus className="h-4 w-4 mr-2" /><span className="hidden sm:inline">New Shipment</span></Button></div></div></CardContent></Card>
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Shipment Management</h1>
+          <p className="text-muted-foreground text-lg">Track, update and manage all your assigned deliveries.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export List
+          </Button>
+        </div>
+      </div>
 
-      {selectedShipments.length > 0 && (<div className="flex flex-wrap items-center gap-2 md:gap-3 rounded-lg bg-primary/5 p-3"><span className="text-sm font-medium">{selectedShipments.length} selected</span><Button size="sm" variant="outline" onClick={() => { toast.success("Reassigning..."); setSelectedShipments([]); }}>Reassign</Button><Button size="sm" variant="destructive" onClick={() => { toast.error("Escalated"); setSelectedShipments([]); }}>Escalate</Button></div>)}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by tracking number or city..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+              {['all', 'assigned', 'picked_up', 'in_transit', 'delivered', 'failed'].map((status) => (
+                <Button
+                  key={status}
+                  variant={statusFilter === status ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter(status)}
+                  className="whitespace-nowrap capitalize"
+                >
+                  {status.replace('_', ' ')}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {filteredDeliveries.length > 0 ? filteredDeliveries.map((delivery) => (
+              <div key={delivery.id} className="border rounded-2xl p-6 transition-all hover:border-primary/30 hover:shadow-sm bg-white">
+                <div className="grid md:grid-cols-4 gap-6 items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center">
+                      <Package className="h-6 w-6 text-slate-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm">#{delivery.tracking_number}</h3>
+                      <p className="text-xs text-muted-foreground">Order: {delivery.order_id.split('-')[0]}</p>
+                    </div>
+                  </div>
 
-      <div className="space-y-3">{filteredShipments.map((shipment) => (<Card key={shipment.id} className="cursor-pointer hover:bg-muted/20"><CardContent className="p-4"><div className="flex items-start justify-between mb-2"><div className="flex items-center gap-2"><Checkbox checked={selectedShipments.includes(shipment.id)} onCheckedChange={() => toggleSelect(shipment.id)} onClick={(e) => e.stopPropagation()} /><span className="font-semibold text-sm">{shipment.id}</span></div><StatusBadge status={shipment.status} /></div><p className="text-sm font-medium mb-1">{shipment.vendorName}</p><p className="text-xs text-muted-foreground mb-2">{shipment.deliveryLocation.city}</p><div className="flex flex-wrap gap-2"><RiskBadge level={shipment.riskLevel} /><Badge variant="outline" className="capitalize text-xs">{shipment.deliveryModel}</Badge><span className="text-xs text-muted-foreground">{shipment.assignedPartner?.name || "Unassigned"}</span></div></CardContent></Card>))}</div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      Destination
+                    </div>
+                    <p className="text-sm font-bold truncate">{delivery.delivery_address?.city}, {delivery.delivery_address?.street || 'N/A'}</p>
+                  </div>
 
-      <CreateShipmentModal open={showCreateModal} onOpenChange={setShowCreateModal} onSubmit={() => toast.success("Shipment created!")} />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      Status
+                    </div>
+                    <Badge className={`${delivery.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                        delivery.status === 'in_transit' ? 'bg-blue-100 text-blue-700' :
+                          delivery.status === 'failed' ? 'bg-red-100 text-red-700' :
+                            'bg-amber-100 text-amber-700'
+                      } border-none`}>
+                      {delivery.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2">
+                    {delivery.status === 'assigned' && (
+                      <Button size="sm" onClick={() => handleUpdateStatus(delivery.id, 'picked_up')}>Mark Picked Up</Button>
+                    )}
+                    {delivery.status === 'picked_up' && (
+                      <Button size="sm" onClick={() => handleUpdateStatus(delivery.id, 'in_transit')}>Ship Transit</Button>
+                    )}
+                    {delivery.status === 'in_transit' && (
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdateStatus(delivery.id, 'delivered')}>Complete Delivery</Button>
+                    )}
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )) : (
+              <div className="py-20 text-center space-y-4 grayscale opacity-40 border-2 border-dashed rounded-2xl">
+                <Truck className="h-12 w-12 mx-auto" />
+                <p className="font-bold text-slate-600">No matching shipments found</p>
+                <Button variant="outline" size="sm" onClick={() => { setStatusFilter('all'); setSearchQuery(''); }}>Reset Filters</Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

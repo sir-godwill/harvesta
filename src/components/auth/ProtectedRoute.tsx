@@ -9,7 +9,17 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
+  const {
+    user,
+    isLoading,
+    roles,
+    supplierProfile,
+    isSuperAdmin,
+    isAdmin,
+    isSeller,
+    isLogistics,
+    isAffiliate
+  } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -24,14 +34,40 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   }
 
   if (!user) {
-    // Save the attempted URL for redirecting after login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // TODO: Add role-based access control when roles are fetched
-  // if (requiredRole && !requiredRole.includes(userRole)) {
-  //   return <Navigate to="/unauthorized" replace />;
-  // }
+  // Super Admin can bypass everything EXCEPT blocked status (if we add that)
+  if (isSuperAdmin) return <>{children}</>;
+
+  // Admin Route Protection
+  if (location.pathname.startsWith('/admin')) {
+    if (!isAdmin) return <Navigate to="/" replace />;
+  }
+
+  // Seller Dashboard Protection
+  if (location.pathname.startsWith('/seller')) {
+    if (location.pathname === '/seller/onboarding') return <>{children}</>;
+
+    if (!isSeller || !supplierProfile || !supplierProfile.is_active) {
+      return supplierProfile ? <Navigate to="/seller/onboarding" replace /> : <Navigate to="/register/seller" replace />;
+    }
+  }
+
+  // Logistics Dashboard Protection
+  if (location.pathname.startsWith('/logistics')) {
+    if (!isLogistics) return <Navigate to="/" replace />;
+  }
+
+  // Affiliate Dashboard Protection
+  if (location.pathname.startsWith('/affiliate')) {
+    if (!isAffiliate) return <Navigate to="/" replace />;
+  }
+
+  // Generic Role Check (if passed as prop)
+  if (requiredRole && !requiredRole.some(r => roles.includes(r))) {
+    return <Navigate to="/" replace />;
+  }
 
   return <>{children}</>;
 }

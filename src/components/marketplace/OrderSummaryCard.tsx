@@ -28,6 +28,14 @@ export function OrderSummaryCard({
   isCheckoutPage = false,
   className,
 }: OrderSummaryCardProps) {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-CM', {
+      style: 'currency',
+      currency: 'XAF',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
   return (
     <div className={cn(
       'bg-card rounded-xl border shadow-sm p-6 space-y-4 sticky top-4',
@@ -43,7 +51,7 @@ export function OrderSummaryCard({
           <span className="text-muted-foreground">
             Subtotal ({itemCount} item{itemCount !== 1 ? 's' : ''})
           </span>
-          <span className="font-medium">${subtotal.toFixed(2)}</span>
+          <span className="font-medium">{formatPrice(subtotal)}</span>
         </div>
 
         <div className="flex justify-between items-center">
@@ -55,7 +63,7 @@ export function OrderSummaryCard({
             {deliveryTotal === 0 ? (
               <span className="text-secondary">FREE</span>
             ) : (
-              `$${deliveryTotal.toFixed(2)}`
+              formatPrice(deliveryTotal)
             )}
           </span>
         </div>
@@ -66,7 +74,7 @@ export function OrderSummaryCard({
               <Tag className="w-4 h-4" />
               Discount
             </span>
-            <span>-${discount.toFixed(2)}</span>
+            <span>-{formatPrice(discount)}</span>
           </div>
         )}
 
@@ -74,9 +82,9 @@ export function OrderSummaryCard({
           <div className="flex justify-between">
             <span className="text-muted-foreground flex items-center gap-1">
               <Receipt className="w-4 h-4" />
-              Taxes (8%)
+              Taxes (18%)
             </span>
-            <span className="font-medium">${taxes.toFixed(2)}</span>
+            <span className="font-medium">{formatPrice(taxes)}</span>
           </div>
         )}
       </div>
@@ -85,19 +93,19 @@ export function OrderSummaryCard({
 
       <div className="flex justify-between items-center">
         <span className="font-semibold text-lg">Total</span>
-        <span className="text-2xl font-bold text-primary">${grandTotal.toFixed(2)}</span>
+        <span className="text-2xl font-bold text-primary">{formatPrice(grandTotal)}</span>
       </div>
 
       {!isCheckoutPage && (
         <div className="space-y-3 pt-2">
-          <Button 
+          <Button
             onClick={onCheckout}
             className="w-full"
             size="lg"
           >
             Proceed to Checkout
           </Button>
-          
+
           {onRequestQuotation && (
             <Button
               onClick={onRequestQuotation}

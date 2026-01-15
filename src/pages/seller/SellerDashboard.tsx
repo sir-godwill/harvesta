@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Package,
@@ -10,21 +11,19 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SellerLayout } from '@/components/seller/SellerLayout';
-import {
-  mockSellerProfile,
-  mockSellerOrders,
-  mockSellerAnalytics,
-  mockSellerProducts,
-  mockSellerRFQs,
-} from '@/services/seller-api';
+// Remove mock data imports
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { fetchDashboardStats, fetchRecentOrders, fetchHistoricalRevenue, DashboardStats } from '@/lib/dashboardApi';
+import { format, subDays, startOfDay } from 'date-fns';
 
 const formatCurrency = (amount: number, currency = 'XAF') => {
   if (currency === 'USD') {
@@ -46,32 +45,87 @@ const getStatusColor = (status: string) => {
 };
 
 export default function SellerDashboard() {
-  const stats = [
+  const [loading, setLoading] = useState(true);
+  const [supplierName, setSupplierName] = useState('Seller');
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get basic profile info
+      const { data: supplier } = await supabase
+        .from('suppliers')
+        .select('id, company_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (supplier) {
+        setSupplierName(supplier.company_name);
+
+        // Get stats
+        const dashboardStats = await fetchDashboardStats(supplier.id);
+        setStats(dashboardStats);
+
+        // Get recent orders
+        const { data: orders } = await fetchRecentOrders(supplier.id);
+        if (orders) setRecentOrders(orders);
+
+        // Get historical revenue
+        const historicalData = await fetchHistoricalRevenue(supplier.id);
+        setRevenueData(historicalData);
+      }
+
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SellerLayout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  const statCards = [
     {
       title: 'Total Revenue',
-      value: formatCurrency(mockSellerAnalytics.revenue.total),
-      change: mockSellerAnalytics.revenue.change,
+      value: stats ? formatCurrency(stats.revenue.total) : '0 XAF',
+      change: stats?.revenue.change || 0,
       icon: DollarSign,
       color: 'from-green-500 to-emerald-600',
     },
     {
       title: 'Total Orders',
-      value: mockSellerAnalytics.orders.total.toString(),
-      change: mockSellerAnalytics.orders.change,
+      value: stats?.orders.total.toString() || '0',
+      change: 0,
       icon: ShoppingCart,
       color: 'from-blue-500 to-indigo-600',
     },
     {
       title: 'Active Products',
-      value: mockSellerAnalytics.products.active.toString(),
-      change: 5.2,
+      value: stats?.products.active.toString() || '0',
+      change: 0,
       icon: Package,
       color: 'from-purple-500 to-pink-600',
     },
     {
       title: 'Store Views',
-      value: mockSellerAnalytics.views.total.toLocaleString(),
-      change: mockSellerAnalytics.views.change,
+      value: stats?.views.total.toLocaleString() || '0',
+      change: stats?.views.change || 0,
       icon: Eye,
       color: 'from-orange-500 to-red-600',
     },
@@ -84,260 +138,155 @@ export default function SellerDashboard() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 text-white"
+          className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-2xl p-6 text-white"
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold">Welcome back, {mockSellerProfile.companyName}!</h1>
-              <p className="text-green-100 mt-1">
-                You have {mockSellerOrders.filter(o => o.status === 'pending').length} pending orders and{' '}
-                {mockSellerRFQs.filter(r => r.status === 'open').length} new RFQs
+              <h1 className="text-2xl font-bold">Welcome back, {supplierName}!</h1>
+              <p className="text-orange-50 mt-1">
+                You have {stats?.orders.pending || 0} pending orders requiring attention.
               </p>
             </div>
             <div className="flex gap-3">
+              {/* <SeedDataButton /> */}
               <Button variant="secondary" asChild>
                 <Link to="/seller/products/add">Add Product</Link>
-              </Button>
-              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" asChild>
-                <Link to="/seller/orders">View Orders</Link>
               </Button>
             </div>
           </div>
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map((stat, index) => (
             <motion.div
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="relative overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">{stat.title}</p>
-                      <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        {stat.change >= 0 ? (
-                          <ArrowUpRight className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <ArrowDownRight className="w-4 h-4 text-red-600" />
-                        )}
-                        <span className={stat.change >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          {Math.abs(stat.change)}%
-                        </span>
-                        <span className="text-muted-foreground text-xs">vs last month</span>
-                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                      <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
                     </div>
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color}`}>
-                      <stat.icon className="w-5 h-5 text-white" />
+                    <div className={`p-3 rounded-full bg-gradient-to-br ${stat.color} text-white`}>
+                      <stat.icon className="w-5 h-5" />
                     </div>
                   </div>
+                  {stat.change !== 0 && (
+                    <div className="flex items-center mt-4 text-xs">
+                      {stat.change > 0 ? (
+                        <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
+                      ) : (
+                        <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
+                      )}
+                      <span className={stat.change > 0 ? 'text-green-500' : 'text-red-500'}>
+                        {Math.abs(stat.change)}%
+                      </span>
+                      <span className="text-muted-foreground ml-1">vs last month</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
           ))}
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Chart */}
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Chart Section - Placeholder for now until we have time-series data */}
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-600" />
-                Revenue Overview
-              </CardTitle>
+              <CardTitle>Revenue Analytics</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={mockSellerAnalytics.revenue.byMonth}>
-                    <defs>
-                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                    <Tooltip
-                      formatter={(value: number) => [formatCurrency(value), 'Revenue']}
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                    />
-                    <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} fill="url(#revenueGradient)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="h-[300px]">
+                {revenueData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={revenueData}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 12, fill: '#888' }}
+                        tickFormatter={(str) => format(new Date(str), 'MMM d')}
+                        minTickGap={30}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 12, fill: '#888' }}
+                        tickFormatter={(val) => `XAF ${val / 1000}k`}
+                      />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        formatter={(val: number) => [formatCurrency(val), 'Revenue']}
+                        labelFormatter={(label) => format(new Date(label), 'MMMM d, yyyy')}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="amount"
+                        stroke="#f59e0b"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorRevenue)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground bg-muted/20 rounded-lg">
+                    <p>Not enough historical data for chart</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Views Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Eye className="w-5 h-5 text-blue-600" />
-                Store Views This Week
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={mockSellerAnalytics.views.byDay}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }} />
-                    <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Orders & Products Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Orders */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Recent Orders</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/seller/orders">View All</Link>
-              </Button>
+            <CardHeader>
+              <CardTitle>Recent Orders</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockSellerOrders.slice(0, 4).map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">{order.orderNumber}</p>
-                      <p className="text-xs text-muted-foreground">{order.buyerName}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-sm">{formatCurrency(order.totalAmount, order.currency)}</p>
-                      <Badge variant="secondary" className={getStatusColor(order.status)}>
-                        {order.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Products */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Top Products</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/seller/products">View All</Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockSellerAnalytics.topProducts.map((product, index) => (
-                  <div key={product.id} className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{product.name}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{product.orders} orders</span>
-                        <span>•</span>
-                        <span>{formatCurrency(product.revenue)}</span>
+                {recentOrders.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No orders yet.</p>
+                ) : (
+                  recentOrders.map((item, i) => (
+                    <div key={item.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <ShoppingCart className="w-5 h-5" />
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions & Alerts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Order Status Distribution */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Order Status</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockSellerAnalytics.orders.byStatus.map((item) => (
-                <div key={item.status} className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>{item.status}</span>
-                    <span className="font-medium">{item.count}</span>
-                  </div>
-                  <Progress value={(item.count / mockSellerAnalytics.orders.total) * 100} className="h-2" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Low Stock Alert */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-orange-500" />
-                Stock Alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {mockSellerProducts
-                  .filter((p) => p.status === 'out_of_stock' || p.stock < 100)
-                  .slice(0, 3)
-                  .map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-100">
-                      <div>
-                        <p className="font-medium text-sm">{product.name}</p>
-                        <p className="text-xs text-orange-600">{product.stock === 0 ? 'Out of stock' : `${product.stock} ${product.unit} remaining`}</p>
-                      </div>
-                      <Button size="sm" variant="outline" className="text-orange-600 border-orange-200">
-                        Restock
-                      </Button>
-                    </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pending RFQs */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-500" />
-                Pending RFQs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {mockSellerRFQs
-                  .filter((r) => r.status === 'open')
-                  .slice(0, 3)
-                  .map((rfq) => (
-                    <div key={rfq.id} className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-medium text-sm">{rfq.productName}</p>
-                          <p className="text-xs text-muted-foreground">{rfq.buyerName} • {rfq.quantity} {rfq.unit}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-medium truncate">{item.products?.name}</h4>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(new Date(item.created_at), 'MMM d')}
+                          </span>
                         </div>
-                        <Badge variant="outline" className="text-blue-600 border-blue-200">
-                          {new Date(rfq.deadline).toLocaleDateString()}
-                        </Badge>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">Order #{item.orders?.order_number}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {formatCurrency(item.total_price || 0)}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                <Button variant="outline" className="w-full" asChild>
-                  <Link to="/seller/rfqs">View All RFQs</Link>
-                </Button>
+                  ))
+                )}
               </div>
+              <Button variant="ghost" className="w-full mt-4" asChild>
+                <Link to="/seller/orders">View All Orders</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>

@@ -43,6 +43,7 @@ export interface ProductVariant {
   lowStockThreshold: number;
   isDefault: boolean;
   isActive: boolean;
+  price?: number; // Added price
 }
 
 interface ProductVariantsEditorProps {
@@ -50,6 +51,7 @@ interface ProductVariantsEditorProps {
   onChange: (variants: ProductVariant[]) => void;
   enableVariants: boolean;
   onEnableChange: (enabled: boolean) => void;
+  currency?: string;
 }
 
 const gradeOptions = [
@@ -88,8 +90,10 @@ export function ProductVariantsEditor({
   onChange,
   enableVariants,
   onEnableChange,
+  currency = 'XAF',
 }: ProductVariantsEditorProps) {
   const [expandedVariants, setExpandedVariants] = useState<Set<string>>(new Set());
+  const [showSku, setShowSku] = useState(false); // SKU Toggle default hidden
 
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedVariants);
@@ -109,6 +113,7 @@ export function ProductVariantsEditor({
       grade: '',
       quality: '',
       packaging: '',
+      price: undefined, // Default price undefined
       weight: undefined,
       weightUnit: 'kg',
       stockQuantity: 0,
@@ -116,7 +121,7 @@ export function ProductVariantsEditor({
       isDefault: variants.length === 0,
       isActive: true,
     };
-    
+
     onChange([...variants, newVariant]);
     setExpandedVariants(new Set([...expandedVariants, newVariant.id]));
   };
@@ -178,6 +183,15 @@ export function ProductVariantsEditor({
         </div>
         <Switch checked={enableVariants} onCheckedChange={onEnableChange} />
       </div>
+
+      {enableVariants && (
+        <div className="flex justify-end px-2">
+          <div className="flex items-center gap-2">
+            <Switch id="show-sku" checked={showSku} onCheckedChange={setShowSku} />
+            <Label htmlFor="show-sku" className="text-sm text-muted-foreground cursor-pointer">Show SKU Field</Label>
+          </div>
+        </div>
+      )}
 
       <AnimatePresence>
         {enableVariants && (
@@ -264,12 +278,24 @@ export function ProductVariantsEditor({
                         <CardContent className="p-4 pt-0 space-y-4">
                           {/* Basic Info Row */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {showSku && (
+                              <div className="space-y-2">
+                                <Label>SKU (Stock Code)</Label>
+                                <Input
+                                  value={variant.sku}
+                                  onChange={(e) => updateVariant(variant.id, { sku: e.target.value })}
+                                  placeholder="e.g., COC-GA-001"
+                                />
+                              </div>
+                            )}
                             <div className="space-y-2">
-                              <Label>SKU (Stock Code)</Label>
+                              <Label>Price ({currency})</Label>
                               <Input
-                                value={variant.sku}
-                                onChange={(e) => updateVariant(variant.id, { sku: e.target.value })}
-                                placeholder="e.g., COC-GA-001"
+                                type="number"
+                                min={0}
+                                value={variant.price || ''}
+                                onChange={(e) => updateVariant(variant.id, { price: parseFloat(e.target.value) || 0 })}
+                                placeholder="0.00"
                               />
                             </div>
                             <div className="space-y-2">
@@ -330,8 +356,8 @@ export function ProductVariantsEditor({
                                 <Input
                                   type="number"
                                   value={variant.weight || ''}
-                                  onChange={(e) => updateVariant(variant.id, { 
-                                    weight: e.target.value ? parseFloat(e.target.value) : undefined 
+                                  onChange={(e) => updateVariant(variant.id, {
+                                    weight: e.target.value ? parseFloat(e.target.value) : undefined
                                   })}
                                   placeholder="0"
                                   className="flex-1"
@@ -361,8 +387,8 @@ export function ProductVariantsEditor({
                                 type="number"
                                 min={0}
                                 value={variant.stockQuantity}
-                                onChange={(e) => updateVariant(variant.id, { 
-                                  stockQuantity: parseInt(e.target.value) || 0 
+                                onChange={(e) => updateVariant(variant.id, {
+                                  stockQuantity: parseInt(e.target.value) || 0
                                 })}
                               />
                             </div>
@@ -372,8 +398,8 @@ export function ProductVariantsEditor({
                                 type="number"
                                 min={0}
                                 value={variant.lowStockThreshold}
-                                onChange={(e) => updateVariant(variant.id, { 
-                                  lowStockThreshold: parseInt(e.target.value) || 0 
+                                onChange={(e) => updateVariant(variant.id, {
+                                  lowStockThreshold: parseInt(e.target.value) || 0
                                 })}
                               />
                             </div>

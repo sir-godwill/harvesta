@@ -63,16 +63,16 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar - Forest Theme for Seller Dashboard */
-    --sidebar-background: 142 35% 18%;
+    /* Sidebar - Earthy Neutral Theme for Seller Dashboard */
+    --sidebar-background: 30 15% 12%; 
     --sidebar-foreground: 30 20% 95%;
     --sidebar-primary: 24 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 142 30% 25%;
+    --sidebar-accent: 30 15% 20%;
     --sidebar-accent-foreground: 30 20% 98%;
-    --sidebar-border: 142 25% 25%;
+    --sidebar-border: 30 15% 18%;
     --sidebar-ring: 24 95% 53%;
-    --sidebar-muted: 142 20% 35%;
+    --sidebar-muted: 30 10% 40%;
 
     /* Chart Colors */
     --chart-1: 24 95% 53%;

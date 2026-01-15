@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { 
-  fetchConversations, 
-  fetchMessages, 
+import {
+  fetchConversations,
+  fetchMessages,
   sendMessage,
   searchConversations,
-  Conversation, 
-  Message 
+  Conversation,
+  Message
 } from '@/lib/chat-api';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { ChatList } from '@/components/chat/ChatList';
 import { MessageArea } from '@/components/chat/MessageArea';
 import { ChatHeader } from '@/components/chat/ChatHeader';
@@ -19,6 +21,7 @@ import { ChatContextPanel } from '@/components/chat/ChatContextPanel';
 import { Link } from 'react-router-dom';
 
 export default function Messages() {
+  const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,8 +35,8 @@ export default function Messages() {
 
   const loadConversations = async () => {
     setIsLoading(true);
-    const data = await fetchConversations();
-    setConversations(data);
+    const { data } = await fetchConversations();
+    setConversations(data || []);
     setIsLoading(false);
   };
 
@@ -42,8 +45,8 @@ export default function Messages() {
     if (conversation) {
       setSelectedConversation(conversation);
       setIsMobileListOpen(false);
-      const msgs = await fetchMessages(conversation.id);
-      setMessages(msgs);
+      const { data } = await fetchMessages(conversation.id);
+      setMessages(data || []);
     }
   };
 
@@ -58,26 +61,57 @@ export default function Messages() {
 
   const handleSendMessage = async (content: string) => {
     if (!selectedConversation || !content.trim()) return;
-    
-    const newMessage = await sendMessage(selectedConversation.id, { 
-      type: 'text', 
-      content 
-    });
-    setMessages(prev => [...prev, newMessage]);
+
+    const { data: newMessage } = await sendMessage(selectedConversation.id, content);
+    if (newMessage) {
+      setMessages(prev => [...prev, newMessage]);
+    }
   };
 
   const handleSendAttachment = async (type: string, file?: File) => {
     if (!selectedConversation) return;
-    
-    const newMessage = await sendMessage(selectedConversation.id, { 
-      type: type as any, 
-      content: file ? file.name : `${type} shared` 
-    });
-    setMessages(prev => [...prev, newMessage]);
+
+    const { data: newMessage } = await sendMessage(
+      selectedConversation.id,
+      file ? `Sent a ${type}: ${file.name}` : `Shared a ${type}`,
+      type as any
+    );
+    if (newMessage) {
+      setMessages(prev => [...prev, newMessage]);
+    }
   };
 
+  // Real-time messages subscription
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const channel = supabase
+      .channel(`chat:${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          // Avoid duplicate local messages
+          setMessages((prev) => {
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedConversation]);
+
   const handleTyping = (isTyping: boolean) => {
-    // Could integrate with real-time typing indicators
     console.log('Typing:', isTyping);
   };
 
@@ -140,17 +174,17 @@ export default function Messages() {
         )}>
           {selectedConversation ? (
             <>
-              <ChatHeader 
+              <ChatHeader
                 conversation={selectedConversation}
                 onBack={handleBackToList}
                 onToggleContext={() => setShowContextPanel(!showContextPanel)}
               />
-              <MessageArea 
+              <MessageArea
                 messages={messages}
                 conversation={selectedConversation}
-                currentUserId="current-user"
+                currentUserId={user?.id || 'guest'}
               />
-              <ChatInput 
+              <ChatInput
                 onSendMessage={handleSendMessage}
                 onSendAttachment={handleSendAttachment}
                 onTyping={handleTyping}
@@ -164,7 +198,7 @@ export default function Messages() {
 
         {/* Context Panel */}
         {showContextPanel && selectedConversation?.context && (
-          <ChatContextPanel 
+          <ChatContextPanel
             context={selectedConversation.context}
             onClose={() => setShowContextPanel(false)}
           />

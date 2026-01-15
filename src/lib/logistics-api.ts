@@ -1,305 +1,558 @@
-/**
- * Harvestá Logistics API Layer
- * All functions return mock data, ready for Supabase integration
- */
+import { supabase } from '@/integrations/supabase/client';
 
-// ============ TYPES ============
-
-export type ShipmentStatus = 'pending' | 'picked-up' | 'in-transit' | 'out-for-delivery' | 'delivered' | 'delayed' | 'exception';
-export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
-export type DeliveryModel = 'harvesta' | 'supplier' | 'third-party' | 'pickup';
-export type ZoneType = 'urban' | 'semi-urban' | 'rural-accessible' | 'rural-difficult';
-
-export interface Location {
-  street: string;
-  city: string;
-  region: string;
-  country: string;
-  coordinates?: { lat: number; lng: number };
-}
-
-export interface ShipmentItem {
-  id: string;
-  name: string;
-  quantity: number;
-  weight: number;
-  volume: number;
-  isPerishable: boolean;
-  temperatureRequired?: string;
-}
-
-export interface CostBreakdown {
-  handlingFee: number;
-  packagingFee: number;
-  platformFee: number;
-  distanceCost: number;
-  weightCost: number;
-  perishabilityMultiplier: number;
-  roadConditionMultiplier: number;
-  fuelBuffer: number;
-  total: number;
-  currency: string;
-}
-
-export interface TimelineEvent {
-  id: string;
-  status: ShipmentStatus;
-  timestamp: string;
-  description: string;
-  location?: string;
-  actor: string;
-}
+// =====================================================
+// TYPES
+// =====================================================
 
 export interface LogisticsPartner {
   id: string;
-  name: string;
-  type: 'driver' | 'company' | 'transporter';
-  rating: number;
-  onTimeRate: number;
-  successRate: number;
-  totalDeliveries: number;
-  vehicleType: string;
-  zones: ZoneType[];
-  isActive: boolean;
-  contactPhone: string;
-  licenseNumber: string;
+  user_id: string;
+  company_name: string;
+  contact_person: string;
+  phone: string;
+  email: string;
+  operating_regions: string[];
+  vehicle_types: string[];
+  capacity_kg: number;
+  license_number?: string;
+  documents: any[];
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  rejection_reason?: string;
+  performance_score: number;
+  total_deliveries: number;
+  successful_deliveries: number;
+  failed_deliveries: number;
+  average_delivery_time?: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Shipment {
+export interface Delivery {
   id: string;
-  orderId: string;
-  vendorId: string;
-  vendorName: string;
-  buyerId: string;
-  buyerName: string;
-  deliveryModel: DeliveryModel;
-  status: ShipmentStatus;
-  riskLevel: RiskLevel;
-  productType: string;
-  items: ShipmentItem[];
-  pickupLocation: Location;
-  deliveryLocation: Location;
-  zone: ZoneType;
-  estimatedDelivery: string;
-  actualDelivery?: string;
-  assignedPartner?: LogisticsPartner;
-  costBreakdown: CostBreakdown;
-  timeline: TimelineEvent[];
-  notes: string[];
-  createdAt: string;
-  updatedAt: string;
+  order_id: string;
+  logistics_partner_id?: string;
+  status: 'pending' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'failed' | 'cancelled';
+  pickup_address: any;
+  delivery_address: any;
+  pickup_time?: string;
+  estimated_delivery?: string;
+  actual_delivery?: string;
+  tracking_number: string;
+  notes?: string;
+  failure_reason?: string;
+  proof_of_delivery?: any;
+  distance_km?: number;
+  delivery_fee?: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface AdminMetrics {
-  totalActiveShipments: number;
-  inTransit: number;
-  delivered: number;
-  delayed: number;
-  exceptions: number;
-  onTimeRate: number;
-  topDelayReasons: { reason: string; count: number }[];
-  regionBreakdown: { region: string; active: number; delayed: number }[];
-}
-
-export interface Alert {
+export interface DeliveryTracking {
   id: string;
-  shipmentId: string;
-  type: 'delay' | 'exception' | 'sla-breach' | 'temperature' | 'damage';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  message: string;
-  createdAt: string;
-  isResolved: boolean;
+  delivery_id: string;
+  status: string;
+  location?: any;
+  notes?: string;
+  created_at: string;
 }
 
-// ============ MOCK DATA ============
-
-const mockPartners: LogisticsPartner[] = [
-  { id: 'LP001', name: 'Jean-Pierre Mbarga', type: 'driver', rating: 4.8, onTimeRate: 94, successRate: 98, totalDeliveries: 1247, vehicleType: 'Toyota Hilux', zones: ['urban', 'semi-urban'], isActive: true, contactPhone: '+237 6XX XXX XXX', licenseNumber: 'CMR-DRV-2024-001' },
-  { id: 'LP002', name: 'Cameroon Agro Logistics', type: 'company', rating: 4.6, onTimeRate: 89, successRate: 96, totalDeliveries: 5420, vehicleType: 'Fleet - Mixed', zones: ['urban', 'semi-urban', 'rural-accessible'], isActive: true, contactPhone: '+237 2XX XXX XXX', licenseNumber: 'CMR-TRP-2024-015' },
-  { id: 'LP003', name: 'Marie Ngono', type: 'transporter', rating: 4.9, onTimeRate: 97, successRate: 99, totalDeliveries: 823, vehicleType: 'Refrigerated Van', zones: ['urban'], isActive: true, contactPhone: '+237 6XX XXX XXX', licenseNumber: 'CMR-DRV-2024-089' },
-  { id: 'LP004', name: 'Paul Nkomo', type: 'driver', rating: 4.5, onTimeRate: 88, successRate: 94, totalDeliveries: 456, vehicleType: 'Mitsubishi Canter', zones: ['semi-urban', 'rural-accessible'], isActive: true, contactPhone: '+237 6XX XXX XXX', licenseNumber: 'CMR-DRV-2024-112' },
-  { id: 'LP005', name: 'Trans-Cameroon Express', type: 'company', rating: 4.7, onTimeRate: 92, successRate: 97, totalDeliveries: 3210, vehicleType: 'Fleet - Heavy Duty', zones: ['urban', 'semi-urban', 'rural-accessible', 'rural-difficult'], isActive: true, contactPhone: '+237 2XX XXX XXX', licenseNumber: 'CMR-TRP-2024-008' },
-];
-
-const mockShipments: Shipment[] = [
-  {
-    id: 'SHP-2024-001',
-    orderId: 'ORD-2024-4521',
-    vendorId: 'VND-001',
-    vendorName: 'Cooperative Agricole de Bamenda',
-    buyerId: 'BYR-001',
-    buyerName: 'Restaurant Le Jardin',
-    deliveryModel: 'harvesta',
-    status: 'in-transit',
-    riskLevel: 'medium',
-    productType: 'perishable',
-    items: [
-      { id: 'ITM-001', name: 'Fresh Tomatoes', quantity: 50, weight: 25, volume: 0.5, isPerishable: true, temperatureRequired: '10-15°C' },
-      { id: 'ITM-002', name: 'Green Peppers', quantity: 30, weight: 15, volume: 0.3, isPerishable: true, temperatureRequired: '10-15°C' },
-    ],
-    pickupLocation: { street: 'Marché Central', city: 'Bamenda', region: 'Northwest', country: 'Cameroon' },
-    deliveryLocation: { street: 'Quartier Bastos', city: 'Yaoundé', region: 'Centre', country: 'Cameroon' },
-    zone: 'semi-urban',
-    estimatedDelivery: '2024-01-15T14:00:00Z',
-    assignedPartner: mockPartners[2],
-    costBreakdown: { handlingFee: 2500, packagingFee: 1500, platformFee: 1000, distanceCost: 8500, weightCost: 2000, perishabilityMultiplier: 1.3, roadConditionMultiplier: 1.1, fuelBuffer: 1200, total: 21500, currency: 'XAF' },
-    timeline: [
-      { id: 'TL-001', status: 'pending', timestamp: '2024-01-14T08:00:00Z', description: 'Order placed', actor: 'System' },
-      { id: 'TL-002', status: 'picked-up', timestamp: '2024-01-14T10:30:00Z', description: 'Picked up from vendor', location: 'Bamenda', actor: 'Marie Ngono' },
-      { id: 'TL-003', status: 'in-transit', timestamp: '2024-01-14T11:00:00Z', description: 'En route to destination', location: 'National Road N1', actor: 'Marie Ngono' },
-    ],
-    notes: ['Handle with care - fresh produce', 'Buyer prefers morning delivery'],
-    createdAt: '2024-01-14T08:00:00Z',
-    updatedAt: '2024-01-14T11:00:00Z',
-  },
-  {
-    id: 'SHP-2024-002',
-    orderId: 'ORD-2024-4522',
-    vendorId: 'VND-002',
-    vendorName: 'Ferme Bio Douala',
-    buyerId: 'BYR-002',
-    buyerName: 'SuperMarché Central',
-    deliveryModel: 'supplier',
-    status: 'pending',
-    riskLevel: 'low',
-    productType: 'non-perishable',
-    items: [
-      { id: 'ITM-003', name: 'Dried Cassava', quantity: 100, weight: 200, volume: 2, isPerishable: false },
-      { id: 'ITM-004', name: 'Palm Oil (5L)', quantity: 20, weight: 100, volume: 0.5, isPerishable: false },
-    ],
-    pickupLocation: { street: 'Zone Industrielle Bonabéri', city: 'Douala', region: 'Littoral', country: 'Cameroon' },
-    deliveryLocation: { street: 'Avenue Kennedy', city: 'Douala', region: 'Littoral', country: 'Cameroon' },
-    zone: 'urban',
-    estimatedDelivery: '2024-01-16T10:00:00Z',
-    costBreakdown: { handlingFee: 3000, packagingFee: 2000, platformFee: 1500, distanceCost: 3500, weightCost: 5000, perishabilityMultiplier: 1.0, roadConditionMultiplier: 1.0, fuelBuffer: 800, total: 15800, currency: 'XAF' },
-    timeline: [{ id: 'TL-004', status: 'pending', timestamp: '2024-01-14T14:00:00Z', description: 'Order placed', actor: 'System' }],
-    notes: ['Bulk order - requires large vehicle'],
-    createdAt: '2024-01-14T14:00:00Z',
-    updatedAt: '2024-01-14T14:00:00Z',
-  },
-  {
-    id: 'SHP-2024-003',
-    orderId: 'ORD-2024-4523',
-    vendorId: 'VND-003',
-    vendorName: 'Plantation Mbalmayo',
-    buyerId: 'BYR-003',
-    buyerName: 'Grossiste Alimentaire SA',
-    deliveryModel: 'harvesta',
-    status: 'delayed',
-    riskLevel: 'high',
-    productType: 'perishable',
-    items: [
-      { id: 'ITM-005', name: 'Fresh Plantains', quantity: 200, weight: 400, volume: 4, isPerishable: true },
-      { id: 'ITM-006', name: 'Cocoyam', quantity: 150, weight: 300, volume: 3, isPerishable: true },
-    ],
-    pickupLocation: { street: 'Route de Mbalmayo', city: 'Mbalmayo', region: 'Centre', country: 'Cameroon' },
-    deliveryLocation: { street: 'Marché Mokolo', city: 'Yaoundé', region: 'Centre', country: 'Cameroon' },
-    zone: 'rural-accessible',
-    estimatedDelivery: '2024-01-14T16:00:00Z',
-    assignedPartner: mockPartners[0],
-    costBreakdown: { handlingFee: 4000, packagingFee: 2500, platformFee: 2000, distanceCost: 5000, weightCost: 8000, perishabilityMultiplier: 1.4, roadConditionMultiplier: 1.25, fuelBuffer: 1500, total: 34750, currency: 'XAF' },
-    timeline: [
-      { id: 'TL-005', status: 'pending', timestamp: '2024-01-14T06:00:00Z', description: 'Order placed', actor: 'System' },
-      { id: 'TL-006', status: 'picked-up', timestamp: '2024-01-14T08:00:00Z', description: 'Picked up from plantation', location: 'Mbalmayo', actor: 'Jean-Pierre Mbarga' },
-      { id: 'TL-007', status: 'delayed', timestamp: '2024-01-14T12:00:00Z', description: 'Road blocked due to rain - detour required', location: 'Route N10', actor: 'System' },
-    ],
-    notes: ['URGENT: Perishable goods delayed', 'Customer notified of delay'],
-    createdAt: '2024-01-14T06:00:00Z',
-    updatedAt: '2024-01-14T12:00:00Z',
-  },
-];
-
-// ============ API FUNCTIONS ============
-
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-export async function fetchShipments(filters?: { status?: ShipmentStatus; riskLevel?: RiskLevel }): Promise<Shipment[]> {
-  await delay(400);
-  let results = [...mockShipments];
-  if (filters?.status) results = results.filter(s => s.status === filters.status);
-  if (filters?.riskLevel) results = results.filter(s => s.riskLevel === filters.riskLevel);
-  return results;
+export interface LogisticsVehicle {
+  id: string;
+  logistics_partner_id: string;
+  vehicle_type: string;
+  registration_number: string;
+  capacity_kg: number;
+  status: 'active' | 'maintenance' | 'inactive';
+  current_location?: any;
+  created_at: string;
+  updated_at: string;
 }
 
-export async function fetchShipmentById(id: string): Promise<Shipment | null> {
-  await delay(300);
-  return mockShipments.find(s => s.id === id) || null;
+// =====================================================
+// LOGISTICS PARTNER OPERATIONS
+// =====================================================
+
+/**
+ * Apply as logistics partner
+ */
+export async function applyAsLogisticsPartner(data: {
+  company_name: string;
+  contact_person: string;
+  phone: string;
+  email: string;
+  operating_regions: string[];
+  vehicle_types: string[];
+  capacity_kg: number;
+  license_number?: string;
+  documents?: any[];
+}): Promise<{ data: LogisticsPartner | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: application, error } = await supabase
+      .from('logistics_partners')
+      .insert({
+        user_id: user.id,
+        ...data,
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data: application, error: null };
+  } catch (error) {
+    console.error('Error applying as logistics partner:', error);
+    return { data: null, error };
+  }
 }
 
-export async function fetchPartners(): Promise<LogisticsPartner[]> {
-  await delay(350);
-  return mockPartners;
+/**
+ * Get logistics partner profile
+ */
+export async function getLogisticsProfile(): Promise<{ data: LogisticsPartner | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('logistics_partners')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching logistics profile:', error);
+    return { data: null, error };
+  }
 }
 
-export async function fetchAdminMetrics(): Promise<AdminMetrics> {
-  await delay(400);
-  return {
-    totalActiveShipments: 47,
-    inTransit: 23,
-    delivered: 892,
-    delayed: 5,
-    exceptions: 2,
-    onTimeRate: 94,
-    topDelayReasons: [
-      { reason: 'Weather conditions', count: 12 },
-      { reason: 'Road conditions', count: 8 },
-      { reason: 'Vehicle breakdown', count: 5 },
-      { reason: 'Traffic congestion', count: 4 },
-    ],
-    regionBreakdown: [
-      { region: 'Centre', active: 15, delayed: 2 },
-      { region: 'Littoral', active: 12, delayed: 1 },
-      { region: 'West', active: 8, delayed: 0 },
-      { region: 'Northwest', active: 6, delayed: 1 },
-      { region: 'South', active: 4, delayed: 1 },
-    ],
-  };
+/**
+ * Get assigned deliveries for logistics partner
+ */
+export async function getAssignedDeliveries(
+  filters?: {
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<{ data: Delivery[] | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: partner } = await getLogisticsProfile();
+    if (!partner) throw new Error('Not a logistics partner');
+
+    let query = supabase
+      .from('deliveries')
+      .select('*, order:orders(*)')
+      .eq('logistics_partner_id', partner.id);
+
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    query = query.order('created_at', { ascending: false });
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    if (filters?.offset) {
+      query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching assigned deliveries:', error);
+    return { data: null, error };
+  }
 }
 
-export async function fetchAlerts(): Promise<Alert[]> {
-  await delay(300);
-  return [
-    { id: 'ALT-001', shipmentId: 'SHP-2024-003', type: 'delay', severity: 'high', message: 'Shipment SHP-2024-003 delayed due to road conditions', createdAt: new Date().toISOString(), isResolved: false },
-    { id: 'ALT-002', shipmentId: 'SHP-2024-007', type: 'sla-breach', severity: 'critical', message: 'SLA breach risk for SHP-2024-007 - vehicle breakdown', createdAt: new Date().toISOString(), isResolved: false },
-    { id: 'ALT-003', shipmentId: 'SHP-2024-001', type: 'temperature', severity: 'medium', message: 'Temperature fluctuation detected for perishable goods', createdAt: new Date().toISOString(), isResolved: false },
-  ];
+/**
+ * Update delivery status
+ */
+export async function updateDeliveryStatus(
+  deliveryId: string,
+  status: Delivery['status'],
+  notes?: string,
+  location?: any
+): Promise<{ data: Delivery | null; error: any }> {
+  try {
+    const updates: any = { status };
+
+    if (status === 'picked_up' && !updates.pickup_time) {
+      updates.pickup_time = new Date().toISOString();
+    }
+
+    if (status === 'delivered') {
+      updates.actual_delivery = new Date().toISOString();
+    }
+
+    const { data, error } = await supabase
+      .from('deliveries')
+      .update(updates)
+      .eq('id', deliveryId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Add tracking entry with location if provided
+    if (location) {
+      await supabase
+        .from('delivery_tracking')
+        .insert({
+          delivery_id: deliveryId,
+          status,
+          location,
+          notes
+        });
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating delivery status:', error);
+    return { data: null, error };
+  }
 }
 
-export async function updateShipmentStatus(shipmentId: string, status: ShipmentStatus, notes?: string): Promise<{ success: boolean }> {
-  await delay(400);
-  console.log('[API] Updating shipment status:', shipmentId, status, notes);
-  return { success: true };
+/**
+ * Get delivery tracking history
+ */
+export async function getDeliveryTracking(deliveryId: string): Promise<{ data: DeliveryTracking[] | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('delivery_tracking')
+      .select('*')
+      .eq('delivery_id', deliveryId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching delivery tracking:', error);
+    return { data: null, error };
+  }
 }
 
-export async function assignPartner(shipmentId: string, partnerId: string): Promise<{ success: boolean }> {
-  await delay(400);
-  console.log('[API] Assigning partner:', shipmentId, partnerId);
-  return { success: true };
+/**
+ * Upload proof of delivery
+ */
+export async function uploadProofOfDelivery(
+  deliveryId: string,
+  proofData: any
+): Promise<{ data: Delivery | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('deliveries')
+      .update({
+        proof_of_delivery: proofData,
+        status: 'delivered',
+        actual_delivery: new Date().toISOString()
+      })
+      .eq('id', deliveryId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error uploading proof of delivery:', error);
+    return { data: null, error };
+  }
 }
 
-export async function resolveAlert(alertId: string): Promise<{ success: boolean }> {
-  await delay(300);
-  console.log('[API] Resolving alert:', alertId);
-  return { success: true };
+/**
+ * Report delivery issue
+ */
+export async function reportDeliveryIssue(
+  deliveryId: string,
+  disputeType: string,
+  description: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('logistics_disputes')
+      .insert({
+        delivery_id: deliveryId,
+        reported_by: user.id,
+        dispute_type: disputeType,
+        description,
+        status: 'open'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error reporting delivery issue:', error);
+    return { data: null, error };
+  }
 }
 
-export async function calculateDeliveryCost(params: {
-  origin: Location;
-  destination: Location;
-  weight: number;
-  isPerishable: boolean;
-}): Promise<CostBreakdown> {
-  await delay(500);
-  return {
-    handlingFee: 2500,
-    packagingFee: 1500,
-    platformFee: 1000,
-    distanceCost: 8500,
-    weightCost: params.weight * 100,
-    perishabilityMultiplier: params.isPerishable ? 1.3 : 1.0,
-    roadConditionMultiplier: 1.1,
-    fuelBuffer: 1200,
-    total: 21500,
-    currency: 'XAF',
-  };
+/**
+ * Get vehicles for logistics partner
+ */
+export async function getVehicles(): Promise<{ data: LogisticsVehicle[] | null; error: any }> {
+  try {
+    const { data: partner } = await getLogisticsProfile();
+    if (!partner) throw new Error('Not a logistics partner');
+
+    const { data, error } = await supabase
+      .from('logistics_vehicles')
+      .select('*')
+      .eq('logistics_partner_id', partner.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Add vehicle
+ */
+export async function addVehicle(vehicleData: {
+  vehicle_type: string;
+  registration_number: string;
+  capacity_kg: number;
+}): Promise<{ data: LogisticsVehicle | null; error: any }> {
+  try {
+    const { data: partner } = await getLogisticsProfile();
+    if (!partner) throw new Error('Not a logistics partner');
+
+    const { data, error } = await supabase
+      .from('logistics_vehicles')
+      .insert({
+        logistics_partner_id: partner.id,
+        ...vehicleData,
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error adding vehicle:', error);
+    return { data: null, error };
+  }
+}
+
+// =====================================================
+// ADMIN OPERATIONS
+// =====================================================
+
+/**
+ * Get all logistics partners (admin only)
+ */
+export async function getAllLogisticsPartners(
+  filters?: {
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<{ data: LogisticsPartner[] | null; error: any }> {
+  try {
+    let query = supabase
+      .from('logistics_partners')
+      .select('*, user:user_profiles(*)');
+
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    query = query.order('created_at', { ascending: false });
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    if (filters?.offset) {
+      query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching all logistics partners:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Approve logistics partner (admin only)
+ */
+export async function approveLogisticsPartner(partnerId: string): Promise<{ data: any; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('logistics_partners')
+      .update({
+        status: 'approved',
+        approved_by: user.id,
+        approved_at: new Date().toISOString()
+      })
+      .eq('id', partnerId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error approving logistics partner:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Reject logistics partner (admin only)
+ */
+export async function rejectLogisticsPartner(
+  partnerId: string,
+  reason: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('logistics_partners')
+      .update({
+        status: 'rejected',
+        rejection_reason: reason
+      })
+      .eq('id', partnerId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error rejecting logistics partner:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Suspend logistics partner (admin only)
+ */
+export async function suspendLogisticsPartner(
+  partnerId: string,
+  reason: string
+): Promise<{ data: any; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('logistics_partners')
+      .update({
+        status: 'suspended',
+        rejection_reason: reason
+      })
+      .eq('id', partnerId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error suspending logistics partner:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Assign delivery to logistics partner (admin only)
+ */
+export async function assignDeliveryToPartner(
+  deliveryId: string,
+  partnerId: string
+): Promise<{ data: Delivery | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('deliveries')
+      .update({
+        logistics_partner_id: partnerId,
+        status: 'assigned'
+      })
+      .eq('id', deliveryId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error assigning delivery:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Get logistics analytics (admin only)
+ */
+export async function getLogisticsAnalytics(): Promise<{ data: any; error: any }> {
+  try {
+    const { data: partners } = await supabase
+      .from('logistics_partners')
+      .select('*');
+
+    const { data: deliveries } = await supabase
+      .from('deliveries')
+      .select('*');
+
+    const { data: disputes } = await supabase
+      .from('logistics_disputes')
+      .select('*');
+
+    const analytics = {
+      totalPartners: partners?.length || 0,
+      activePartners: partners?.filter(p => p.status === 'approved').length || 0,
+      pendingApplications: partners?.filter(p => p.status === 'pending').length || 0,
+      totalDeliveries: deliveries?.length || 0,
+      completedDeliveries: deliveries?.filter(d => d.status === 'delivered').length || 0,
+      failedDeliveries: deliveries?.filter(d => d.status === 'failed').length || 0,
+      activeDeliveries: deliveries?.filter(d => ['assigned', 'picked_up', 'in_transit'].includes(d.status)).length || 0,
+      openDisputes: disputes?.filter(d => d.status === 'open').length || 0,
+      averageDeliveryTime: partners?.reduce((sum, p) => sum + (p.average_delivery_time || 0), 0) / (partners?.length || 1),
+    };
+
+    return { data: analytics, error: null };
+  } catch (error) {
+    console.error('Error fetching logistics analytics:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Get delivery by tracking number
+ */
+export async function getDeliveryByTracking(trackingNumber: string): Promise<{ data: Delivery | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('deliveries')
+      .select('*, order:orders(*), logistics_partner:logistics_partners(*)')
+      .eq('tracking_number', trackingNumber)
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching delivery by tracking:', error);
+    return { data: null, error };
+  }
 }

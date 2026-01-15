@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Users, Key, Link2, Bell, Globe, Shield, Database, Save, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Settings, Users, Key, Link2, Bell, Globe, Shield, Database, Save, Plus, Trash2, Edit2, Percent, AlertCircle, Lock } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,7 @@ const mockIntegrations = [
 ];
 
 export default function AdminSettings() {
+  const { isSuperAdmin } = useAuth();
   const [settings, setSettings] = useState({
     siteName: 'Harvestá',
     supportEmail: 'support@harvesta.com',
@@ -147,7 +149,12 @@ export default function AdminSettings() {
                 </div>
               </div>
 
-              <Button onClick={handleSave}><Save className="mr-2 h-4 w-4" />Save Changes</Button>
+              <div className="flex gap-4">
+                <Button onClick={handleSave}><Save className="mr-2 h-4 w-4" />Save Changes</Button>
+                <Button variant="secondary" onClick={() => import('@/lib/seedData').then(m => m.seedDatabase())}>
+                  <Database className="mr-2 h-4 w-4" /> Seed Database
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -288,9 +295,9 @@ export default function AdminSettings() {
                           {integration.status}
                         </Badge>
                       </div>
-                      <Button 
-                        variant={integration.status === 'connected' ? 'outline' : 'default'} 
-                        size="sm" 
+                      <Button
+                        variant={integration.status === 'connected' ? 'outline' : 'default'}
+                        size="sm"
                         className="w-full mt-4"
                         onClick={() => toast.success(integration.status === 'connected' ? 'Disconnected' : 'Connected')}
                       >
@@ -361,6 +368,131 @@ export default function AdminSettings() {
               </div>
 
               <Button onClick={handleSave}><Save className="mr-2 h-4 w-4" />Save Preferences</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tax Settings */}
+        <TabsContent value="tax" className="space-y-4">
+          <Card className="border-yellow-200 bg-yellow-50/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-yellow-700">
+                  <AlertCircle className="h-5 w-5" />
+                  <CardTitle>Tax System Freeze Active</CardTitle>
+                </div>
+                <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-300">SYSTEM PROTECTED</Badge>
+              </div>
+              <CardDescription className="text-yellow-600">
+                All tax calculations are currently disabled platform-wide. This freeze is enforced at the core calculation level.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Percent className="h-5 w-5" />
+                Tax Configuration Framework
+              </CardTitle>
+              <CardDescription>Prepare tax rules for future activation. These settings are currently ignored by the system.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2"><Settings className="h-4 w-4" /> Policy Strategy</h4>
+                  <div className="space-y-4 opacity-70 pointer-events-none">
+                    <div className="flex items-center justify-between">
+                      <Label className="flex flex-col gap-1">
+                        <span>Tax Status Toggle</span>
+                        <span className="font-normal text-xs text-muted-foreground text-red-500 flex items-center gap-1"><Lock className="h-3 w-3" /> Locked: Freeze in effect</span>
+                      </Label>
+                      <Switch checked={false} disabled />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Primary Tax Type</Label>
+                      <Select defaultValue="vat" disabled>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="vat">VAT (Value Added Tax)</SelectItem>
+                          <SelectItem value="sales">Sales Tax</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Target Scope</Label>
+                      <Select defaultValue="platform" disabled>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="platform">Platform-wide</SelectItem>
+                          <SelectItem value="country">Per Country</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2"><Database className="h-4 w-4" /> Calculation Rules</h4>
+                  <div className="space-y-4 opacity-70 pointer-events-none">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Default Rate (%)</Label>
+                        <Input type="number" defaultValue="19.25" disabled />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Method</Label>
+                        <Select defaultValue="percent" disabled>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="percent">Percentage</SelectItem></SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Responsibility</Label>
+                      <Select defaultValue="buyer" disabled>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="buyer">Buyer Pays</SelectItem>
+                          <SelectItem value="seller">Seller Pays</SelectItem>
+                          <SelectItem value="shared">Shared Responsibility</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label>Inclusive Pricing</Label>
+                      <Switch checked={false} disabled />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="bg-muted/50 p-4 rounded-lg flex items-start gap-3">
+                <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Activation Safeguards</p>
+                  <ul className="text-xs text-muted-foreground list-disc ml-4 space-y-1">
+                    <li>Unfreezing requires double Multi-Factor Authentication.</li>
+                    <li>Historical orders (prior to activation) will never be modified.</li>
+                    <li>Rule versions are archived and immutable once activated.</li>
+                  </ul>
+                </div>
+              </div>
+
+              {isSuperAdmin ? (
+                <div className="flex gap-4">
+                  <Button disabled variant="secondary"><Lock className="mr-2 h-4 w-4" /> Preview Simulation</Button>
+                  <Button disabled><Save className="mr-2 h-4 w-4" /> Save Configuration draft</Button>
+                </div>
+              ) : (
+                <p className="text-sm text-red-500 font-medium italic">Only Super Admins can access tax configuration drafts.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

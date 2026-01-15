@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { updateProductStatus } from '@/lib/admin-api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -80,17 +81,17 @@ function ProductCard({ product, view, onRefresh }: { product: Product; view: 'gr
   const stock = defaultVariant?.stock_quantity || 0;
   const grade = defaultVariant?.grade || '';
 
-  const formatPrice = (price: number) => 
+  const formatPrice = (price: number) =>
     new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(price);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    
+
     const { error } = await supabase
       .from('products')
       .delete()
       .eq('id', product.id);
-    
+
     if (error) {
       toast.error('Failed to delete product');
     } else {
@@ -144,6 +145,16 @@ function ProductCard({ product, view, onRefresh }: { product: Product; view: 'gr
                     <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
                       <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
+                    {product.status !== 'active' && (
+                      <DropdownMenuItem onClick={() => updateProductStatus(product.id, 'active').then(onRefresh)}>
+                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Publish
+                      </DropdownMenuItem>
+                    )}
+                    {product.status === 'active' && (
+                      <DropdownMenuItem onClick={() => updateProductStatus(product.id, 'draft').then(onRefresh)}>
+                        <XCircle className="mr-2 h-4 w-4 text-orange-600" /> Unpublish
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -342,9 +353,9 @@ export default function AdminProducts() {
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input 
-                  placeholder="Search products..." 
-                  className="pl-9" 
+                <Input
+                  placeholder="Search products..."
+                  className="pl-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -410,10 +421,10 @@ export default function AdminProducts() {
           )}
         >
           {filteredProducts.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              view={isMobile ? 'grid' : view} 
+            <ProductCard
+              key={product.id}
+              product={product}
+              view={isMobile ? 'grid' : view}
               onRefresh={fetchProducts}
             />
           ))}

@@ -1,110 +1,132 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Plus,
   Search,
   Filter,
-  MoreVertical,
-  Package,
-  Eye,
+  MoreHorizontal,
   Edit,
   Trash2,
-  Archive,
-  Copy,
-  ChevronDown,
+  Eye,
+  Package,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { SellerLayout } from '@/components/seller/SellerLayout';
-import { mockSellerProducts, SellerProduct } from '@/services/seller-api';
 import { Link } from 'react-router-dom';
-
-const formatCurrency = (amount: number, currency = 'XAF') => {
-  if (currency === 'USD') {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  }
-  return new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(amount);
-};
-
-const getStatusBadge = (status: SellerProduct['status']) => {
-  const styles: Record<SellerProduct['status'], string> = {
-    active: 'bg-green-100 text-green-800',
-    draft: 'bg-gray-100 text-gray-800',
-    inactive: 'bg-yellow-100 text-yellow-800',
-    out_of_stock: 'bg-red-100 text-red-800',
-  };
-  return styles[status];
-};
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function SellerProducts() {
-  const [products] = useState(mockSellerProducts);
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
-  const filteredProducts = products.filter((product) => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get supplier ID
+      const { data: supplier } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!supplier) return;
+
+      // Fetch products
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+                *,
+                product_variants (
+                    stock_quantity,
+                    price:pricing_tiers(price_per_unit, currency)
+                ),
+                images:product_images(image_url)
+            `)
+        .eq('supplier_id', supplier.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      active: 'bg-green-100 text-green-800',
+      draft: 'bg-gray-100 text-gray-800',
+      out_of_stock: 'bg-red-100 text-red-800',
+      inactive: 'bg-yellow-100 text-yellow-800',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      product.sku?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const toggleSelectAll = () => {
-    if (selectedProducts.length === filteredProducts.length) {
-      setSelectedProducts([]);
-    } else {
-      setSelectedProducts(filteredProducts.map((p) => p.id));
+  const handleDelete = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', productId);
+      if (error) throw error;
+      toast.success('Product deleted');
+      fetchProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
     }
   };
 
-  const toggleSelect = (id: string) => {
-    setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+  if (loading) {
+    return (
+      <SellerLayout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </SellerLayout>
     );
-  };
-
-  const stats = {
-    total: products.length,
-    active: products.filter((p) => p.status === 'active').length,
-    outOfStock: products.filter((p) => p.status === 'out_of_stock').length,
-    draft: products.filter((p) => p.status === 'draft').length,
-  };
+  }
 
   return (
     <SellerLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Products</h1>
             <p className="text-muted-foreground">Manage your product catalog</p>
           </div>
-          <Button className="bg-green-600 hover:bg-green-700" asChild>
+          <Button asChild>
             <Link to="/seller/products/add">
               <Plus className="w-4 h-4 mr-2" />
               Add Product
@@ -112,219 +134,118 @@ export default function SellerProducts() {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <Package className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total Products</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-100">
-                  <Package className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.active}</p>
-                  <p className="text-sm text-muted-foreground">Active</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-red-100">
-                  <Package className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.outOfStock}</p>
-                  <p className="text-sm text-muted-foreground">Out of Stock</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gray-100">
-                  <Package className="w-5 h-5 text-gray-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.draft}</p>
-                  <p className="text-sm text-muted-foreground">Drafts</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="draft">Draft</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline">
-                <Filter className="w-4 h-4 mr-2" />
-                More Filters
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => {
+            // Helper to get primary image or placeholder
+            const primaryImage = product.images?.find((i: any) => i.is_primary)?.image_url || product.images?.[0]?.image_url;
+            // Helper to get price range
+            const variants = product.product_variants || [];
+            const prices = variants.flatMap((v: any) => v.price?.map((p: any) => p.price_per_unit) || []);
+            const minPrice = prices.length ? Math.min(...prices) : 0;
 
-        {/* Bulk Actions */}
-        {selectedProducts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-4 p-4 bg-green-50 rounded-lg border border-green-200"
-          >
-            <span className="text-sm font-medium">{selectedProducts.length} selected</span>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline">
-                <Archive className="w-4 h-4 mr-1" />
-                Archive
-              </Button>
-              <Button size="sm" variant="outline" className="text-red-600">
-                <Trash2 className="w-4 h-4 mr-1" />
-                Delete
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Products Table */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
-                        onCheckedChange={toggleSelectAll}
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="overflow-hidden">
+                  <div className="aspect-square bg-muted relative">
+                    {primaryImage ? (
+                      <img
+                        src={primaryImage}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
                       />
-                    </TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Views</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedProducts.includes(product.id)}
-                          onCheckedChange={() => toggleSelect(product.id)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-10 h-10 rounded-lg object-cover"
-                          />
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">MOQ: {product.minOrderQuantity} {product.unit}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{product.sku}</TableCell>
-                      <TableCell>{product.category}</TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="font-medium">{formatCurrency(product.domesticPrice)}</p>
-                          {product.internationalPrice && (
-                            <p className="text-xs text-muted-foreground">
-                              ${product.internationalPrice} (Int'l)
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={product.stock === 0 ? 'text-red-600 font-medium' : ''}>
-                          {product.stock.toLocaleString()} {product.unit}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={getStatusBadge(product.status)}>
-                          {product.status.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{product.views.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Eye className="w-4 h-4 mr-2" />
-                              View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Copy className="w-4 h-4 mr-2" />
-                              Duplicate
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <Package className="w-12 h-12 opacity-20" />
+                      </div>
+                    )}
+                    <Badge className={`absolute top-2 right-2 ${getStatusColor(product.status)}`}>
+                      {product.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-semibold truncate pr-2" title={product.name}>{product.name}</h3>
+                        <p className="text-sm text-muted-foreground">{product.sku || 'No SKU'}</p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link to={`/seller/products/edit/${product.id}`}>
+                              <Edit className="w-4 h-4 mr-2" /> Edit
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Eye className="w-4 h-4 mr-2" /> View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(product.id)}>
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <div className="flex justify-between items-end mt-4">
+                      <div>
+                        <p className="text-lg font-bold">
+                          {new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(minPrice)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Stock: {variants.reduce((acc: number, v: any) => acc + (v.stock_quantity || 0), 0)} {product.unit_of_measure}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+
+          {filteredProducts.length === 0 && (
+            <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+              <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p>No products found matching your filters.</p>
+              <Button variant="link" asChild className="mt-2">
+                <Link to="/seller/products/add">Add your first product</Link>
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
     </SellerLayout>
   );

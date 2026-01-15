@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { fetchBuyers, Buyer } from '@/lib/admin-api';
+import { fetchBuyers, Buyer, suspendBuyer } from '@/lib/admin-api';
 import { toast } from 'sonner';
 
 const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } };
@@ -54,7 +54,7 @@ export default function AdminBuyers() {
 
   const filteredBuyers = buyers.filter(b => {
     const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         b.email.toLowerCase().includes(searchTerm.toLowerCase());
+      b.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || b.type === typeFilter;
     return matchesSearch && matchesType;
   });
@@ -225,7 +225,7 @@ export default function AdminBuyers() {
                               Send Email
                             </DropdownMenuItem>
                             <DropdownMenuItem>View Orders</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600" onClick={() => toast.success('Buyer suspended')}>
+                            <DropdownMenuItem className="text-red-600" onClick={() => suspendBuyer(buyer.id).then(() => toast.success('Buyer suspended'))}>
                               <Ban className="mr-2 h-4 w-4" />
                               Suspend
                             </DropdownMenuItem>

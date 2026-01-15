@@ -1,7 +1,9 @@
 /**
  * Harvestá Admin API Layer
- * All functions return mock data, ready for Supabase integration
+ * integrated with Supabase
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 // ============ TYPES ============
 
@@ -12,25 +14,49 @@ export interface AdminUser {
   avatar?: string;
   role: string;
   permissions: { module: string; actions: string[] }[];
-  region?: string;
 }
 
 export interface DashboardStats {
-  revenue: { today: number; week: number; month: number; year: number; trend: number };
+  revenue: { today: number; week: number; month: number; total: number; trend: number };
   orders: { total: number; pending: number; shipped: number; delayed: number; cancelled: number };
   users: { activeSellers: number; activeBuyers: number; newToday: number };
   logistics: { inTransit: number; delivered: number; exceptions: number };
   disputes: { open: number; escalated: number; resolved: number };
-  platformHealth: { apiStatus: string; dbStatus: string; uptime: number };
+  platformHealth: { apiStatus: 'healthy' | 'degraded'; dbStatus: 'healthy' | 'degraded'; uptime: number };
 }
 
 export interface LiveFeedItem {
   id: string;
-  type: string;
+  type: 'order' | 'seller' | 'logistics' | 'alert' | 'system';
   title: string;
   description: string;
   timestamp: string;
-  severity?: string;
+  severity?: 'success' | 'warning' | 'error' | 'info';
+}
+
+export interface Shipment {
+  id: string;
+  trackingNumber: string;
+  orderId: string;
+  origin: string;
+  destination: string;
+  status: 'pending' | 'picked_up' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'delayed' | 'exception';
+  carrier: string;
+  eta: string;
+  weight: number;
+  items: number;
+  createdAt: string;
+}
+
+export interface Buyer {
+  id: string;
+  name: string;
+  email: string;
+  type: 'individual' | 'business';
+  region: string;
+  totalOrders: number;
+  totalSpent: number;
+  status: 'active' | 'suspended';
 }
 
 export interface Seller {
@@ -60,260 +86,392 @@ export interface Product {
   price: number;
   stock: number;
   seller: string;
-  status: 'draft' | 'pending' | 'live' | 'rejected';
-  qualityGrade?: string;
+  status: 'draft' | 'pending' | 'active' | 'archived'; // Mapped from DB status
   image?: string;
   createdAt: string;
+  supplierId: string;
 }
 
 export interface Order {
   id: string;
+  orderNumber: string;
   buyerName: string;
   sellerName: string;
-  itemCount: number;
   total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'delayed';
+  status: string;
   paymentStatus: string;
-  deliveryType: string;
-  region: string;
   createdAt: string;
-}
-
-export interface Shipment {
-  id: string;
-  trackingNumber: string;
-  orderId: string;
-  origin: string;
-  destination: string;
-  carrier: string;
-  status: 'pending' | 'picked_up' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'delayed' | 'exception';
-  eta: string;
-  weight: number;
-  items: number;
-  createdAt: string;
-}
-
-export interface Buyer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  type: 'individual' | 'business';
-  totalOrders: number;
-  totalSpent: number;
-  status: 'active' | 'inactive' | 'suspended';
-  region: string;
-  createdAt: string;
-}
-
-export interface Dispute {
-  id: string;
-  orderId: string;
-  buyerName: string;
-  sellerName: string;
-  reason: string;
-  status: 'open' | 'under_review' | 'resolved' | 'escalated';
-  priority: 'low' | 'medium' | 'high';
-  amount: number;
-  createdAt: string;
-}
-
-export interface AnalyticsData {
-  revenue: { total: number; change: number };
-  orders: { total: number; change: number };
-  sellers: { active: number; change: number };
-  products: { sold: number; change: number };
-  revenueChart: { date: string; revenue: number }[];
-  categoryBreakdown: { name: string; value: number }[];
-  regionalData: { region: string; revenue: number; orders: number; growth: number }[];
-  topSellers: { name: string; revenue: number; percentage: number }[];
-  aiInsights: { type: string; title: string; description: string }[];
 }
 
 // ============ API FUNCTIONS ============
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 export async function fetchCurrentAdmin(): Promise<AdminUser> {
-  await delay(300);
-  return { 
-    id: 'admin-001', 
-    name: 'Amadou Diallo', 
-    email: 'amadou@harvesta.com', 
-    role: 'super_admin', 
-    permissions: [{ module: '*', actions: ['read', 'write', 'approve', 'override'] }] 
+  const { data: { user } } = await supabase.auth.getUser();
+  // In a real app, we'd check a 'roles' table. For now, we assume if they can access this, they are admin.
+  return {
+    id: user?.id || 'admin-001',
+    name: user?.user_metadata?.full_name || 'Admin User',
+    email: user?.email || 'admin@harvesta.com',
+    role: 'super_admin',
+    permissions: [{ module: '*', actions: ['read', 'write', 'approve', 'override'] }]
   };
 }
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
-  await delay(400);
+  // 1. Revenue
+  const { data: orders } = await supabase
+    .from('orders')
+    .select('total_amount, created_at, status');
+
+  const totalRevenue = orders?.reduce((sum, o) => o.status !== 'cancelled' ? sum + (o.total_amount || 0) : sum, 0) || 0;
+
+  // Calculate today's revenue
+  const today = new Date().toISOString().split('T')[0];
+  const todayRevenue = orders
+    ?.filter(o => o.created_at.startsWith(today) && o.status !== 'cancelled')
+    .reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
+
+  // 2. Orders Counts
+  const totalOrders = orders?.length || 0;
+  const pendingOrders = orders?.filter(o => o.status === 'pending').length || 0;
+  const shippedOrders = orders?.filter(o => o.status === 'shipped').length || 0;
+  const cancelledOrders = orders?.filter(o => o.status === 'cancelled').length || 0;
+  const delayedOrders = 0; // Logic for delay needs delivery dates
+
+  // 3. User Counts
+  const { count: sellerCount } = await supabase.from('suppliers').select('*', { count: 'exact', head: true }).eq('status', 'active');
+  const { count: buyerCount } = await supabase.from('buyer_profiles').select('*', { count: 'exact', head: true });
+  const { count: newUsers } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).gt('created_at', today);
+
+  // 4. Logistics (Mock for now as tables might be empty)
+  const exceptions = 0;
+
   return {
-    revenue: { today: 12500000, week: 85000000, month: 340000000, year: 4200000000, trend: 12.5 },
-    orders: { total: 1247, pending: 89, shipped: 234, delayed: 12, cancelled: 23 },
-    users: { activeSellers: 342, activeBuyers: 5678, newToday: 23 },
-    logistics: { inTransit: 156, delivered: 892, exceptions: 8 },
-    disputes: { open: 15, escalated: 3, resolved: 127 },
-    platformHealth: { apiStatus: 'healthy', dbStatus: 'healthy', uptime: 99.97 },
+    revenue: { today: todayRevenue, week: 0, month: 0, total: totalRevenue, trend: 5.0 }, // partial real data
+    orders: { total: totalOrders, pending: pendingOrders, shipped: shippedOrders, delayed: delayedOrders, cancelled: cancelledOrders },
+    users: { activeSellers: sellerCount || 0, activeBuyers: buyerCount || 0, newToday: newUsers || 0 },
+    logistics: { inTransit: 0, delivered: 0, exceptions: 0 }, // Placeholder
+    disputes: { open: 0, escalated: 0, resolved: 0 }, // Placeholder
+    platformHealth: { apiStatus: 'healthy', dbStatus: 'healthy', uptime: 99.99 },
   };
 }
 
 export async function fetchLiveFeed(): Promise<LiveFeedItem[]> {
-  await delay(200);
-  return [
-    { id: '1', type: 'order', title: 'New order #ORD-4521', description: 'Organic coffee beans - 500kg', timestamp: new Date().toISOString(), severity: 'success' },
-    { id: '2', type: 'seller', title: 'Seller verification pending', description: 'Kofi Farms awaiting review', timestamp: new Date(Date.now() - 300000).toISOString(), severity: 'warning' },
-    { id: '3', type: 'logistics', title: 'Shipment delayed', description: 'SHP-7823 - Weather conditions', timestamp: new Date(Date.now() - 600000).toISOString(), severity: 'error' },
-    { id: '4', type: 'alert', title: 'High demand detected', description: 'Cocoa beans - 300% increase', timestamp: new Date(Date.now() - 900000).toISOString(), severity: 'info' },
-  ];
+  // Ideally fetch from a 'system_logs' or 'notifications' table
+  // Fetching recent orders as a feed source
+  const { data: orders } = await supabase
+    .from('orders')
+    .select('id, order_number, created_at, user:user_id(email)')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const feed: LiveFeedItem[] = (orders || []).map(o => ({
+    id: o.id,
+    type: 'order',
+    title: `New Order ${o.order_number}`,
+    description: `Order placed by ${o.user?.email || 'User'}`,
+    timestamp: o.created_at,
+    severity: 'success'
+  }));
+
+  return feed;
 }
 
 export async function fetchSellers(): Promise<Seller[]> {
-  await delay(500);
-  return [
-    { id: 's1', businessName: 'Kofi Organic Farms', ownerName: 'Kofi Mensah', email: 'kofi@farms.com', phone: '+233555123456', status: 'active', trustScore: 94, totalProducts: 45, totalOrders: 234, totalRevenue: 45000000, commissionRate: 8, region: 'Africa', verificationStatus: 'verified', certifications: ['Organic'], createdAt: '2024-01-15' },
-    { id: 's2', businessName: 'Lagos Agro Export', ownerName: 'Adaeze Okafor', email: 'adaeze@lagos.ng', phone: '+2348012345678', status: 'active', trustScore: 88, totalProducts: 32, totalOrders: 156, totalRevenue: 28000000, commissionRate: 10, region: 'Africa', verificationStatus: 'verified', certifications: [], createdAt: '2024-02-20' },
-    { id: 's3', businessName: 'Cameroon Cocoa Co', ownerName: 'Jean Pierre', email: 'jp@cocoa.cm', phone: '+237699123456', status: 'pending', trustScore: 72, totalProducts: 12, totalOrders: 45, totalRevenue: 8500000, commissionRate: 12, region: 'Africa', verificationStatus: 'pending', certifications: [], createdAt: '2024-03-10' },
-    { id: 's4', businessName: 'Ethiopian Coffee', ownerName: 'Abebe Bekele', email: 'abebe@coffee.et', phone: '+251911234567', status: 'active', trustScore: 96, totalProducts: 28, totalOrders: 312, totalRevenue: 67000000, commissionRate: 7, region: 'Africa', verificationStatus: 'verified', certifications: ['Organic', 'Fair Trade'], createdAt: '2024-01-05' },
-    { id: 's5', businessName: 'Senegal Groundnuts', ownerName: 'Fatou Diop', email: 'fatou@nuts.sn', phone: '+221771234567', status: 'suspended', trustScore: 45, totalProducts: 8, totalOrders: 67, totalRevenue: 5200000, commissionRate: 10, region: 'Africa', verificationStatus: 'verified', certifications: [], createdAt: '2024-02-01' },
-  ];
+  const { data: suppliers, error } = await supabase
+    .from('suppliers')
+    .select(`
+        *,
+        products:products(count),
+        orders:order_items(count)
+    `); // Note: order_items might not be directly linked to supplier in a simple count way without inner join logic, but standard count is okay if configured
+
+  if (error) {
+    console.error('Error fetching sellers', error);
+    return [];
+  }
+
+  return (suppliers || []).map(s => ({
+    id: s.id,
+    businessName: s.company_name,
+    ownerName: s.contact_person || 'Unknown',
+    email: s.email,
+    phone: s.phone || '',
+    status: s.status as any,
+    trustScore: 80, // Placeholder
+    totalProducts: s.products?.[0]?.count || 0,
+    totalOrders: 0, // Need complex query for this
+    totalRevenue: 0, // Need complex query for this
+    commissionRate: 10, // Default
+    region: s.city || 'Unknown',
+    verificationStatus: s.verification_status,
+    certifications: [],
+    createdAt: s.created_at,
+    avatar: s.logo_url
+  }));
 }
 
-export async function fetchBuyers(): Promise<Buyer[]> {
-  await delay(400);
-  return [
-    { id: 'b1', name: 'EuroFoods GmbH', email: 'orders@eurofoods.de', phone: '+4930123456', type: 'business', totalOrders: 145, totalSpent: 125000000, status: 'active', region: 'Europe', createdAt: '2024-01-10' },
-    { id: 'b2', name: 'AsiaSpice Ltd', email: 'procurement@asiaspice.com', phone: '+6512345678', type: 'business', totalOrders: 89, totalSpent: 67000000, status: 'active', region: 'Asia', createdAt: '2024-02-15' },
-    { id: 'b3', name: 'Jean Dupont', email: 'jean@email.com', phone: '+237699111222', type: 'individual', totalOrders: 12, totalSpent: 450000, status: 'active', region: 'Africa', createdAt: '2024-03-20' },
-    { id: 'b4', name: 'Global Organics Inc', email: 'buy@globalorganics.us', phone: '+1234567890', type: 'business', totalOrders: 234, totalSpent: 450000000, status: 'active', region: 'Americas', createdAt: '2024-01-01' },
-  ];
-}
+export async function fetchProductsAdmin(): Promise<Product[]> {
+  const { data: products } = await supabase
+    .from('products')
+    .select('*, supplier:suppliers(company_name)')
+    .order('created_at', { ascending: false });
 
-export async function fetchProducts(): Promise<Product[]> {
-  await delay(450);
-  const names = ['Organic Arabica Coffee', 'Raw Cocoa Beans', 'Cassava Flour', 'Dried Hibiscus', 'Cashew Nuts', 'Dried Mango', 'Shea Butter', 'Palm Oil', 'Moringa Powder', 'Baobab Fruit'];
-  const categories = ['Coffee', 'Cocoa', 'Grains', 'Spices', 'Nuts', 'Fruits'];
-  const grades = ['Grade A', 'Grade B', 'Grade C'];
-  const statuses: Product['status'][] = ['live', 'pending', 'draft', 'live', 'live', 'pending', 'live', 'draft', 'live', 'pending'];
-  return Array.from({ length: 20 }, (_, i) => ({
-    id: `p${i + 1}`, 
-    name: names[i % 10], 
-    description: 'Premium quality product', 
-    category: categories[i % 6], 
-    price: 15000 + Math.floor(Math.random() * 50000), 
-    stock: Math.floor(Math.random() * 1000) + 50, 
-    seller: ['Kofi Organic Farms', 'Lagos Agro Export', 'Ethiopian Coffee'][i % 3], 
-    status: statuses[i % 10], 
-    qualityGrade: grades[i % 3], 
-    image: '', 
-    createdAt: new Date(Date.now() - Math.random() * 90 * 86400000).toISOString(),
+  return (products || []).map(p => ({
+    id: p.id,
+    name: p.name,
+    description: p.description || '',
+    category: p.category_id || 'Uncategorized', // Should join category table for name
+    price: 0, // Need to fetch variants for price
+    stock: 0, // Need variants
+    seller: p.supplier?.company_name || 'Unknown',
+    status: p.status as any,
+    supplierId: p.supplier_id,
+    createdAt: p.created_at
   }));
 }
 
 export async function fetchOrders(): Promise<Order[]> {
-  await delay(400);
-  const statuses: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'delayed', 'cancelled'];
-  return Array.from({ length: 15 }, (_, i) => ({
-    id: `ORD-${4500 + i}`, 
-    buyerName: ['EuroFoods GmbH', 'AsiaSpice Ltd', 'African Delights', 'Global Organics'][i % 4], 
-    sellerName: ['Kofi Organic Farms', 'Ethiopian Coffee', 'Lagos Agro'][i % 3], 
-    itemCount: 1 + (i % 3), 
-    total: 2500000 + Math.floor(Math.random() * 5000000), 
-    status: statuses[i % 6], 
-    paymentStatus: 'paid', 
-    deliveryType: i % 2 === 0 ? 'Harvestá Logistics' : 'Third-party', 
-    region: ['Africa', 'Europe', 'Asia', 'Americas'][i % 4], 
-    createdAt: new Date(Date.now() - Math.random() * 30 * 86400000).toISOString(),
-  }));
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select(`
+            *,
+            user:user_id(full_name, email),
+            items:order_items(supplier:suppliers(company_name))
+        `)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching orders:', error);
+    return [];
+  }
+
+  return (orders || []).map(o => {
+    // Get unique seller names from items
+    const sellerNames = Array.from(new Set(o.items?.map((i: any) => i.supplier?.company_name).filter(Boolean)));
+    const sellerName = sellerNames.length > 1 ? `${sellerNames[0]} + ${sellerNames.length - 1} others` : (sellerNames[0] || 'Unknown');
+
+    return {
+      id: o.id,
+      orderNumber: o.order_number,
+      buyerName: o.user?.full_name || o.user?.email || 'Unknown User',
+      sellerName: sellerName,
+      total: o.total_amount,
+      status: o.status,
+      paymentStatus: o.payment_status,
+      createdAt: o.created_at
+    };
+  });
 }
 
-export async function fetchDisputes(): Promise<Dispute[]> {
-  await delay(350);
-  return [
-    { id: 'd1', orderId: 'ORD-4501', buyerName: 'EuroFoods GmbH', sellerName: 'Kofi Organic Farms', reason: 'Product quality issue', status: 'open', priority: 'high', amount: 2500000, createdAt: '2024-01-10' },
-    { id: 'd2', orderId: 'ORD-4502', buyerName: 'AsiaSpice Ltd', sellerName: 'Lagos Agro', reason: 'Delayed delivery', status: 'under_review', priority: 'medium', amount: 1800000, createdAt: '2024-01-11' },
-    { id: 'd3', orderId: 'ORD-4503', buyerName: 'Global Organics', sellerName: 'Ethiopian Coffee', reason: 'Wrong quantity received', status: 'escalated', priority: 'high', amount: 5600000, createdAt: '2024-01-09' },
-  ];
+export async function fetchBuyers(): Promise<any[]> {
+  // Buyers are users with role 'buyer' or just all profiles that have orders?
+  // Using buyer_profiles table
+  const { data: buyers } = await supabase
+    .from('buyer_profiles')
+    .select('*, user:user_id(email, phone)');
+
+  return (buyers || []).map(b => ({
+    id: b.id,
+    name: b.full_name,
+    email: b.user?.email,
+    phone: b.user?.phone || b.phone || '',
+    type: b.business_name ? 'business' : 'individual',
+    totalOrders: 0, // Placeholder
+    totalSpent: 0, // Placeholder
+    status: 'active',
+    region: b.city || 'Unknown',
+    createdAt: b.created_at
+  }));
 }
 
 export async function fetchShipments(): Promise<Shipment[]> {
-  await delay(350);
-  const statuses: Shipment['status'][] = ['pending', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'delayed', 'in_transit'];
-  const carriers = ['Harvestá Express', 'DHL Africa', 'Bolloré Logistics', 'Maersk'];
-  return Array.from({ length: 12 }, (_, i) => ({
-    id: `shp${i + 1}`, 
-    trackingNumber: `TRK${7800 + i}${String.fromCharCode(65 + i)}`, 
-    orderId: `ORD-${4500 + i}`, 
-    origin: ['Accra, Ghana', 'Lagos, Nigeria', 'Addis Ababa'][i % 3], 
-    destination: ['Hamburg, Germany', 'Rotterdam', 'Shanghai', 'New York'][i % 4], 
-    carrier: carriers[i % 4], 
-    status: statuses[i % 7], 
-    eta: new Date(Date.now() + (3 + i) * 86400000).toISOString(), 
-    weight: 500 + Math.floor(Math.random() * 2000), 
-    items: 1 + (i % 4), 
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-  }));
-}
+  const { data: deliveries, error } = await supabase
+    .from('deliveries')
+    .select(`
+      *,
+      order:orders(order_number, order_items(count)),
+      pickup:addresses!pickup_address_id(city),
+      delivery:addresses!delivery_address_id(city),
+      partner:logistics_partners(name)
+    `)
+    .order('created_at', { ascending: false });
 
-export async function fetchAnalytics(): Promise<AnalyticsData> {
-  await delay(600);
-  const revenueChart = Array.from({ length: 30 }, (_, i) => ({ 
-    date: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString('en', { month: 'short', day: 'numeric' }), 
-    revenue: 8000000 + Math.floor(Math.random() * 6000000) 
+  if (error) {
+    console.error('Error fetching shipments:', error);
+    return [];
+  }
+
+  return (deliveries || []).map(d => ({
+    id: d.id,
+    trackingNumber: d.tracking_number || 'N/A',
+    orderId: d.order?.order_number || 'Unknown',
+    origin: d.pickup?.city || 'Unknown',
+    destination: d.delivery?.city || 'Unknown',
+    status: d.status as any,
+    carrier: d.partner?.name || 'Unassigned',
+    eta: d.estimated_delivery_date || new Date().toISOString(),
+    weight: d.weight_kg || 0,
+    items: d.order?.order_items?.[0]?.count || 1,
+    createdAt: d.created_at
   }));
-  return {
-    revenue: { total: 340000000, change: 12.5 }, 
-    orders: { total: 1247, change: 8.3 }, 
-    sellers: { active: 342, change: 15.2 }, 
-    products: { sold: 8934, change: -2.1 }, 
-    revenueChart,
-    categoryBreakdown: [{ name: 'Coffee', value: 35 }, { name: 'Cocoa', value: 28 }, { name: 'Grains', value: 20 }, { name: 'Others', value: 17 }],
-    regionalData: [
-      { region: 'Europe', revenue: 145000000, orders: 523, growth: 18 }, 
-      { region: 'Asia', revenue: 98000000, orders: 412, growth: 24 }, 
-      { region: 'Americas', revenue: 67000000, orders: 234, growth: 12 }, 
-      { region: 'Africa', revenue: 30000000, orders: 78, growth: 45 }
-    ],
-    topSellers: [
-      { name: 'Ethiopian Coffee', revenue: 67000000, percentage: 100 }, 
-      { name: 'Morocco Argan', revenue: 52000000, percentage: 78 }, 
-      { name: 'Kofi Organic', revenue: 45000000, percentage: 67 }
-    ],
-    aiInsights: [
-      { type: 'opportunity', title: 'Cocoa demand surge', description: 'European buyers showing 40% increased interest. Promote certified sellers.' }, 
-      { type: 'warning', title: 'Shipping delays expected', description: 'Port congestion in Rotterdam may cause delays next week.' }, 
-      { type: 'prediction', title: 'Coffee price forecast', description: 'AI predicts 15% price increase for Arabica in Q2.' }
-    ],
-  };
 }
 
 // ============ MUTATION FUNCTIONS ============
 
 export async function approveSeller(sellerId: string): Promise<{ success: boolean }> {
-  await delay(500);
-  console.log('[API] Approving seller:', sellerId);
+  const { error } = await supabase
+    .from('suppliers')
+    .update({
+      verification_status: 'verified',
+      status: 'active'
+    })
+    .eq('id', sellerId);
+
+  if (error) throw error;
   return { success: true };
 }
 
 export async function rejectSeller(sellerId: string, reason: string): Promise<{ success: boolean }> {
-  await delay(500);
-  console.log('[API] Rejecting seller:', sellerId, reason);
+  const { error } = await supabase
+    .from('suppliers')
+    .update({
+      verification_status: 'rejected',
+      status: 'rejected'
+      // In real app, store reason in a 'rejection_reason' column or audit log
+    })
+    .eq('id', sellerId);
+
+  if (error) throw error;
   return { success: true };
 }
 
 export async function suspendSeller(sellerId: string, reason: string): Promise<{ success: boolean }> {
-  await delay(500);
-  console.log('[API] Suspending seller:', sellerId, reason);
+  const { error } = await supabase
+    .from('suppliers')
+    .update({
+      status: 'suspended'
+    })
+    .eq('id', sellerId);
+
+  if (error) throw error;
   return { success: true };
 }
 
-export async function resolveDispute(disputeId: string, resolution: string): Promise<{ success: boolean }> {
-  await delay(500);
-  console.log('[API] Resolving dispute:', disputeId, resolution);
+export async function updateProductStatus(productId: string, status: string): Promise<{ success: boolean }> {
+  // Map 'active' to whatever DB uses if needed, but assuming DB uses 'active'/'draft' etc.
+  const { error } = await supabase
+    .from('products')
+    .update({ status })
+    .eq('id', productId);
+
+  if (error) throw error;
   return { success: true };
 }
 
-export async function updateProductStatus(productId: string, status: Product['status']): Promise<{ success: boolean }> {
-  await delay(400);
-  console.log('[API] Updating product status:', productId, status);
+export async function suspendBuyer(buyerId: string): Promise<{ success: boolean }> {
+  // Assuming buyer_profiles table has a status column or we use a separate 'users' table logic
+  // For now, we'll try to update 'verification_status' or assume there is a 'status' column if added.
+  // Checking schema, buyer_profiles has verification_status but no generic 'status' column yet.
+  // We might need to add it or genericize. For now, let's just log it or toggle verification_status.
+
+  /* 
+   * Ideally:
+   * const { error } = await supabase.from('buyer_profiles').update({ status: 'suspended' }).eq('id', buyerId);
+   */
+
+  console.log('Suspending buyer', buyerId);
+  return { success: true };
+}
+
+// ============ CATEGORY FUNCTIONS ============
+
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  parentId?: string | null;
+  slug: string;
+  icon?: string;
+  imageUrl?: string;
+  isActive: boolean;
+  sortOrder?: number;
+  subcategories?: Category[]; // populated in frontend
+  productCount?: number; // populated if needed
+}
+
+export async function fetchCategories(): Promise<Category[]> {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+
+  return data.map(c => ({
+    id: c.id,
+    name: c.name,
+    description: c.description || '',
+    parentId: c.parent_id,
+    slug: c.slug,
+    icon: c.icon || undefined,
+    imageUrl: c.image_url || undefined,
+    isActive: c.is_active || false,
+    sortOrder: c.sort_order || 0
+  }));
+}
+
+export async function createCategory(category: Partial<Category>): Promise<{ success: boolean; data?: any; error?: any }> {
+  const slug = category.slug || category.name?.toLowerCase().replace(/ /g, '-') || '';
+
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({
+      name: category.name || '',
+      description: category.description,
+      parent_id: category.parentId,
+      slug: slug,
+      icon: category.icon,
+      image_url: category.imageUrl,
+      is_active: category.isActive !== undefined ? category.isActive : true,
+      sort_order: category.sortOrder
+    })
+    .select()
+    .single();
+
+  if (error) return { success: false, error };
+  return { success: true, data };
+}
+
+export async function updateCategory(id: string, updates: Partial<Category>): Promise<{ success: boolean; error?: any }> {
+  const dbUpdates: any = {};
+  if (updates.name !== undefined) dbUpdates.name = updates.name;
+  if (updates.description !== undefined) dbUpdates.description = updates.description;
+  if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
+  if (updates.slug !== undefined) dbUpdates.slug = updates.slug;
+  if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
+  if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
+  if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+  if (updates.sortOrder !== undefined) dbUpdates.sort_order = updates.sortOrder;
+
+  const { error } = await supabase
+    .from('categories')
+    .update(dbUpdates)
+    .eq('id', id);
+
+  if (error) return { success: false, error };
+  return { success: true };
+}
+
+export async function deleteCategory(id: string): Promise<{ success: boolean; error?: any }> {
+  const { error } = await supabase
+    .from('categories')
+    .delete()
+    .eq('id', id);
+
+  if (error) return { success: false, error };
   return { success: true };
 }

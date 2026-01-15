@@ -59,6 +59,7 @@ export async function registerUser(data: RegisterData) {
         buyer_type: data.buyerType,
         phone: data.phone,
         company_name: data.companyName,
+        business_registration_number: data.businessRegistrationNumber,
       },
     },
   });
@@ -121,79 +122,104 @@ export interface Notification {
 }
 
 export async function fetchBuyerDashboard(): Promise<DashboardStats> {
-  // Placeholder: Fetch from Supabase
-  return {
-    totalOrders: 24,
-    activeOrders: 3,
-    pendingPayments: 2,
-    savedSuppliers: 12,
-  };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { totalOrders: 0, activeOrders: 0, pendingPayments: 0, savedSuppliers: 0 };
+
+  try {
+    const [ordersRes, savedSuppliersRes] = await Promise.all([
+      supabase.from('orders').select('status, payment_status').eq('user_id', user.id),
+      supabase.from('saved_suppliers').select('id', { count: 'exact' }).eq('user_id', user.id)
+    ]);
+
+    const orders = ordersRes.data || [];
+    return {
+      totalOrders: orders.length,
+      activeOrders: orders.filter(o => !['delivered', 'cancelled', 'refunded'].includes(o.status)).length,
+      pendingPayments: orders.filter(o => o.payment_status === 'pending').length,
+      savedSuppliers: savedSuppliersRes.count || 0,
+    };
+  } catch (error) {
+    console.error("Error fetching buyer dashboard stats:", error);
+    return { totalOrders: 0, activeOrders: 0, pendingPayments: 0, savedSuppliers: 0 };
+  }
 }
 
 export async function fetchRecentOrders(): Promise<RecentOrder[]> {
-  // Placeholder: Fetch from Supabase
-  return [
-    {
-      id: "1",
-      orderNumber: "HRV-2026-001234",
-      vendorName: "Green Valley Farms",
-      status: "shipped",
-      totalAmount: 125000,
-      currency: "XAF",
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      items: 5,
-    },
-    {
-      id: "2",
-      orderNumber: "HRV-2026-001189",
-      vendorName: "AgriPro Supplies",
-      status: "processing",
-      totalAmount: 450000,
-      currency: "XAF",
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      items: 12,
-    },
-    {
-      id: "3",
-      orderNumber: "HRV-2026-001156",
-      vendorName: "Farm Fresh Exports",
-      status: "delivered",
-      totalAmount: 89000,
-      currency: "XAF",
-      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      items: 3,
-    },
-  ];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        order_number,
+        status,
+        total_amount,
+        currency,
+        created_at,
+        order_items (
+          quantity,
+          suppliers (
+            company_name
+          )
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (error || !data) return [];
+
+    return data.map(order => {
+      const items = (order.order_items as any[]) || [];
+      const firstSupplier = items[0]?.suppliers?.company_name;
+      const vendorName = items.length > 1 ? `${firstSupplier} + ${items.length - 1} more` : firstSupplier || 'Internal Supplier';
+      const totalItems = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+      return {
+        id: order.id,
+        orderNumber: order.order_number,
+        vendorName,
+        status: order.status as any,
+        totalAmount: order.total_amount,
+        currency: order.currency,
+        createdAt: new Date(order.created_at),
+        items: totalItems
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching recent orders:", error);
+    return [];
+  }
 }
 
 export async function fetchNotifications(): Promise<Notification[]> {
-  // Placeholder: Fetch from Supabase
-  return [
-    {
-      id: "1",
-      type: "delivery",
-      title: "Order Out for Delivery",
-      message: "Your order HRV-2026-001234 is out for delivery and will arrive today.",
-      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      isRead: false,
-    },
-    {
-      id: "2",
-      type: "order",
-      title: "Order Confirmed",
-      message: "Your order HRV-2026-001189 has been confirmed by the supplier.",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      isRead: false,
-    },
-    {
-      id: "3",
-      type: "message",
-      title: "New Message from Supplier",
-      message: "Green Valley Farms sent you a message about your recent inquiry.",
-      timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-      isRead: true,
-    },
-  ];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+
+    return (data || []).map(n => ({
+      id: n.id,
+      type: n.type as any,
+      title: n.title,
+      message: n.message,
+      timestamp: new Date(n.created_at),
+      isRead: n.is_read
+    }));
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    return [];
+  }
 }
 
 // ============================================
@@ -235,50 +261,130 @@ export interface Address {
 }
 
 export async function fetchBuyerProfile(): Promise<BuyerProfile> {
-  // Placeholder: Fetch from Supabase
-  return {
-    id: "user-123",
-    email: "buyer@example.com",
-    fullName: "Jean-Pierre Kamga",
-    phone: "+237 670 123 456",
-    buyerType: "business",
-    companyName: "Kamga Agro Imports",
-    businessRegistrationNumber: "RC/YAO/2024/B/1234",
-    isVerified: true,
-    language: "en",
-    currency: "XAF",
-    notificationPreferences: {
-      email: true,
-      sms: true,
-      push: false,
-    },
-    addresses: [
-      {
-        id: "addr-1",
-        label: "Main Warehouse",
-        fullName: "Jean-Pierre Kamga",
-        phone: "+237 670 123 456",
-        street: "123 Rue du Commerce",
-        city: "Douala",
-        region: "Littoral",
-        country: "Cameroon",
-        isDefault: true,
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not found");
+
+  try {
+    const [profileRes, buyerRes, addressesRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('buyer_profiles').select('*').eq('user_id', user.id).single(),
+      supabase.from('addresses').select('*').eq('user_id', user.id)
+    ]);
+
+    if (profileRes.error) throw profileRes.error;
+
+    const profile = profileRes.data;
+    const buyer = buyerRes.data || {} as any;
+    const addresses = (addressesRes.data || []).map(addr => ({
+      id: addr.id,
+      label: addr.label || 'Home',
+      fullName: addr.recipient_name || profile.full_name || '',
+      phone: addr.recipient_phone || profile.phone || '',
+      street: addr.address_line_1,
+      city: addr.city,
+      region: addr.region || '',
+      country: addr.country,
+      postalCode: addr.postal_code || undefined,
+      isDefault: addr.is_default || false
+    }));
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      fullName: profile.full_name || '',
+      phone: profile.phone || '',
+      avatarUrl: profile.avatar_url || undefined,
+      buyerType: buyer.buyer_type || 'individual',
+      companyName: buyer.business_name || undefined,
+      businessRegistrationNumber: buyer.business_registration_number || undefined,
+      isVerified: buyer.verification_status === 'verified',
+      language: profile.preferred_language || 'en',
+      currency: profile.preferred_currency || 'XAF',
+      notificationPreferences: {
+        email: true,
+        sms: true,
+        push: false,
       },
-    ],
-    createdAt: new Date("2024-06-15"),
-  };
+      addresses,
+      createdAt: new Date(profile.created_at),
+    };
+  } catch (error) {
+    console.error("Error fetching buyer profile:", error);
+    throw error;
+  }
 }
 
 export async function updateBuyerProfile(data: Partial<BuyerProfile>) {
-  // Placeholder: Update in Supabase
-  console.log("Update profile:", data);
-  return { success: true };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not found");
+
+  try {
+    const profileUpdates: any = {};
+    if (data.fullName) profileUpdates.full_name = data.fullName;
+    if (data.phone) profileUpdates.phone = data.phone;
+    if (data.avatarUrl) profileUpdates.avatar_url = data.avatarUrl;
+    if (data.language) profileUpdates.preferred_language = data.language;
+    if (data.currency) profileUpdates.preferred_currency = data.currency;
+
+    const buyerUpdates: any = {};
+    if (data.buyerType) buyerUpdates.buyer_type = data.buyerType;
+    if (data.companyName) buyerUpdates.business_name = data.companyName;
+    if (data.businessRegistrationNumber) buyerUpdates.business_registration_number = data.businessRegistrationNumber;
+
+    const promises: Promise<any>[] = [];
+
+    if (Object.keys(profileUpdates).length > 0) {
+      promises.push(supabase.from('profiles').update(profileUpdates).eq('id', user.id));
+    }
+
+    if (Object.keys(buyerUpdates).length > 0) {
+      promises.push(supabase.from('buyer_profiles').update(buyerUpdates).eq('user_id', user.id));
+    }
+
+    await Promise.all(promises);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating buyer profile:", error);
+    return { success: false, error };
+  }
 }
 
 export async function manageAddresses(action: "add" | "update" | "delete", address: Partial<Address>) {
-  // Placeholder: Manage addresses in Supabase
-  console.log("Manage address:", action, address);
-  return { success: true };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not found");
+
+  try {
+    if (action === "delete") {
+      if (!address.id) throw new Error("ID required for deletion");
+      await supabase.from('addresses').delete().eq('id', address.id);
+      return { success: true };
+    }
+
+    const addrData: any = {
+      user_id: user.id,
+      label: address.label,
+      recipient_name: address.fullName,
+      recipient_phone: address.phone,
+      address_line_1: address.street,
+      city: address.city,
+      region: address.region,
+      country: address.country || 'Cameroon',
+      postal_code: address.postalCode,
+      is_default: address.isDefault,
+    };
+
+    if (action === "add") {
+      await supabase.from('addresses').insert(addrData);
+    } else if (action === "update") {
+      if (!address.id) throw new Error("ID required for update");
+      await supabase.from('addresses').update(addrData).eq('id', address.id);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error(`Error ${action}ing address:`, error);
+    return { success: false, error };
+  }
 }
 
 // ============================================
@@ -330,82 +436,207 @@ export async function fetchOrders(filters?: {
   vendorId?: string;
   search?: string;
 }): Promise<RecentOrder[]> {
-  // Placeholder: Fetch from Supabase with filters
-  console.log("Fetch orders with filters:", filters);
-  return fetchRecentOrders();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  try {
+    let query = supabase
+      .from('orders')
+      .select(`
+        id,
+        order_number,
+        status,
+        total_amount,
+        currency,
+        created_at,
+        order_items (
+          quantity,
+          suppliers (
+            id,
+            company_name
+          )
+        )
+      `)
+      .eq('user_id', user.id);
+
+    if (filters?.status) query = query.eq('status', filters.status);
+    if (filters?.vendorId) query = query.eq('order_items.supplier_id', filters.vendorId);
+    if (filters?.dateFrom) query = query.gte('created_at', filters.dateFrom.toISOString());
+    if (filters?.dateTo) query = query.lte('created_at', filters.dateTo.toISOString());
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+
+    return data.map(order => {
+      const items = (order.order_items as any[]) || [];
+      const firstSupplier = items[0]?.suppliers?.company_name;
+      const vendorName = items.length > 1 ? `${firstSupplier} + ${items.length - 1} more` : firstSupplier || 'Internal Supplier';
+      const totalItems = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+      return {
+        id: order.id,
+        orderNumber: order.order_number,
+        vendorName,
+        status: order.status as any,
+        totalAmount: order.total_amount,
+        currency: order.currency,
+        createdAt: new Date(order.created_at),
+        items: totalItems
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching filtered orders:", error);
+    return [];
+  }
 }
 
 export async function fetchOrderDetails(orderId: string): Promise<OrderDetail> {
-  // Placeholder: Fetch from Supabase
-  console.log("Fetch order details:", orderId);
-  return {
-    id: orderId,
-    orderNumber: "HRV-2026-001234",
-    status: "shipped",
-    paymentStatus: "paid",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    vendors: [
-      {
-        vendorId: "v1",
-        vendorName: "Green Valley Farms",
-        items: [
-          {
-            id: "item-1",
-            productId: "p1",
-            productName: "Organic Tomatoes",
-            quantity: 50,
-            unitPrice: 1500,
-            totalPrice: 75000,
-            unit: "kg",
-          },
-          {
-            id: "item-2",
-            productId: "p2",
-            productName: "Fresh Onions",
-            quantity: 100,
-            unitPrice: 500,
-            totalPrice: 50000,
-            unit: "kg",
-          },
-        ],
-        subtotal: 125000,
+  try {
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        addresses!orders_shipping_address_id_fkey (
+          *
+        ),
+        order_items (
+          *,
+          suppliers (
+            id,
+            company_name,
+            logo_url
+          ),
+          product_variants (
+            name,
+            product_id,
+            products (
+              name,
+              unit_of_measure,
+              product_images (
+                image_url
+              )
+            )
+          )
+        )
+      `)
+      .eq('id', orderId)
+      .single();
+
+    if (error || !order) throw error || new Error("Order not found");
+
+    const items = (order.order_items as any[]) || [];
+
+    // Group by supplier
+    const vendorsMap = new Map<string, VendorOrder>();
+    items.forEach(item => {
+      const supplier = item.suppliers;
+      const product = item.product_variants?.products;
+      const variant = item.product_variants;
+
+      if (!vendorsMap.has(supplier.id)) {
+        vendorsMap.set(supplier.id, {
+          vendorId: supplier.id,
+          vendorName: supplier.company_name,
+          vendorLogo: supplier.logo_url,
+          items: [],
+          subtotal: 0
+        });
+      }
+
+      const vendorOrder = vendorsMap.get(supplier.id)!;
+      vendorOrder.items.push({
+        id: item.id,
+        productId: variant.product_id,
+        productName: product?.name || item.product_name,
+        productImage: product?.product_images?.[0]?.image_url,
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+        totalPrice: item.total,
+        unit: product?.unit_of_measure || 'units'
+      });
+      vendorOrder.subtotal += item.total;
+    });
+
+    const shippingAddr = order.addresses;
+
+    return {
+      id: order.id,
+      orderNumber: order.order_number,
+      status: order.status as any,
+      paymentStatus: order.payment_status as any,
+      createdAt: new Date(order.created_at),
+      estimatedDelivery: order.estimated_delivery_date ? new Date(order.estimated_delivery_date) : undefined,
+      deliveredAt: order.delivered_at ? new Date(order.delivered_at) : undefined,
+      vendors: Array.from(vendorsMap.values()),
+      subtotal: order.subtotal,
+      shippingCost: order.delivery_fee || 0,
+      tax: order.tax_amount || 0,
+      discount: order.discount_amount || 0,
+      total: order.total_amount,
+      currency: order.currency,
+      shippingAddress: {
+        id: shippingAddr?.id || '',
+        label: shippingAddr?.label || 'Default',
+        fullName: shippingAddr?.recipient_name || '',
+        phone: shippingAddr?.recipient_phone || '',
+        street: shippingAddr?.address_line_1 || '',
+        city: shippingAddr?.city || '',
+        region: shippingAddr?.region || '',
+        country: shippingAddr?.country || '',
+        isDefault: shippingAddr?.is_default || false
       },
-    ],
-    subtotal: 125000,
-    shippingCost: 5000,
-    tax: 0,
-    discount: 5000,
-    total: 125000,
-    currency: "XAF",
-    shippingAddress: {
-      id: "addr-1",
-      label: "Main Warehouse",
-      fullName: "Jean-Pierre Kamga",
-      phone: "+237 670 123 456",
-      street: "123 Rue du Commerce",
-      city: "Douala",
-      region: "Littoral",
-      country: "Cameroon",
-      isDefault: true,
-    },
-    paymentMethod: "Mobile Money",
-  };
+      paymentMethod: "Secured Payment", // Should fetch from payments table if detailed
+    };
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+    throw error;
+  }
 }
 
 export async function trackOrder(orderId: string) {
-  // Placeholder: Get tracking info
-  console.log("Track order:", orderId);
-  return {
-    currentStatus: "shipped",
-    timeline: [
-      { status: "Order Placed", date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), completed: true },
-      { status: "Confirmed", date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), completed: true },
-      { status: "Processing", date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), completed: true },
-      { status: "Shipped", date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), completed: true },
-      { status: "Delivered", date: null, completed: false },
-    ],
-  };
+  try {
+    const { data: delivery, error: deliveryError } = await supabase
+      .from('deliveries')
+      .select(`
+        *,
+        delivery_tracking(*)
+      `)
+      .eq('order_id', orderId)
+      .maybeSingle();
+
+    if (deliveryError) throw deliveryError;
+
+    if (!delivery) {
+      return {
+        currentStatus: "pending",
+        timeline: [
+          { status: "Order Placed", date: new Date(), completed: true },
+          { status: "Processing", date: null, completed: false },
+        ],
+      };
+    }
+
+    const trackingEvents = (delivery.delivery_tracking as any[]) || [];
+    const timeline = [
+      { status: "Order Placed", date: new Date(delivery.created_at), completed: true },
+      ...trackingEvents.map(event => ({
+        status: event.status,
+        date: new Date(event.created_at),
+        completed: true
+      }))
+    ];
+
+    return {
+      currentStatus: delivery.status,
+      timeline,
+      trackingNumber: delivery.tracking_number,
+      estimatedDelivery: delivery.estimated_delivery ? new Date(delivery.estimated_delivery) : null
+    };
+  } catch (error) {
+    console.error("Error tracking order:", error);
+    return { currentStatus: "unknown", timeline: [] };
+  }
 }
 
 // ============================================
@@ -442,65 +673,115 @@ export interface SavedSupplier {
 }
 
 export async function fetchSavedProducts(): Promise<SavedProduct[]> {
-  // Placeholder: Fetch from Supabase
-  return [
-    {
-      id: "sp-1",
-      productId: "p1",
-      name: "Premium Organic Tomatoes",
-      image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400",
-      price: 1500,
-      originalPrice: 2000,
-      currency: "XAF",
-      moq: 50,
-      unit: "kg",
-      vendorName: "Green Valley Farms",
-      inStock: true,
-      savedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: "sp-2",
-      productId: "p2",
-      name: "Fresh Red Onions",
-      image: "https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?w=400",
-      price: 800,
-      currency: "XAF",
-      moq: 100,
-      unit: "kg",
-      vendorName: "AgriPro Supplies",
-      inStock: true,
-      savedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-    },
-  ];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('saved_products')
+      .select(`
+        id,
+        created_at,
+        products (
+          id,
+          name,
+          unit_of_measure,
+          min_order_quantity,
+          supplier_id,
+          suppliers (
+            company_name
+          ),
+          product_images (
+            image_url
+          ),
+          product_variants (
+            id,
+            stock_quantity,
+            pricing_tiers (
+              price_per_unit,
+              currency
+            )
+          )
+        )
+      `)
+      .eq('user_id', user.id);
+
+    if (error || !data) return [];
+
+    return data.map(item => {
+      const product = item.products as any;
+      if (!product) return null;
+
+      const variant = product.product_variants?.[0];
+      const pricing = variant?.pricing_tiers?.[0];
+
+      return {
+        id: item.id,
+        productId: product.id,
+        name: product.name,
+        image: product.product_images?.[0]?.image_url || '/placeholder-product.png',
+        price: pricing?.price_per_unit || 0,
+        currency: pricing?.currency || 'XAF',
+        moq: product.min_order_quantity || 1,
+        unit: product.unit_of_measure || 'units',
+        vendorName: product.suppliers?.company_name || 'Generic Seller',
+        inStock: (variant?.stock_quantity || 0) > 0,
+        savedAt: new Date(item.created_at)
+      };
+    }).filter(Boolean) as SavedProduct[];
+  } catch (error) {
+    console.error("Error fetching saved products:", error);
+    return [];
+  }
 }
 
 export async function fetchSavedSuppliers(): Promise<SavedSupplier[]> {
-  // Placeholder: Fetch from Supabase
-  return [
-    {
-      id: "ss-1",
-      supplierId: "s1",
-      name: "Green Valley Farms",
-      logo: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=100",
-      rating: 4.8,
-      responseRate: 95,
-      yearsInBusiness: 8,
-      isVerified: true,
-      trustLevel: "gold",
-      mainProducts: ["Tomatoes", "Peppers", "Onions", "Vegetables"],
-      savedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: "ss-2",
-      supplierId: "s2",
-      name: "AgriPro Supplies",
-      rating: 4.5,
-      responseRate: 88,
-      yearsInBusiness: 5,
-      isVerified: true,
-      trustLevel: "verified",
-      mainProducts: ["Seeds", "Fertilizers", "Farm Equipment"],
-      savedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-    },
-  ];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('saved_suppliers')
+      .select(`
+        id,
+        created_at,
+        suppliers (
+          id,
+          company_name,
+          logo_url,
+          rating,
+          response_rate,
+          verification_status,
+          total_products,
+          products (
+            name
+          )
+        )
+      `)
+      .eq('user_id', user.id);
+
+    if (error || !data) return [];
+
+    return data.map(item => {
+      const supplier = item.suppliers as any;
+      if (!supplier) return null;
+
+      return {
+        id: item.id,
+        supplierId: supplier.id,
+        name: supplier.company_name,
+        logo: supplier.logo_url || undefined,
+        rating: supplier.rating || 0,
+        responseRate: supplier.response_rate || 0,
+        yearsInBusiness: 1, // Placeholder as not in schema
+        isVerified: supplier.verification_status === 'verified',
+        trustLevel: supplier.verification_status === 'verified' ? "gold" : "verified",
+        mainProducts: supplier.products?.slice(0, 3).map((p: any) => p.name) || [],
+        savedAt: new Date(item.created_at)
+      };
+    }).filter(Boolean) as SavedSupplier[];
+  } catch (error) {
+    console.error("Error fetching saved suppliers:", error);
+    return [];
+  }
 }

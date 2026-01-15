@@ -65,12 +65,12 @@ import { ProductVariantsEditor, ProductVariant } from '@/components/product-form
 import { PurchaseConditionsEditor, PurchaseCondition } from '@/components/product-form/PurchaseConditionsEditor';
 
 // API imports
-import { 
-  fetchCategories, 
-  fetchActiveSuppliers, 
-  createProduct, 
+import {
+  fetchCategories,
+  fetchActiveSuppliers,
+  createProduct,
   updateProduct,
-  createProductVariant, 
+  createProductVariant,
   createPricingTier,
   fetchProductForEdit,
 } from '@/lib/productManagementApi';
@@ -122,7 +122,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
   // Category creation
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
-  
+
   // Custom unit
   const [customUnit, setCustomUnit] = useState('');
   const [showCustomUnitInput, setShowCustomUnitInput] = useState(false);
@@ -171,7 +171,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([
     { id: 'tier_1', minQuantity: 1, maxQuantity: 99, pricePerUnit: 0 },
   ]);
-  
+
   // International tiered pricing
   const [enableInternationalTieredPricing, setEnableInternationalTieredPricing] = useState(false);
   const [internationalPricingTiers, setInternationalPricingTiers] = useState<PricingTier[]>([
@@ -213,14 +213,14 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
       ]);
       if (catResult.data) setCategories(catResult.data);
       if (supResult.data) setSuppliers(supResult.data);
-      
+
       // Load product data for edit mode
       if (productId) {
         setIsLoadingProduct(true);
         try {
           const { data: productData, error } = await fetchProductForEdit(productId);
           if (error) throw error;
-          
+
           if (productData) {
             // Pre-fill form with existing data
             setProductName(productData.name || '');
@@ -240,18 +240,18 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
             setIsFeatured(productData.is_featured || false);
             setMinOrderQuantity(productData.min_order_quantity?.toString() || '1');
             setMaxOrderQuantity(productData.max_order_quantity?.toString() || '');
-            
+
             // Load variants and pricing
             if (productData.variants && productData.variants.length > 0) {
               const defaultVariant = productData.variants.find((v: any) => v.is_default) || productData.variants[0];
               setStock(defaultVariant.stock_quantity?.toString() || '');
               setLowStockThreshold(defaultVariant.low_stock_threshold?.toString() || '10');
-              
+
               // Get price from pricing tiers
               if (defaultVariant.pricing_tiers && defaultVariant.pricing_tiers.length > 0) {
                 const baseTier = defaultVariant.pricing_tiers.find((t: any) => t.min_quantity === 1) || defaultVariant.pricing_tiers[0];
                 setDomesticPrice(baseTier.price_per_unit?.toString() || '');
-                
+
                 // If there are multiple tiers, enable tiered pricing
                 if (defaultVariant.pricing_tiers.length > 1) {
                   setEnableTieredPricing(true);
@@ -263,7 +263,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                   })));
                 }
               }
-              
+
               // If there are multiple variants, enable variant editing
               if (productData.variants.length > 1 || !defaultVariant.is_default) {
                 setEnableVariants(true);
@@ -283,7 +283,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                 })));
               }
             }
-            
+
             // Load images
             if (productData.images && productData.images.length > 0) {
               setImages(productData.images.map((img: any) => ({
@@ -306,13 +306,13 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
   }, [productId]);
 
   const toggleTag = (tagId: string) => {
-    setSelectedTags(prev => 
+    setSelectedTags(prev =>
       prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]
     );
   };
 
   const toggleLabel = (labelId: string) => {
-    setSelectedLabels(prev => 
+    setSelectedLabels(prev =>
       prev.includes(labelId) ? prev.filter(l => l !== labelId) : [...prev, labelId]
     );
   };
@@ -437,7 +437,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
 
       if (error) throw error;
 
-      // Create default variant with pricing
+      // Create default variant with pricing if variants disabled
       if (product && !enableVariants) {
         const { data: variant } = await createProductVariant({
           product_id: product.id,
@@ -458,6 +458,36 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
             currency: 'XAF',
             is_active: true,
           });
+        }
+      } else if (product && enableVariants) {
+        // Create multiple variants
+        for (const v of variants) {
+          const { data: variant } = await createProductVariant({
+            product_id: product.id,
+            name: v.name,
+            sku: v.sku || undefined,
+            grade: v.grade || undefined,
+            quality: v.quality || undefined,
+            packaging: v.packaging || undefined,
+            weight: v.weight,
+            weight_unit: v.weightUnit,
+            stock_quantity: v.stockQuantity,
+            low_stock_threshold: v.lowStockThreshold,
+            is_default: v.isDefault,
+            is_active: v.isActive,
+          });
+
+          // Create pricing tier for this variant using its specific price, or fall back to main price if missing
+          if (variant) {
+            await createPricingTier({
+              product_variant_id: variant.id,
+              min_quantity: 1,
+              max_quantity: null,
+              price_per_unit: v.price || parseInt(domesticPrice) || 0,
+              currency: 'XAF',
+              is_active: true,
+            });
+          }
         }
       }
 
@@ -502,9 +532,9 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
             <Save className="w-4 h-4 mr-2" />
             Save Draft
           </Button>
-          <Button 
-            className="bg-green-600 hover:bg-green-700" 
-            onClick={() => handleSubmit('active')} 
+          <Button
+            className="bg-primary hover:bg-primary/90"
+            onClick={() => handleSubmit('active')}
             disabled={isSubmitting}
           >
             <Eye className="w-4 h-4 mr-2" />
@@ -588,10 +618,10 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                     <Label htmlFor="name" className="flex items-center gap-1">
                       Product Name <span className="text-red-500">*</span>
                     </Label>
-                    <Input 
-                      id="name" 
-                      value={productName} 
-                      onChange={(e) => setProductName(e.target.value)} 
+                    <Input
+                      id="name"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
                       placeholder="e.g., Premium Organic Cocoa Beans - Grade A"
                       className="text-base sm:text-lg"
                     />
@@ -667,7 +697,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                       <Label>Unit of Measure <span className="text-red-500">*</span></Label>
                       {showCustomUnitInput ? (
                         <div className="flex gap-2">
-                          <Input 
+                          <Input
                             value={customUnit}
                             onChange={(e) => setCustomUnit(e.target.value)}
                             placeholder="Enter custom unit"
@@ -696,10 +726,10 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sku">SKU (Stock Code)</Label>
-                      <Input 
-                        id="sku" 
-                        value={sku} 
-                        onChange={(e) => setSku(e.target.value)} 
+                      <Input
+                        id="sku"
+                        value={sku}
+                        onChange={(e) => setSku(e.target.value)}
                         placeholder="e.g., COC-ORG-001"
                       />
                     </div>
@@ -708,10 +738,10 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                   {/* Short Description */}
                   <div className="space-y-2">
                     <Label htmlFor="shortDesc">Short Description</Label>
-                    <Textarea 
-                      id="shortDesc" 
-                      value={shortDescription} 
-                      onChange={(e) => setShortDescription(e.target.value)} 
+                    <Textarea
+                      id="shortDesc"
+                      value={shortDescription}
+                      onChange={(e) => setShortDescription(e.target.value)}
                       placeholder="Brief description for search results (2-3 sentences)"
                       rows={2}
                       maxLength={200}
@@ -848,11 +878,11 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                       <Label htmlFor="domesticPrice">Regular Price (XAF) <span className="text-red-500">*</span></Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">XAF</span>
-                        <Input 
-                          id="domesticPrice" 
+                        <Input
+                          id="domesticPrice"
                           type="text"
                           inputMode="numeric"
-                          value={domesticPrice} 
+                          value={domesticPrice}
                           onChange={(e) => {
                             const value = e.target.value.replace(/[^0-9]/g, '');
                             setDomesticPrice(value);
@@ -880,11 +910,11 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                       </Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">XAF</span>
-                        <Input 
-                          id="discountedPrice" 
+                        <Input
+                          id="discountedPrice"
                           type="text"
                           inputMode="numeric"
-                          value={discountedPrice} 
+                          value={discountedPrice}
                           onChange={(e) => {
                             const value = e.target.value.replace(/[^0-9]/g, '');
                             setDiscountedPrice(value);
@@ -901,11 +931,11 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                         <Label htmlFor="internationalPrice">International Price (USD)</Label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">$</span>
-                          <Input 
-                            id="internationalPrice" 
+                          <Input
+                            id="internationalPrice"
                             type="text"
                             inputMode="numeric"
-                            value={internationalPrice} 
+                            value={internationalPrice}
                             onChange={(e) => {
                               const value = e.target.value.replace(/[^0-9.]/g, '');
                               setInternationalPrice(value);
@@ -947,12 +977,12 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                               </p>
                             </div>
                           </div>
-                          <Switch 
-                            checked={enableInternationalTieredPricing} 
-                            onCheckedChange={setEnableInternationalTieredPricing} 
+                          <Switch
+                            checked={enableInternationalTieredPricing}
+                            onCheckedChange={setEnableInternationalTieredPricing}
                           />
                         </div>
-                        
+
                         {enableInternationalTieredPricing && (
                           <TieredPricingEditor
                             tiers={internationalPricingTiers}
@@ -960,7 +990,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                             unit={unit}
                             currency="USD"
                             enableTiered={true}
-                            onEnableChange={() => {}}
+                            onEnableChange={() => { }}
                           />
                         )}
                       </div>
@@ -989,11 +1019,11 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                       <div className="space-y-2">
                         <Label htmlFor="stock">Available Stock</Label>
                         <div className="flex gap-2">
-                          <Input 
-                            id="stock" 
+                          <Input
+                            id="stock"
                             type="text"
                             inputMode="numeric"
-                            value={stock} 
+                            value={stock}
                             onChange={(e) => setStock(e.target.value.replace(/[^0-9]/g, ''))}
                             placeholder="0"
                             className="flex-1"
@@ -1003,11 +1033,11 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lowStock">Low Stock Alert</Label>
-                        <Input 
-                          id="lowStock" 
+                        <Input
+                          id="lowStock"
                           type="text"
                           inputMode="numeric"
-                          value={lowStockThreshold} 
+                          value={lowStockThreshold}
                           onChange={(e) => setLowStockThreshold(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="10"
                         />
@@ -1022,11 +1052,11 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                     <div className="space-y-2">
                       <Label htmlFor="minOrder">Minimum Order Quantity</Label>
                       <div className="flex gap-2">
-                        <Input 
-                          id="minOrder" 
+                        <Input
+                          id="minOrder"
                           type="text"
                           inputMode="numeric"
-                          value={minOrderQuantity} 
+                          value={minOrderQuantity}
                           onChange={(e) => setMinOrderQuantity(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="1"
                           className="flex-1"
@@ -1037,11 +1067,11 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                     <div className="space-y-2">
                       <Label htmlFor="maxOrder">Maximum Order Quantity</Label>
                       <div className="flex gap-2">
-                        <Input 
-                          id="maxOrder" 
+                        <Input
+                          id="maxOrder"
                           type="text"
                           inputMode="numeric"
-                          value={maxOrderQuantity} 
+                          value={maxOrderQuantity}
                           onChange={(e) => setMaxOrderQuantity(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="No limit"
                           className="flex-1"
@@ -1103,47 +1133,47 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="originCountry">Country of Origin</Label>
-                      <Input 
-                        id="originCountry" 
-                        value={originCountry} 
-                        onChange={(e) => setOriginCountry(e.target.value)} 
+                      <Input
+                        id="originCountry"
+                        value={originCountry}
+                        onChange={(e) => setOriginCountry(e.target.value)}
                         placeholder="e.g., Cameroon"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="originRegion">Region / Farm Location</Label>
-                      <Input 
-                        id="originRegion" 
-                        value={originRegion} 
-                        onChange={(e) => setOriginRegion(e.target.value)} 
+                      <Input
+                        id="originRegion"
+                        value={originRegion}
+                        onChange={(e) => setOriginRegion(e.target.value)}
                         placeholder="e.g., West Region, Bafoussam"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="harvestDate">Harvest Date</Label>
-                      <Input 
-                        id="harvestDate" 
+                      <Input
+                        id="harvestDate"
                         type="date"
-                        value={harvestDate} 
+                        value={harvestDate}
                         onChange={(e) => setHarvestDate(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="expiryDate">Expiry / Best Before</Label>
-                      <Input 
-                        id="expiryDate" 
+                      <Input
+                        id="expiryDate"
                         type="date"
-                        value={expiryDate} 
+                        value={expiryDate}
                         onChange={(e) => setExpiryDate(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="leadTime">Lead Time (days to ship)</Label>
-                      <Input 
-                        id="leadTime" 
+                      <Input
+                        id="leadTime"
                         type="text"
                         inputMode="numeric"
-                        value={leadTime} 
+                        value={leadTime}
                         onChange={(e) => setLeadTime(e.target.value.replace(/[^0-9]/g, ''))}
                         placeholder="e.g., 3"
                       />
@@ -1221,7 +1251,7 @@ export default function AddProductPage({ isAdmin = false, backLink = '/seller/pr
           <ChevronLeft className="w-4 h-4 mr-1" />
           Previous
         </Button>
-        
+
         {currentTabIndex === tabs.length - 1 ? (
           <div className="flex gap-2 flex-1">
             <Button
