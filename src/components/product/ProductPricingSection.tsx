@@ -36,19 +36,19 @@ export function ProductPricingSection({
   formatPrice,
 }: ProductPricingSectionProps) {
   const [showInternational, setShowInternational] = useState(false);
-  
+
   const { applicableTier, totalPrice, unitPrice } = calculateTieredPricing(quantity, pricing.tiers);
-  
+
   const basePrice = pricing.tiers[0]?.pricePerUnit || 0;
   const savings = basePrice > unitPrice ? (basePrice - unitPrice) * quantity : 0;
-  const savingsPercentage = basePrice > unitPrice 
-    ? Math.round(((basePrice - unitPrice) / basePrice) * 100) 
+  const savingsPercentage = basePrice > unitPrice
+    ? Math.round(((basePrice - unitPrice) / basePrice) * 100)
     : 0;
 
   // Find the best value tier (lowest price per unit)
-  const bestValueTier = pricing.tiers.reduce((best, tier) => 
+  const bestValueTier = pricing.tiers.reduce((best, tier) =>
     tier.pricePerUnit < best.pricePerUnit ? tier : best
-  , pricing.tiers[0]);
+    , pricing.tiers[0]);
 
   return (
     <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 rounded-xl p-4 lg:p-6 space-y-4">
@@ -67,7 +67,7 @@ export function ProductPricingSection({
             </Badge>
           )}
         </div>
-        
+
         {pricing.internationalPrice && showInternational && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Globe className="w-4 h-4" />
@@ -87,28 +87,42 @@ export function ProductPricingSection({
       <Separator />
 
       {/* Pricing Tiers - 1688 Style */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-semibold text-foreground">Bulk Pricing</h4>
-          {isB2B && (
-            <Badge variant="outline" className="text-xs">B2B Rates</Badge>
-          )}
+          <h4 className="font-semibold text-foreground flex items-center gap-2">
+            Bulk Pricing Breakdown
+            {isB2B && (
+              <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">B2B Rates</Badge>
+            )}
+          </h4>
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <TrendingDown className="w-3 h-3 text-green-600" />
+            Buy more, save more
+          </span>
         </div>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {pricing.tiers.map((tier, index) => {
-            const isActive = tier === applicableTier;
-            const isBestValue = tier === bestValueTier;
-            
-            return (
-              <Tooltip key={tier.id || index}>
-                <TooltipTrigger asChild>
-                  <div
+
+        <div className="overflow-hidden rounded-lg border border-primary/10 bg-white dark:bg-card shadow-sm">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted/50 text-left border-b">
+                <th className="px-4 py-2 font-medium">Quantity ({unit})</th>
+                <th className="px-4 py-2 font-medium text-right">Unit Price</th>
+                <th className="px-4 py-2 font-medium text-right">Savings</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-primary/5">
+              {pricing.tiers.map((tier, index) => {
+                const isActive = tier === applicableTier;
+                const savingsPct = basePrice > tier.pricePerUnit
+                  ? Math.round(((basePrice - tier.pricePerUnit) / basePrice) * 100)
+                  : 0;
+
+                return (
+                  <tr
+                    key={tier.id || index}
                     className={cn(
-                      'relative bg-white dark:bg-card rounded-lg p-3 text-center border-2 transition-all cursor-pointer',
-                      isActive 
-                        ? 'border-primary ring-2 ring-primary/20' 
-                        : 'border-transparent hover:border-muted-foreground/30'
+                      'transition-colors cursor-pointer',
+                      isActive ? 'bg-primary/5' : 'hover:bg-muted/30'
                     )}
                     onClick={() => {
                       if (tier.minQuantity > quantity) {
@@ -116,38 +130,29 @@ export function ProductPricingSection({
                       }
                     }}
                   >
-                    {isBestValue && (
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-green-600 text-white text-[10px] px-1.5">
-                          Best Value
-                        </Badge>
-                      </div>
-                    )}
-                    <p className="text-xs text-muted-foreground mb-1">
-                      {tier.minQuantity}{tier.maxQuantity ? `-${tier.maxQuantity}` : '+'} {unit}
-                    </p>
-                    <p className={cn(
-                      'font-bold',
+                    <td className="px-4 py-3 font-medium">
+                      {tier.minQuantity}{tier.maxQuantity ? `-${tier.maxQuantity}` : '+'}
+                    </td>
+                    <td className={cn(
+                      'px-4 py-3 text-right font-bold',
                       isActive ? 'text-primary' : 'text-foreground'
                     )}>
                       {formatPrice(tier.pricePerUnit)}
-                    </p>
-                    {tier.discountPercentage && tier.discountPercentage > 0 && (
-                      <p className="text-xs text-green-600">
-                        -{tier.discountPercentage}%
-                      </p>
-                    )}
-                    {isActive && (
-                      <Check className="absolute top-1 right-1 w-4 h-4 text-primary" />
-                    )}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Order {tier.minQuantity}+ {unit} for this price</p>
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {savingsPct > 0 ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
+                          -{savingsPct}%
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">Base</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -161,7 +166,7 @@ export function ProductPricingSection({
             {stockAvailable.toLocaleString()} {unit} available
           </span>
         </div>
-        
+
         <QuantityInput
           value={quantity}
           onChange={onQuantityChange}

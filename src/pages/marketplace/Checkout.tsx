@@ -239,13 +239,30 @@ export default function CheckoutPage() {
             <StepAccordion step="payment">
               <div className="space-y-6 pt-4">
                 <RadioGroup value={selectedPayment.id} onValueChange={(value) => { const p = mockPaymentMethods.find(m => m.id === value); if (p) setSelectedPayment(p); }} className="space-y-3">
-                  {mockPaymentMethods.map((method) => (
-                    <Label key={method.id} htmlFor={method.id} className={cn('flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all', selectedPayment.id === method.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50')}>
-                      <RadioGroupItem value={method.id} id={method.id} />
-                      <span className="text-2xl">{method.icon}</span>
-                      <div><p className="font-medium">{method.name}</p></div>
-                    </Label>
-                  ))}
+                  {mockPaymentMethods.map((method) => {
+                    // Simulating eligibility check for COD
+                    const isCodEligible = method.type !== 'cash_on_delivery' || grandTotal < 100000;
+
+                    return (
+                      <div key={method.id} className="relative">
+                        <Label
+                          htmlFor={method.id}
+                          className={cn(
+                            'flex items-center gap-4 p-4 rounded-lg border transition-all',
+                            selectedPayment.id === method.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50',
+                            !isCodEligible && 'opacity-50 cursor-not-allowed grayscale'
+                          )}
+                        >
+                          <RadioGroupItem value={method.id} id={method.id} disabled={!isCodEligible} />
+                          <span className="text-2xl">{method.icon}</span>
+                          <div className="flex-1">
+                            <p className="font-medium">{method.name}</p>
+                            {!isCodEligible && <p className="text-[10px] text-red-500 font-medium uppercase mt-1">Available for orders below 100,000 XAF</p>}
+                          </div>
+                        </Label>
+                      </div>
+                    );
+                  })}
                 </RadioGroup>
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setCurrentStep('delivery')}>Back</Button>

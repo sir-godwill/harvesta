@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, Link } from 'react-router-dom';
 import { MessageSquare, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -8,7 +9,8 @@ import {
   sendMessage,
   searchConversations,
   Conversation,
-  Message
+  Message,
+  createConversation
 } from '@/lib/chat-api';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +23,7 @@ import { ChatContextPanel } from '@/components/chat/ChatContextPanel';
 import { Link } from 'react-router-dom';
 
 export default function Messages() {
+  const location = useLocation();
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -36,12 +39,49 @@ export default function Messages() {
   const loadConversations = async () => {
     setIsLoading(true);
     const { data } = await fetchConversations();
-    setConversations(data || []);
+    const allConvs = data || [];
+    setConversations(allConvs);
+
+    // Initial logic for deep-linked chat
+    if (location.state?.sellerId) {
+      const sellerId = location.state.sellerId;
+      const initialMessage = location.state.initialMessage;
+      const context = location.state.context;
+
+      // 1. Find if we already have a direct chat with this seller
+      let existingConv = allConvs.find(c =>
+        c.type === 'direct' &&
+        c.participants?.some(p => p.user_id === sellerId)
+      );
+
+      if (!existingConv) {
+        // 2. Create new conversation
+        const { data: newConv } = await createConversation([sellerId], 'direct');
+        if (newConv) {
+          existingConv = newConv;
+          setConversations(prev => [newConv, ...prev]);
+        }
+      }
+
+      if (existingConv) {
+        handleSelectConversation(existingConv.id);
+
+        // 3. Auto-send initial message if exists
+        if (initialMessage) {
+          await sendMessage(existingConv.id, initialMessage, context?.type || 'text', context);
+          // Refresh messages for selected conv
+          const { data: updatedMsgs } = await fetchMessages(existingConv.id);
+          setMessages(updatedMsgs || []);
+        }
+      }
+    }
+
     setIsLoading(false);
   };
 
   const handleSelectConversation = async (conversationId: string) => {
-    const conversation = conversations.find(c => c.id === conversationId);
+    const conversation = conversations.find(c => c.id === conversationId) ||
+      conversations[0]; // Fallback for newly created
     if (conversation) {
       setSelectedConversation(conversation);
       setIsMobileListOpen(false);

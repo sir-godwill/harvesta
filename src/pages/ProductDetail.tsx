@@ -35,6 +35,10 @@ import { ProductPricingSection } from '@/components/product/ProductPricingSectio
 import { ProductActions, ProductActionsMobile } from '@/components/product/ProductActions';
 import { ProductSellerCard } from '@/components/product/ProductSellerCard';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
+import { ProductBreadcrumbs } from '@/components/product/ProductBreadcrumbs';
+import { TrustBadges } from '@/components/product/TrustBadges';
+import { ProductFAQ } from '@/components/product/ProductFAQ';
+import { RecentActivityTicker } from '@/components/product/RecentActivityTicker';
 
 // API
 import {
@@ -348,9 +352,30 @@ export default function ProductDetail() {
     }
   };
 
-  const handleRequestQuote = () => {
-    if (!product) return;
-    navigate('/rfq', { state: { productId: id, productName: product.name, quantity } });
+  const handleBuyNow = async () => {
+    if (!product || !selectedVariant) return;
+
+    // 1. Add to cart first
+    await handleAddToCart();
+
+    // 2. Navigate to checkout
+    navigate('/checkout');
+  };
+
+  const handleSendOffer = () => {
+    if (!seller || !product) return;
+    const message = `I would like to make an offer for your product: ${product.name}. Quantity: ${quantity} ${product.unit}.`;
+    navigate('/messages', {
+      state: {
+        sellerId: seller.id,
+        initialMessage: message,
+        context: {
+          type: 'product_offer',
+          productId: product.id,
+          quantity: quantity
+        }
+      }
+    });
   };
 
   const handleContactSeller = () => {
@@ -403,16 +428,10 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background pb-24 lg:pb-8">
-      {/* Breadcrumb - Desktop */}
-      <div className="hidden lg:block bg-card border-b border-border">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Home</Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link to={`/search?category=${product.category.slug}`} className="hover:text-primary">{product.category.name}</Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground truncate max-w-xs">{product.name}</span>
-          </div>
+      {/* Breadcrumb - Enhanced */}
+      <div className="bg-card border-b border-border">
+        <div className="container mx-auto px-4 lg:px-6 py-3">
+          <ProductBreadcrumbs category={product.category} productName={product.name} />
         </div>
       </div>
 
@@ -438,6 +457,8 @@ export default function ProductDetail() {
 
           {/* Right Column - Product Info */}
           <div className="lg:col-span-7 space-y-6">
+            <RecentActivityTicker />
+
             <ProductHeader
               name={product.name}
               category={product.category}
@@ -462,6 +483,24 @@ export default function ProductDetail() {
               formatPrice={formatPrice}
             />
 
+            {/* Social Proof & Scarcity */}
+            <div className="flex flex-wrap gap-4 py-2">
+              {inventory.availableStock < 50 && !inventory.isOutOfStock && (
+                <div className="flex items-center gap-2 text-sm text-red-600 font-medium animate-pulse">
+                  <Package className="h-4 w-4" />
+                  Only {inventory.availableStock} left in stock!
+                </div>
+              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                {Math.floor(Math.random() * 15) + 5} people are viewing this now
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Verified Harvestá Quality
+              </div>
+            </div>
+
             <ProductActions
               productId={product.id}
               productName={product.name}
@@ -471,13 +510,29 @@ export default function ProductDetail() {
               unit={product.unit}
               quantity={quantity}
               onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
               onRequestQuote={handleRequestQuote}
               onContactSeller={handleContactSeller}
+              onSendOffer={handleSendOffer}
             />
+
+            <TrustBadges />
 
             <ProductSellerCard seller={seller} />
           </div>
         </div>
+
+        {/* Floating Mobile Actions - Enhanced */}
+        <ProductActionsMobile
+          isOutOfStock={inventory.isOutOfStock}
+          isBelowMoq={quantity < product.moq}
+          onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
+          onRequestQuote={handleRequestQuote}
+          onContactSeller={handleContactSeller}
+          onSendOffer={handleSendOffer}
+          onVisitStore={handleVisitStore}
+        />
 
         {/* Tabbed Content Section */}
         <div className="mt-8">
@@ -825,78 +880,74 @@ export default function ProductDetail() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-primary" />
-                        Buyer Protection & Warranty
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                          <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
-                          <h4 className="font-semibold text-green-800">Quality Guarantee</h4>
-                          <p className="text-sm text-green-600">Full refund if product quality doesn't match description</p>
-                        </div>
-                        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <Shield className="h-8 w-8 text-blue-600 mb-2" />
-                          <h4 className="font-semibold text-blue-800">Secure Payment</h4>
-                          <p className="text-sm text-blue-600">Protected by Harvestá escrow until delivery confirmed</p>
-                        </div>
-                        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                          <MessageSquare className="h-8 w-8 text-purple-600 mb-2" />
-                          <h4 className="font-semibold text-purple-800">Dispute Resolution</h4>
-                          <p className="text-sm text-purple-600">24/7 support for any order issues</p>
-                        </div>
-                      </div>
+                  <div className="grid lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Shield className="h-5 w-5 text-primary" />
+                            Buyer Protection & Warranty
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="grid md:grid-cols-3 gap-4">
+                            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                              <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
+                              <h4 className="font-semibold text-green-800">Quality Guarantee</h4>
+                              <p className="text-sm text-green-600">Full refund if product quality doesn't match description</p>
+                            </div>
+                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                              <Shield className="h-8 w-8 text-blue-600 mb-2" />
+                              <h4 className="font-semibold text-blue-800">Secure Payment</h4>
+                              <p className="text-sm text-blue-600">Protected by Harvestá escrow until delivery confirmed</p>
+                            </div>
+                            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                              <MessageSquare className="h-8 w-8 text-purple-600 mb-2" />
+                              <h4 className="font-semibold text-purple-800">Dispute Resolution</h4>
+                              <p className="text-sm text-purple-600">24/7 support for any order issues</p>
+                            </div>
+                          </div>
 
-                      <Separator />
+                          <Separator />
 
-                      <div>
-                        <h4 className="font-semibold mb-3">Return Policy</h4>
-                        <ul className="space-y-2 text-sm text-muted-foreground">
-                          <li className="flex items-start gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                            Returns accepted within 7 days of delivery for quality issues
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                            Seller covers return shipping for defective products
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                            Photo/video evidence required for quality claims
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                            Refunds processed within 3-5 business days
-                          </li>
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
+                          <div>
+                            <h4 className="font-semibold mb-3">Return Policy</h4>
+                            <ul className="space-y-2 text-sm text-muted-foreground">
+                              <li className="flex items-start gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                                Returns accepted within 7 days of delivery for quality issues
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                                Seller covers return shipping for defective products
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                                Photo/video evidence required for quality claims
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                                Refunds processed within 3-5 business days
+                              </li>
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    <div>
+                      <ProductFAQ productName={product.name} />
+                    </div>
+                  </div>
                 </motion.div>
               </TabsContent>
             </AnimatePresence>
           </Tabs>
         </div>
 
-        {/* Related Products */}
         <div className="mt-8">
           <RelatedProducts products={relatedProducts} formatPrice={formatPrice} />
         </div>
       </div>
-
-      {/* Mobile Bottom Actions */}
-      <ProductActionsMobile
-        isOutOfStock={inventory.isOutOfStock}
-        isBelowMoq={quantity < product.moq}
-        onAddToCart={handleAddToCart}
-        onRequestQuote={handleRequestQuote}
-        onContactSeller={handleContactSeller}
-        onVisitStore={handleVisitStore}
-      />
     </div>
   );
 }
