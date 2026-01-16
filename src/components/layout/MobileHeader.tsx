@@ -1,15 +1,28 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Menu, Camera, X, ChevronRight, Home, ShoppingBag, User, Heart, FileText, HelpCircle, Settings, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import harvestaLogo from '@/assets/harvesta-logo.png';
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Menu,
+  Camera,
+  X,
+  ChevronRight,
+  Home,
+  ShoppingBag,
+  User,
+  Heart,
+  FileText,
+  HelpCircle,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import harvestaLogo from "@/assets/harvesta-logo.png";
 
 export default function MobileHeader() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
@@ -21,8 +34,8 @@ export default function MobileHeader() {
       lastScrollY.current = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -35,16 +48,16 @@ export default function MobileHeader() {
   const handleSignOut = async () => {
     await signOut();
     setIsMenuOpen(false);
-    navigate('/');
+    navigate("/");
   };
 
   const menuItems = [
-    { icon: Home, label: 'Home', href: '/' },
-    { icon: ShoppingBag, label: 'My Orders', href: '/orders' },
-    { icon: Heart, label: 'Saved Products', href: '/saved-products' },
-    { icon: FileText, label: 'Request Quote', href: '/rfq' },
-    { icon: HelpCircle, label: 'Help Center', href: '/help' },
-    { icon: Settings, label: 'Settings', href: '/profile' },
+    { icon: Home, label: "Home", href: "/" },
+    { icon: ShoppingBag, label: "My Orders", href: "/orders" },
+    { icon: Heart, label: "Saved Products", href: "/saved-products" },
+    { icon: FileText, label: "Request Quote", href: "/rfq" },
+    { icon: HelpCircle, label: "Help Center", href: "/help" },
+    { icon: Settings, label: "Settings", href: "/profile" },
   ];
 
   return (
@@ -53,94 +66,129 @@ export default function MobileHeader() {
         <div className="px-3 py-2.5">
           <div className="flex items-center gap-2">
             {/* Left Section: Logo (default) or Hamburger (scrolled) */}
-            <div className={cn(
-              "shrink-0 flex items-center justify-center transition-all duration-300 ease-out",
-              isScrolled ? "w-8" : "w-auto"
-            )}>
+            <div
+              className={cn(
+                "shrink-0 flex items-center justify-center transition-all duration-300 ease-out",
+                isScrolled ? "w-8" : "w-auto"
+              )}
+            >
               {/* Logo - Fades out when scrolled */}
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 className={cn(
                   "transition-all duration-300 ease-out",
-                  isScrolled ? "opacity-0 scale-75 absolute pointer-events-none w-0" : "opacity-100 scale-100"
+                  isScrolled
+                    ? "opacity-0 scale-75 absolute pointer-events-none w-0"
+                    : "opacity-100 scale-100"
                 )}
               >
-                <span className="text-xl font-bold text-primary whitespace-nowrap">harvestá</span>
+                <img
+                  src={harvestaLogo}
+                  alt="Harvestá Logo"
+                  className="h-8 w-auto"
+                />
               </Link>
-              
+
               {/* Hamburger - Fades in when scrolled */}
-              <button 
+              <button
                 onClick={() => setIsMenuOpen(true)}
                 className={cn(
                   "p-1 transition-all duration-300 ease-out",
-                  isScrolled ? "opacity-100 scale-100" : "opacity-0 scale-75 absolute pointer-events-none"
+                  isScrolled
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-75 absolute pointer-events-none"
                 )}
               >
                 <Menu className="h-5 w-5 text-foreground" />
               </button>
             </div>
-            
+
             {/* Search Bar - Expands when scrolled */}
             <form onSubmit={handleSearch} className="flex-1 min-w-0">
-              <div className={cn(
-                "flex items-center rounded-full overflow-hidden transition-all duration-300 ease-out",
-                "border border-primary bg-muted"
-              )}>
+              <div
+                className={cn(
+                  "flex items-center rounded-full overflow-hidden transition-all duration-300 ease-out",
+                  "border border-primary bg-muted"
+                )}
+              >
                 {/* Search Input Area */}
                 <div className="flex-1 flex items-center min-w-0">
                   <div className="flex items-center pl-3">
-                    <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <circle cx="11" cy="11" r="8" strokeWidth="2"/>
-                      <path d="m21 21-4.35-4.35" strokeWidth="2" strokeLinecap="round"/>
+                    <svg
+                      className="h-4 w-4 text-muted-foreground shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle cx="11" cy="11" r="8" strokeWidth="2" />
+                      <path
+                        d="m21 21-4.35-4.35"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   </div>
-                  
+
                   <input
                     type="text"
-                    placeholder={isScrolled ? "What are you looking for..." : "Search"}
+                    placeholder={
+                      isScrolled ? "What are you looking for..." : "Search"
+                    }
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 px-2 py-2 text-sm bg-transparent outline-none placeholder:text-muted-foreground min-w-0"
                   />
                 </div>
-                
+
                 {/* Search Button */}
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold shrink-0"
                 >
                   Search
                 </button>
               </div>
             </form>
-            
+
             {/* Right Section: Profile (default) or Camera (scrolled) */}
-            <div className={cn(
-              "shrink-0 flex items-center justify-center transition-all duration-300 ease-out",
-              isScrolled ? "w-9" : "w-9"
-            )}>
+            <div
+              className={cn(
+                "shrink-0 flex items-center justify-center transition-all duration-300 ease-out",
+                isScrolled ? "w-9" : "w-9"
+              )}
+            >
               {/* Profile Avatar - Fades out when scrolled */}
-              <Link 
-                to={user ? "/dashboard" : "/login"} 
+              <Link
+                to={user ? "/dashboard" : "/login"}
                 className={cn(
                   "transition-all duration-300 ease-out",
-                  isScrolled ? "opacity-0 scale-75 absolute pointer-events-none" : "opacity-100 scale-100"
+                  isScrolled
+                    ? "opacity-0 scale-75 absolute pointer-events-none"
+                    : "opacity-100 scale-100"
                 )}
               >
                 <Avatar className="h-8 w-8 border-2 border-primary">
-                  <AvatarImage src={user ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" : undefined} />
+                  <AvatarImage
+                    src={
+                      user
+                        ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+                        : undefined
+                    }
+                  />
                   <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                    {user ? 'U' : <User className="h-3 w-3" />}
+                    {user ? "U" : <User className="h-3 w-3" />}
                   </AvatarFallback>
                 </Avatar>
               </Link>
-              
+
               {/* Camera Icon - Fades in when scrolled */}
-              <button 
+              <button
                 type="button"
                 className={cn(
                   "p-1 transition-all duration-300 ease-out",
-                  isScrolled ? "opacity-100 scale-100" : "opacity-0 scale-75 absolute pointer-events-none"
+                  isScrolled
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-75 absolute pointer-events-none"
                 )}
               >
                 <Camera className="h-6 w-6 text-muted-foreground" />
@@ -154,16 +202,18 @@ export default function MobileHeader() {
       <div className="lg:hidden h-14" />
 
       {/* Mobile Menu Overlay */}
-      <div 
+      <div
         className={cn(
           "lg:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300",
-          isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isMenuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         )}
         onClick={() => setIsMenuOpen(false)}
       />
 
       {/* Mobile Menu Drawer */}
-      <div 
+      <div
         className={cn(
           "lg:hidden fixed top-0 left-0 bottom-0 w-[75vw] max-w-[280px] z-[70] bg-card shadow-2xl transition-transform duration-400 ease-out",
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
@@ -172,7 +222,7 @@ export default function MobileHeader() {
         {/* Menu Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <span className="text-lg font-bold text-primary">harvestá</span>
-          <button 
+          <button
             onClick={() => setIsMenuOpen(false)}
             className="p-1.5 -mr-1.5 rounded-full hover:bg-muted transition-colors active:scale-90"
           >
@@ -186,15 +236,21 @@ export default function MobileHeader() {
             <div className="flex items-center gap-3 p-2">
               <Avatar className="h-10 w-10 border-2 border-primary">
                 <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" />
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">U</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                  U
+                </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium text-foreground text-sm">Welcome back!</p>
-                <p className="text-xs text-muted-foreground">View your account</p>
+                <p className="font-medium text-foreground text-sm">
+                  Welcome back!
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  View your account
+                </p>
               </div>
             </div>
           ) : (
-            <Link 
+            <Link
               to="/login"
               onClick={() => setIsMenuOpen(false)}
               className="flex items-center gap-3 p-2.5 bg-primary/10 rounded-xl active:scale-[0.98] transition-transform"
@@ -203,8 +259,12 @@ export default function MobileHeader() {
                 <User className="h-4 w-4 text-primary-foreground" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-foreground text-sm">Sign in / Register</p>
-                <p className="text-xs text-muted-foreground">Access your account</p>
+                <p className="font-medium text-foreground text-sm">
+                  Sign in / Register
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Access your account
+                </p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
@@ -220,9 +280,13 @@ export default function MobileHeader() {
               onClick={() => setIsMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-foreground hover:bg-muted active:scale-[0.98] transition-all duration-300",
-                isMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"
+                isMenuOpen
+                  ? "translate-x-0 opacity-100"
+                  : "-translate-x-8 opacity-0"
               )}
-              style={{ transitionDelay: isMenuOpen ? `${(index + 1) * 40}ms` : '0ms' }}
+              style={{
+                transitionDelay: isMenuOpen ? `${(index + 1) * 40}ms` : "0ms",
+              }}
             >
               <item.icon className="h-5 w-5 text-muted-foreground" />
               <span className="text-sm font-medium">{item.label}</span>

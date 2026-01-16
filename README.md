@@ -2,22 +2,16 @@
 
 ## Project info
 
-**URL:** 
+**URL:**
 https://harvestá.com
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -60,15 +54,24 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase
+- TanStack Query
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+This project is configured for deployment on Vercel. Simply push your changes to the main branch, and Vercel will automatically build and deploy.
 
-## Can I connect a custom domain to my Lovable project?
+**Required Environment Variables for Deployment:**
 
-Yes, you can!
+- `VITE_SUPABASE_URL` - Your Supabase project URL
+- `VITE_SUPABASE_PUBLISHABLE_KEY` - Your Supabase public anon key
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Add these in your Vercel project settings under Environment Variables.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Connecting a Custom Domain
+
+To connect a custom domain to your Vercel project:
+
+1. Go to your Vercel project dashboard
+2. Navigate to Settings > Domains
+3. Add your custom domain and follow the DNS configuration instructions
