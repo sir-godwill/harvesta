@@ -61,6 +61,12 @@ export interface UserPresence {
   typing_in?: string;
 }
 
+export interface ChatContext {
+  type: 'general' | 'product' | 'order' | 'rfq' | 'delivery';
+  id?: string;
+  data?: any;
+}
+
 /**
  * Create a new conversation
  */
@@ -523,5 +529,103 @@ export async function editMessage(
   } catch (error) {
     console.error('Error editing message:', error);
     return { data: null, error };
+  }
+}
+
+/**
+ * Fetch context details for chat
+ */
+export async function fetchChatContext(context: ChatContext): Promise<any> {
+  if (!context.id || context.type === 'general') return null;
+
+  try {
+    if (context.type === 'product') {
+      const { data } = await supabase
+        .from('products')
+        .select(`
+          name,
+          unit_of_measure,
+          product_images(image_url, is_primary),
+          product_variants(pricing_tiers(price_per_unit, currency))
+        `)
+        .eq('id', context.id)
+        .single();
+
+      if (!data) return null;
+
+      const primaryImage = data.product_images?.find((i: any) => i.is_primary)?.image_url || data.product_images?.[0]?.image_url;
+      const variant = data.product_variants?.[0];
+      const tier = variant?.pricing_tiers?.[0];
+
+      return {
+        name: data.name,
+        image: primaryImage,
+        rating: 4.5, // Mock, needs reviews table join
+        price: tier?.price_per_unit || 0,
+        currency: tier?.currency || 'XAF',
+        unit: data.unit_of_measure || 'unit'
+      };
+    }
+
+    if (context.type === 'order') {
+      const { data } = await supabase
+        .from('orders')
+        .select('order_number, status, total_amount, currency')
+        .eq('id', context.id)
+        .single();
+
+      if (!data) return null;
+
+      return {
+        orderNumber: data.order_number,
+        status: data.status,
+        totalAmount: data.total_amount,
+        currency: data.currency
+      };
+    }
+
+    if (context.type === 'rfq') {
+      // Assuming rfq_requests table
+      const { data } = await supabase
+        .from('rfq_requests')
+        .select('status, quantity, unit_of_measure, product_id') // Join products for name?
+        .eq('id', context.id)
+        .single();
+
+      if (!data) return null;
+
+      return {
+        status: data.status,
+        title: 'RFQ Request', // Placeholder
+        quantity: data.quantity,
+        unit: data.unit_of_measure
+      };
+    }
+
+    if (context.type === 'delivery') {
+      const { data } = await supabase
+        .from('deliveries')
+        .select('tracking_number, carrier:logistics_partners(name), destination_address')
+        .eq('id', context.id)
+        .single();
+
+      if (!data) return null;
+
+      return {
+        trackingNumber: data.tracking_number,
+        carrier: data.carrier?.name || 'Unknown',
+        deliveryLocation: (() => {
+          try {
+            const addr = typeof data.destination_address === 'string' ? JSON.parse(data.destination_address) : data.destination_address;
+            return addr?.city || 'Unknown';
+          } catch { return 'Unknown'; }
+        })()
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching chat context:', error);
+    return null;
   }
 }

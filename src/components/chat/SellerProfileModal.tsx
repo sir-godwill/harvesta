@@ -4,8 +4,33 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { fetchSellerProfile, SellerProfile } from '@/lib/chat-api';
+import { fetchSupplierProfile, fetchSupplierProducts } from '@/lib/marketplaceApi';
+import { SupplierProfile, Product } from '@/types/marketplace';
 import { useToast } from '@/hooks/use-toast';
+
+// Local interface matching the component's expectations
+interface SellerProfile {
+  id: string;
+  name: string;
+  companyName: string;
+  location: string;
+  country: string;
+  isVerified: boolean;
+  rating: number;
+  reviewCount: number;
+  reliabilityScore: number;
+  yearsActive: number;
+  responseTime: string;
+  certifications: string[];
+  products: {
+    id: string;
+    image: string;
+    name: string;
+    price: number;
+    currency: string;
+    unit: string;
+  }[];
+}
 
 interface SellerProfileModalProps {
   sellerId: string;
@@ -22,10 +47,57 @@ export function SellerProfileModal({ sellerId, isOpen, onClose, onMessage, isBuy
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen && sellerId) {
+    async function loadProfile() {
+      if (!isOpen || !sellerId) return;
+
       setLoading(true);
-      fetchSellerProfile(sellerId).then(data => { setProfile(data); setLoading(false); });
+      try {
+        const [profileRes, productsRes] = await Promise.all([
+          fetchSupplierProfile(sellerId),
+          // Fetch first page of products
+          fetchSupplierProducts(sellerId, 1)
+        ]);
+
+        if (profileRes.success && profileRes.data) {
+          const p = profileRes.data;
+          const products = productsRes.success && productsRes.data ? productsRes.data.items : [];
+
+          // Transform to SellerProfile shape
+          const mappedProfile: SellerProfile = {
+            id: p.id,
+            name: p.name, // Suppliers name is company name usually
+            companyName: p.name,
+            location: p.location,
+            country: p.location.split(',').pop()?.trim() || 'Unknown',
+            isVerified: p.isVerified,
+            rating: p.rating,
+            reviewCount: 10, // Mock or fetch actual count if available in profile
+            reliabilityScore: 95, // Mock
+            yearsActive: p.yearsInOperation || 1,
+            responseTime: p.responseTime || '24h',
+            certifications: p.certifications || [],
+            products: products.map(prod => ({
+              id: prod.id,
+              name: prod.name,
+              image: prod.image,
+              price: prod.currentPrice || 0,
+              currency: 'XAF', // Default
+              unit: prod.unit
+            }))
+          };
+          setProfile(mappedProfile);
+        } else {
+          console.error("Failed to fetch profile");
+          setProfile(null);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+
+    loadProfile();
   }, [isOpen, sellerId]);
 
   if (!isOpen) return null;

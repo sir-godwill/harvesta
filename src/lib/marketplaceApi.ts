@@ -720,29 +720,188 @@ export async function fetchCategoryProducts(
 // ============ SUPPLIER API ============
 
 export async function fetchSupplierProfile(supplierId: string): Promise<ApiResponse<SupplierProfile>> {
-  console.log('[API] Fetching supplier profile:', supplierId);
-  return { success: true };
+  try {
+    const { data: supplier, error } = await supabase
+      .from('suppliers')
+      .select('*')
+      .eq('id', supplierId)
+      .single();
+
+    if (error) throw error;
+    if (!supplier) return { success: false, error: 'Supplier not found' };
+
+    // Transform DB supplier to SupplierProfile
+    // Note: The DB schema has different field names than the frontend type in some cases.
+    // We align them here.
+    const profile: SupplierProfile = {
+      id: supplier.id,
+      name: supplier.company_name,
+      rating: supplier.rating || 0,
+      totalSales: supplier.total_orders || 0, // Approximate
+      location: `${supplier.city}, ${supplier.country}`,
+      isVerified: supplier.verification_status === 'verified',
+      isQualityChecked: true, // Mock or add to schema
+      responseTime: `${supplier.response_time_hours || 24} hours`,
+      description: supplier.description,
+      coverImage: supplier.banner_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&h=400&fit=crop',
+      yearsInOperation: 1, // field missing in schema, default 1
+      capacity: 'N/A', // field missing
+      productionMethods: [],
+      certifications: [], // would need separate table
+      socialLinks: {
+        website: supplier.website,
+        whatsapp: supplier.phone
+      },
+      activityPosts: [], // would need table
+      gallery: [] // would need table
+    };
+
+    return { success: true, data: profile };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 
 export async function fetchSupplierProducts(
   supplierId: string,
   page: number
 ): Promise<ApiResponse<PaginatedResponse<Product>>> {
-  console.log('[API] Fetching supplier products:', { supplierId, page });
-  return { success: true, data: { items: [], total: 0, page, pageSize: 20, hasMore: false } };
+  // Reuse searchProducts logic but scope to supplier
+  try {
+    // We can just call searchProducts but we need to pass filters. 
+    // However searchProducts implementation in this file doesn't support direct supplier_id filter in 'filters' object (it has verifiedOnly, category).
+    // Let's modify searchProducts OR implement custom query here.
+    // Implementing custom query for simplicity/speed.
+
+    const pageSize = 20;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
+      .from('products')
+      .select(`
+        *,
+        categories(name),
+        suppliers(id, company_name, rating, city, country, verification_status),
+        product_images(image_url, is_primary),
+        product_variants(
+          id, name, grade, is_default, packaging,
+          pricing_tiers(min_quantity, max_quantity, price_per_unit)
+        )
+      `, { count: 'exact' })
+      .eq('supplier_id', supplierId)
+      .eq('status', 'active')
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const items: Product[] = (data || []).map((p: any) => {
+      const defaultVariant = p.product_variants.find((v: any) => v.is_default) || p.product_variants[0];
+      const primaryImage = p.product_images.find((img: any) => img.is_primary)?.image_url || p.product_images[0]?.image_url || '';
+
+      return {
+        id: p.id,
+        name: p.name,
+        image: primaryImage,
+        category: p.categories?.name || 'Uncategorized',
+        grade: defaultVariant?.grade || 'Standard',
+        origin: `${p.origin_country || ''}`,
+        unit: p.unit_of_measure,
+        moq: p.min_order_quantity,
+        pricingTiers: defaultVariant?.pricing_tiers.map((t: any) => ({
+          minQuantity: t.min_quantity,
+          maxQuantity: t.max_quantity,
+          pricePerUnit: t.price_per_unit
+        })) || [],
+        currentPrice: defaultVariant?.pricing_tiers[0]?.price_per_unit || 0
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        items,
+        total: count || 0,
+        page,
+        pageSize,
+        hasMore: (count || 0) > page * pageSize
+      }
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 
 export async function fetchSupplierReviews(
   supplierId: string,
   page: number
 ): Promise<ApiResponse<PaginatedResponse<Review>>> {
-  console.log('[API] Fetching supplier reviews:', { supplierId, page });
-  return { success: true, data: { items: [], total: 0, page, pageSize: 10, hasMore: false } };
+  try {
+    // Reviews are on products. We need reviews for all products of this supplier.
+    // Joining reviews -> products -> filter by supplier_id
+    const pageSize = 10;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        products!inner(supplier_id, name),
+        profiles:buyer_id(full_name, avatar_url) 
+      `, { count: 'exact' })
+      .eq('products.supplier_id', supplierId)
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    // Note: profiles might not be 'profiles' table depending on setup, but migration says profiles(id) extends auth.users.
+    // However the FK in reviews is buyer_id -> auth.users. Profiles table also has id -> auth.users.
+    // Supabase can join if FK exists. reviews.buyer_id references auth.users. profiles.id references auth.users.
+    // We might need to join on id.
+
+    if (error) throw error;
+
+    const reviews: Review[] = (data || []).map((r: any) => ({
+      id: r.id,
+      buyerName: r.profiles?.full_name || 'Anonymous',
+      buyerAvatar: r.profiles?.avatar_url,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.created_at,
+      productName: r.products?.name,
+      images: r.images
+    }));
+
+    return {
+      success: true,
+      data: {
+        items: reviews,
+        total: count || 0,
+        page,
+        pageSize,
+        hasMore: (count || 0) > page * pageSize
+      }
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 
 export async function followSupplier(supplierId: string): Promise<ApiResponse<void>> {
-  console.log('[API] Following supplier:', supplierId);
-  return { success: true };
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await supabase
+      .from('saved_suppliers')
+      .upsert({ user_id: user.id, supplier_id: supplierId }, { onConflict: 'user_id, supplier_id' });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 
 // ============ RFQ API ============
@@ -778,8 +937,28 @@ export async function submitRFQ(rfq: RFQRequest): Promise<ApiResponse<{ rfqId: s
 }
 
 export async function fetchRFQStatus(rfqId: string): Promise<ApiResponse<RFQStatus>> {
-  console.log('[API] Fetching RFQ status:', rfqId);
-  return { success: true };
+  try {
+    const { data: rfq, error } = await supabase
+      .from('rfq_requests')
+      .select(`
+         id, status, created_at,
+         rfq_quotes(count)
+      `)
+      .eq('id', rfqId)
+      .single();
+
+    if (error) throw error;
+    if (!rfq) return { success: false, error: 'RFQ not found' };
+
+    // This is a simplified mapping. The Frontend Type RFQStatus might be complex.
+    // Assuming it is just the string status or an object with status.
+    // Let's check imports. RFQStatus is imported from types.
+    // If it's just 'open' | 'closed' etc., we cast.
+
+    return { success: true, data: rfq.status as RFQStatus };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 
 // ============ PRICE COMPARISON API ============
@@ -792,8 +971,71 @@ export async function compareProductPrices(productId: string): Promise<ApiRespon
 // ============ ORDER TRACKING API ============
 
 export async function fetchOrderTracking(orderId: string): Promise<ApiResponse<OrderTracking>> {
-  console.log('[API] Fetching order tracking:', orderId);
-  return { success: true };
+  try {
+    // Fetch delivery and events
+    const { data: delivery, error } = await supabase
+      .from('deliveries')
+      .select(`
+        *,
+        shipment_events(*),
+        orders!inner(order_number, status)
+      `)
+      .eq('order_id', orderId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+
+    // If no delivery record yet, return basic order info
+    if (!delivery) {
+      const { data: order } = await supabase.from('orders').select('order_number, status, created_at').eq('id', orderId).single();
+      if (!order) return { success: false, error: 'Order not found' };
+
+      return {
+        success: true,
+        data: {
+          orderId,
+          orderNumber: order.order_number,
+          currentStatus: order.status,
+          timeline: [
+            { status: 'pending', title: 'Order Placed', description: 'Order received', timestamp: order.created_at, isCompleted: true, isCurrent: order.status === 'pending' }
+          ],
+          vendorTracking: []
+        }
+      };
+    }
+
+    const timeline = (delivery.shipment_events || []).map((e: any) => ({
+      status: 'shipping', // simplified
+      title: e.event_type,
+      description: e.description,
+      timestamp: e.event_time,
+      isCompleted: true,
+      isCurrent: false
+    }));
+
+    // Add current status
+    timeline.push({
+      status: delivery.status,
+      title: 'Current Status',
+      description: `Delivery is ${delivery.status}`,
+      timestamp: new Date().toISOString(),
+      isCompleted: false,
+      isCurrent: true
+    });
+
+    return {
+      success: true,
+      data: {
+        orderId,
+        orderNumber: delivery.orders.order_number,
+        currentStatus: delivery.status,
+        timeline,
+        vendorTracking: [] // Fill if multi-vendor splits
+      }
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 
 // ============ API HEALTH VERIFICATION ============

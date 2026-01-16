@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useGuestTracking } from '@/hooks/useGuestTracking';
-import { ProductCard } from '@/components/home/ProductCard';
+import ProductCard from '@/components/home/ProductCard';
 import { SellerCarousel } from './SellerCarousel';
 import { TrendingProductsCarousel } from './TrendingProductsCarousel';
 import { RecentlyViewedCarousel } from './RecentlyViewedCarousel';
@@ -24,7 +24,7 @@ export function InfiniteProductFeed() {
         scrollThreshold: 50,
     });
 
-    const fetchProducts = async (page: number) => {
+    const fetchProducts = useCallback(async (page: number) => {
         const offset = page * PRODUCTS_PER_PAGE;
 
         const { data, error, count } = await supabase
@@ -45,7 +45,7 @@ export function InfiniteProductFeed() {
             data: data || [],
             hasMore,
         };
-    };
+    }, []);
 
     const { items: products, loading, hasMore, loadMoreRef } = useInfiniteScroll(fetchProducts);
 
