@@ -71,7 +71,7 @@ export function ProductPricingSection({
         {pricing.internationalPrice && showInternational && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Globe className="w-4 h-4" />
-            <span>International: ${pricing.internationalPrice.toFixed(2)} USD</span>
+            <span>International: ${(pricing.internationalPrice ?? 0).toFixed(2)} USD</span>
           </div>
         )}
       </div>

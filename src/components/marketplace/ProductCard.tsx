@@ -44,11 +44,11 @@ export function ProductCard({ product, vendor, onAddToCart, onRequestQuote, onCo
 
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-primary">${product.currentPrice.toFixed(2)}</span>
-            {product.originalPrice && <span className="text-sm text-muted-foreground line-through">${product.originalPrice.toFixed(2)}</span>}
+            <span className="text-xl font-bold text-primary">${(product.currentPrice ?? 0).toFixed(2)}</span>
+            {product.originalPrice && <span className="text-sm text-muted-foreground line-through">${(product.originalPrice ?? 0).toFixed(2)}</span>}
             <span className="text-xs text-muted-foreground">/ {product.unit}</span>
           </div>
-          <p className="text-xs text-secondary font-medium">As low as ${lowestPrice.toFixed(2)} for bulk orders</p>
+          <p className="text-xs text-secondary font-medium">As low as ${(lowestPrice ?? 0).toFixed(2)} for bulk orders</p>
         </div>
 
         <div className="inline-flex items-center gap-1 text-xs bg-warning/10 text-warning px-2 py-1 rounded">

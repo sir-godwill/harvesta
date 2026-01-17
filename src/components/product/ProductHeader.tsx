@@ -92,18 +92,18 @@ export function ProductHeader({
         {rating > 0 && (
           <div className="flex items-center gap-0.5 sm:gap-1">
             <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-amber-400 text-amber-400" />
-            <span className="font-semibold text-foreground">{rating.toFixed(1)}</span>
+            <span className="font-semibold text-foreground">{(rating ?? 0).toFixed(1)}</span>
             <span className="hidden sm:inline">({reviewCount} reviews)</span>
             <span className="sm:hidden">({reviewCount})</span>
           </div>
         )}
         <div className="flex items-center gap-0.5 sm:gap-1">
           <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span>{viewCount >= 1000 ? `${(viewCount/1000).toFixed(1)}K` : viewCount}</span>
+          <span>{(viewCount ?? 0) >= 1000 ? `${((viewCount ?? 0)/1000).toFixed(1)}K` : viewCount ?? 0}</span>
         </div>
         <div className="flex items-center gap-0.5 sm:gap-1">
           <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span>{orderCount >= 1000 ? `${(orderCount/1000).toFixed(1)}K` : orderCount} sold</span>
+          <span>{(orderCount ?? 0) >= 1000 ? `${((orderCount ?? 0)/1000).toFixed(1)}K` : orderCount ?? 0} sold</span>
         </div>
       </div>
     </div>

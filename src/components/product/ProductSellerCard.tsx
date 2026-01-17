@@ -64,7 +64,7 @@ export function ProductSellerCard({ seller, className }: ProductSellerCardProps)
         {/* Stats Grid */}
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="p-2 bg-muted/50 rounded-lg">
-            <p className="font-semibold text-foreground">{seller.rating.toFixed(1)}</p>
+            <p className="font-semibold text-foreground">{(seller.rating ?? 0).toFixed(1)}</p>
             <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
               Rating

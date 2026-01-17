@@ -225,7 +225,7 @@ export default function SellersPage() {
                         <div className="bg-muted/50 rounded-lg p-2">
                           <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
                             <Star className="h-3 w-3 fill-current" />
-                            <span className="text-sm font-semibold">{seller.rating?.toFixed(1) || 'N/A'}</span>
+                            <span className="text-sm font-semibold">{(seller.rating ?? 0).toFixed(1)}</span>
                           </div>
                           <p className="text-[10px] text-muted-foreground">Rating</p>
                         </div>

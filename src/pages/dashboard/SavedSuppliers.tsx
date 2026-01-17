@@ -210,7 +210,7 @@ const SavedSuppliers = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Avg. Rating</p>
                   <p className="text-2xl font-bold">
-                    {(suppliers.reduce((acc, s) => acc + s.rating, 0) / suppliers.length).toFixed(1)}
+                    {suppliers.length > 0 ? (suppliers.reduce((acc, s) => acc + (s.rating ?? 0), 0) / suppliers.length).toFixed(1) : 'N/A'}
                   </p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">

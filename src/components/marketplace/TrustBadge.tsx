@@ -59,7 +59,7 @@ export function VendorRating({ rating, totalSales, showSales = true, className }
     <div className={cn('flex items-center gap-2', className)}>
       <div className="flex items-center gap-1">
         <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-        <span className="font-semibold text-foreground">{rating.toFixed(1)}</span>
+        <span className="font-semibold text-foreground">{(rating ?? 0).toFixed(1)}</span>
       </div>
       {showSales && totalSales && (
         <span className="text-muted-foreground text-sm">
