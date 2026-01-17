@@ -47,26 +47,102 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with:
+### Frontend Stack
+- **React** 18.3.1 - Component-based UI library
+- **TypeScript** 5.8.3 - Type-safe JavaScript
+- **Vite** 7.3.1 - Modern build tool with instant HMR
+- **React Router DOM** 6.30.1 - Client-side routing
+- **Tailwind CSS** 3.4.17 - Utility-first CSS framework
+- **shadcn/ui** - High-quality UI components
+- **Radix UI** - Headless UI primitives
+- **Framer Motion** 12.26.1 - Animation library
+- **React Hook Form** 7.61.1 - Performant forms
+- **Zod** 3.25.76 - Schema validation
+- **TanStack React Query** 5.83.0 - Server state management
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-- Supabase
-- TanStack Query
+### Backend & Database
+- **Express** 4.18.2 - Node.js web framework
+- **Supabase** 2.90.0 - PostgreSQL + Auth + Realtime
+- **Node.js** 20.11.1 - JavaScript runtime
+
+### Development Tools
+- **SWC** - Fast JavaScript compiler
+- **ESLint** 9.32.0 - Code linting
+- **Terser** 5.46.0 - Code minification
+- **PostCSS** 8.5.6 - CSS transformation
+
+### Additional Libraries
+- **Lucide React** 0.462.0 - Icon library
+- **Recharts** 2.15.4 - Data visualization
+- **Sonner** 1.7.4 - Toast notifications
+- **date-fns** 3.6.0 - Date utilities
+- **Embla Carousel** 8.6.0 - Carousel component
+
+**For a complete framework breakdown, see:**
+- [`FRAMEWORK_STACK.md`](./FRAMEWORK_STACK.md) - Detailed documentation
+- [`tech-stack.json`](./tech-stack.json) - Machine-readable format
+- `.nvmrc` - Node.js version specification (20.11.1)
 
 ## How can I deploy this project?
 
-This project is configured for deployment on Vercel. Simply push your changes to the main branch, and Vercel will automatically build and deploy.
+This project is **production-ready** and configured for deployment on multiple platforms:
 
-**Required Environment Variables for Deployment:**
+### Supported Platforms
+- **Vercel** (Recommended) - `vercel.json` auto-detected
+- **Render** - `render.yaml` auto-detected
+- **Netlify** - `netlify.toml` auto-detected
+- **Hostinger & Self-Hosted** - `server.js` Express server included
 
-- `VITE_SUPABASE_URL` - Your Supabase project URL
-- `VITE_SUPABASE_PUBLISHABLE_KEY` - Your Supabase public anon key
+### Build & Start Commands
+```bash
+# Build for production
+npm run build
 
-Add these in your Vercel project settings under Environment Variables.
+# Start Express server
+npm start
+# or
+node server.js
+```
+
+**Output:** `dist/` folder (~2.3MB, optimized and minified)
+
+### Required Environment Variables
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-public-anon-key
+NODE_ENV=production
+```
+
+### Deployment on Vercel
+1. Push changes to main branch
+2. Vercel automatically detects `vercel.json`
+3. Environment variables auto-configured from project settings
+4. Deploy completes in ~2-3 minutes
+
+### Deployment on Render
+1. Connect your GitHub repository
+2. Render automatically detects `render.yaml`
+3. Set environment variables in dashboard
+4. Deploy starts automatically
+
+### Deployment on Netlify
+1. Connect your GitHub repository
+2. Netlify automatically detects `netlify.toml`
+3. Set environment variables in build settings
+4. Deploy completes automatically
+
+### Deployment on Hostinger or Self-Hosted
+1. Install Node.js 20.11.1 (check `.nvmrc`)
+2. `npm install`
+3. `npm run build`
+4. `npm start` (runs `node server.js` on port 3000)
+5. Point domain to your server IP
+
+**See also:**
+- [`HOSTINGER_DEPLOYMENT_ENV_GUIDE.md`](./HOSTINGER_DEPLOYMENT_ENV_GUIDE.md)
+- [`PRODUCTION_BLANK_PAGE_FIX.md`](./PRODUCTION_BLANK_PAGE_FIX.md)
+- [`DEPLOYMENT_FIX_SUMMARY.md`](./DEPLOYMENT_FIX_SUMMARY.md)
 
 ## Connecting a Custom Domain
 
