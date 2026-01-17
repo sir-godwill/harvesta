@@ -1,0 +1,222 @@
+{
+  "project": {
+    "name": "Harvesta",
+    "description": "B2B Agricultural Marketplace Platform",
+    "type": "full-stack-spa",
+    "version": "0.0.0"
+  },
+  "frontend": {
+    "framework": "React",
+    "frameworkVersion": "18.3.1",
+    "language": "TypeScript",
+    "languageVersion": "5.8.3",
+    "buildTool": "Vite",
+    "buildToolVersion": "7.3.1",
+    "jsCompiler": "SWC",
+    "routing": "React Router DOM",
+    "routingVersion": "6.30.1",
+    "stateManagement": [
+      {
+        "name": "TanStack React Query",
+        "version": "5.83.0",
+        "purpose": "Server state management and caching"
+      },
+      {
+        "name": "React Context API",
+        "purpose": "Global state management"
+      },
+      {
+        "name": "React Hook Form",
+        "version": "7.61.1",
+        "purpose": "Form state and validation"
+      }
+    ],
+    "styling": [
+      {
+        "name": "Tailwind CSS",
+        "version": "3.4.17"
+      },
+      {
+        "name": "PostCSS",
+        "version": "8.5.6"
+      },
+      {
+        "name": "Autoprefixer",
+        "version": "10.4.21"
+      }
+    ],
+    "uiLibraries": [
+      {
+        "name": "shadcn/ui",
+        "based_on": "Radix UI"
+      },
+      {
+        "name": "Radix UI",
+        "version": "Latest",
+        "components": "Full component suite (40+ components)"
+      },
+      {
+        "name": "Lucide React Icons",
+        "version": "0.462.0"
+      },
+      {
+        "name": "Framer Motion",
+        "version": "12.26.1",
+        "purpose": "Animations and transitions"
+      }
+    ],
+    "formValidation": {
+      "library": "Zod",
+      "version": "3.25.76",
+      "resolver": "@hookform/resolvers",
+      "resolverVersion": "3.10.0"
+    },
+    "dataVisualization": [
+      {
+        "name": "Recharts",
+        "version": "2.15.4"
+      }
+    ],
+    "utilities": [
+      {
+        "name": "date-fns",
+        "version": "3.6.0"
+      },
+      {
+        "name": "sonner",
+        "version": "1.7.4",
+        "purpose": "Toast notifications"
+      },
+      {
+        "name": "Embla Carousel",
+        "version": "8.6.0"
+      },
+      {
+        "name": "next-themes",
+        "version": "0.3.0",
+        "purpose": "Theme management"
+      }
+    ]
+  },
+  "backend": {
+    "runtime": "Node.js",
+    "runtimeVersion": "20.11.1 (LTS)",
+    "framework": "Express",
+    "frameworkVersion": "4.18.2",
+    "database": "Supabase",
+    "databaseVersion": "2.90.0",
+    "dbEngine": "PostgreSQL",
+    "services": [
+      "Authentication & Authorization",
+      "Realtime Subscriptions",
+      "File Storage",
+      "Vector Embeddings"
+    ]
+  },
+  "devTools": {
+    "linting": {
+      "name": "ESLint",
+      "version": "9.32.0"
+    },
+    "codeFormatter": "Prettier",
+    "minification": {
+      "name": "Terser",
+      "version": "5.46.0"
+    },
+    "typeChecking": "TypeScript"
+  },
+  "deploymentPlatforms": [
+    {
+      "name": "Vercel",
+      "config_file": "vercel.json",
+      "buildCommand": "npm run build",
+      "startCommand": "vercel build output",
+      "nodeVersion": "20.11.1"
+    },
+    {
+      "name": "Render",
+      "config_file": "render.yaml",
+      "buildCommand": "npm ci && npm run build",
+      "startCommand": "node server.js",
+      "nodeVersion": "20.11.1"
+    },
+    {
+      "name": "Netlify",
+      "config_file": "netlify.toml",
+      "buildCommand": "npm run build",
+      "publishDirectory": "dist"
+    },
+    {
+      "name": "Hostinger",
+      "buildCommand": "npm run build",
+      "startCommand": "node server.js",
+      "nodeVersion": "20.11.1"
+    }
+  ],
+  "build": {
+    "buildCommand": "npm run build",
+    "buildTime": "~1m 30s",
+    "outputDirectory": "dist",
+    "outputSize": "~2.3MB",
+    "outputSizeGzipped": "~568KB",
+    "modules": 3323,
+    "minification": true,
+    "codeStripping": true,
+    "treeSheaking": true
+  },
+  "runtime": {
+    "startCommand": "node server.js",
+    "environment": "production",
+    "healthCheckPath": "/api/health"
+  },
+  "features": [
+    "Single Page Application (SPA)",
+    "Client-side routing",
+    "Server-side rendering capable",
+    "Real-time updates",
+    "Authentication & Authorization",
+    "File uploads",
+    "Dark mode support",
+    "Responsive design",
+    "PWA ready"
+  ],
+  "performance": {
+    "bundleSize": "2298KB",
+    "bundleSizeGzipped": "568KB",
+    "modules": 3323,
+    "optimizations": [
+      "Code splitting",
+      "Lazy loading",
+      "Asset caching",
+      "Minification",
+      "Gzip compression",
+      "SWC transpiler"
+    ]
+  },
+  "security": [
+    "TypeScript for type safety",
+    "Zod schema validation",
+    "CORS handling",
+    "Environment variable management",
+    "Supabase Row Level Security",
+    "XSS protection via React",
+    "Secure headers configuration"
+  ],
+  "environmentVariables": [
+    {
+      "name": "VITE_SUPABASE_URL",
+      "required": true,
+      "description": "Supabase project URL"
+    },
+    {
+      "name": "VITE_SUPABASE_PUBLISHABLE_KEY",
+      "required": true,
+      "description": "Supabase public/publishable API key"
+    },
+    {
+      "name": "NODE_ENV",
+      "required": false,
+      "default": "production"
+    }
+  ]
+}

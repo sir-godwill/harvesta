@@ -2,6 +2,7 @@ services:
   - type: web
     name: harvesta
     runtime: node
+    runtimeVersion: 20.11.1
     buildCommand: npm ci && npm run build
     startCommand: node server.js
     envVars:

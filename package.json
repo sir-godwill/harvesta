@@ -1,8 +1,22 @@
 {
   "name": "vite_react_shadcn_ts",
+  "description": "Harvesta - B2B Agricultural Marketplace | React 18 + Vite 7 + TypeScript + Tailwind + Supabase",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "keywords": [
+    "react",
+    "vite",
+    "typescript",
+    "tailwindcss",
+    "supabase",
+    "shadcn-ui",
+    "radix-ui",
+    "express",
+    "b2b",
+    "marketplace",
+    "agriculture"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
