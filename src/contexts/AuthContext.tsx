@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SupplierProfile {
   id: string;
@@ -31,32 +37,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [roles, setRoles] = useState<string[]>([]);
-  const [supplierProfile, setSupplierProfile] = useState<SupplierProfile | null>(null);
+  const [supplierProfile, setSupplierProfile] =
+    useState<SupplierProfile | null>(null);
 
   const fetchUserRolesAndProfile = async (userId: string) => {
     try {
       // Fetch roles
       const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
 
       if (!rolesError && rolesData) {
-        setRoles(rolesData.map(r => r.role));
+        setRoles(rolesData.map((r) => r.role));
       }
 
       // Fetch supplier profile
       const { data: supplierData, error: supplierError } = await supabase
-        .from('suppliers')
-        .select('id, is_active, verification_status, company_name')
-        .eq('user_id', userId)
+        .from("suppliers")
+        .select("id, is_active, verification_status, company_name")
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (!supplierError) {
         setSupplierProfile(supplierData);
       }
     } catch (error) {
-      console.error('Error fetching user details:', error);
+      console.error("Error fetching user details:", error);
     }
   };
 
@@ -73,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set a timeout to prevent infinite loading (e.g., if auth connection fails)
     loadingTimeout = setTimeout(() => {
       if (isMounted) {
-        console.warn('AuthContext: Loading timeout reached, stopping loading state');
+        console.warn(
+          "AuthContext: Loading timeout reached, stopping loading state",
+        );
         setIsLoading(false);
       }
     }, 5000); // 5 second timeout
@@ -99,11 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsLoading(false);
             clearTimeout(loadingTimeout);
           }
-        }
+        },
       );
       subscription = data?.subscription;
     } catch (error) {
-      console.error('AuthContext: Failed to set up auth listener:', error);
+      console.error("AuthContext: Failed to set up auth listener:", error);
       if (isMounted) {
         setIsLoading(false);
         clearTimeout(loadingTimeout);
@@ -111,7 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // THEN check for existing session
-    supabase.auth.getSession()
+    supabase.auth
+      .getSession()
       .then(async ({ data: { session } }) => {
         if (!isMounted) return;
 
@@ -128,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch((error) => {
-        console.error('AuthContext: Failed to get session:', error);
+        console.error("AuthContext: Failed to get session:", error);
         if (isMounted) {
           setIsLoading(false);
           clearTimeout(loadingTimeout);
@@ -150,27 +160,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSupplierProfile(null);
   };
 
-  const isSuperAdmin = roles.includes('super_admin');
-  const isAdmin = roles.includes('admin') || isSuperAdmin;
-  const isSeller = roles.includes('supplier');
-  const isLogistics = roles.includes('logistics_partner');
-  const isAffiliate = roles.includes('affiliate');
+  const isSuperAdmin = roles.includes("super_admin");
+  const isAdmin = roles.includes("admin") || isSuperAdmin;
+  const isSeller = roles.includes("supplier");
+  const isLogistics = roles.includes("logistics_partner");
+  const isAffiliate = roles.includes("affiliate");
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      isLoading,
-      signOut,
-      roles,
-      supplierProfile,
-      refreshProfile,
-      isSuperAdmin,
-      isAdmin,
-      isSeller,
-      isLogistics,
-      isAffiliate
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        isLoading,
+        signOut,
+        roles,
+        supplierProfile,
+        refreshProfile,
+        isSuperAdmin,
+        isAdmin,
+        isSeller,
+        isLogistics,
+        isAffiliate,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -179,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

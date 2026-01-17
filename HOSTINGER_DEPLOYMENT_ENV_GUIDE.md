@@ -1,6 +1,7 @@
 # Hostinger Deployment: Complete Environment Variables Guide
 
 ## Overview
+
 This guide lists all API keys and environment variables needed to deploy Harvesta on Hostinger. Hostinger uses cPanel/WHM for environment management.
 
 ---
@@ -8,18 +9,21 @@ This guide lists all API keys and environment variables needed to deploy Harvest
 ## Required Environment Variables
 
 ### 1. **Supabase (Database & Auth) - REQUIRED**
+
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Where to get:**
+
 - Log in to [Supabase Console](https://app.supabase.com)
 - Select your project
 - Go to Settings → API
 - Copy the **Project URL** and **Anon Public Key**
 
-**Why needed:** 
+**Why needed:**
+
 - Database storage for all marketplace data
 - User authentication
 - Real-time subscriptions
@@ -30,17 +34,20 @@ VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### 2. **Payment Gateways (Optional but Recommended)**
 
 #### A. **Stripe** (Credit/Debit Cards)
+
 ```
 STRIPE_PUBLIC_KEY=pk_live_xxxxxxxxxxxxx
 STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx
 ```
 
 **Where to get:**
+
 - Log in to [Stripe Dashboard](https://dashboard.stripe.com)
 - Go to Developers → API Keys
 - Copy **Publishable key** and **Secret key**
 
 **Why needed:**
+
 - Accept international credit/debit card payments
 - Most popular payment method for B2B
 
@@ -49,6 +56,7 @@ STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx
 ---
 
 #### B. **MTN Mobile Money** (Cameroon, Africa)
+
 ```
 MTN_MOMO_API_KEY=your_mtn_api_key_here
 MTN_MOMO_PRIMARY_KEY=4dd49a824c0343ebba9007da8dec84f2
@@ -56,11 +64,13 @@ MTN_MOMO_ENVIRONMENT=sandbox|production
 ```
 
 **Where to get:**
+
 - Register at [MTN MoMo Developer Portal](https://momodeveloperapi.mtn.com)
 - Apply for production credentials
 - Receive API keys via email
 
 **Why needed:**
+
 - Accept mobile money payments in Cameroon
 - High penetration in target market
 - Lower transaction fees (1-2%)
@@ -70,6 +80,7 @@ MTN_MOMO_ENVIRONMENT=sandbox|production
 ---
 
 #### C. **Flutterwave** (Multi-country payments)
+
 ```
 FLUTTERWAVE_PUBLIC_KEY=FLWPUBK_LIVE-xxxxxxxxxxxxx
 FLUTTERWAVE_SECRET_KEY=FLWSECK_LIVE-xxxxxxxxxxxxx
@@ -77,11 +88,13 @@ FLUTTERWAVE_ENCRYPTION_KEY=xxxxxxxxxxxxx
 ```
 
 **Where to get:**
+
 - Create account at [Flutterwave Dashboard](https://dashboard.flutterwave.com)
 - Go to Settings → API Keys
 - Copy all three keys
 
 **Why needed:**
+
 - Accept payments in 150+ countries
 - Supports mobile money, bank transfers, cards
 - Automatic currency conversion
@@ -91,17 +104,20 @@ FLUTTERWAVE_ENCRYPTION_KEY=xxxxxxxxxxxxx
 ---
 
 #### D. **Paystack** (Africa)
+
 ```
 PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxxxxxx
 PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxxxxxx
 ```
 
 **Where to get:**
+
 - Sign up at [Paystack Dashboard](https://dashboard.paystack.com)
 - Go to Settings → API Keys & Webhooks
 - Copy keys from Live section
 
 **Why needed:**
+
 - Popular in Nigeria and Ghana
 - Simple integration
 - Good for mobile money
@@ -113,6 +129,7 @@ PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxxxxxx
 ### 3. **Logistics & Shipping (Optional)**
 
 #### DHL Express
+
 ```
 DHL_API_KEY=xxxxxxxxxxxxx
 DHL_ACCOUNT_NUMBER=xxxxxxxxxxxxx
@@ -120,6 +137,7 @@ DHL_BASE_URL=https://api.dhl.com
 ```
 
 **Where to get:**
+
 - Register at [DHL for Developers](https://developer.dhl.com)
 - Create API key in dashboard
 - Request account number from DHL sales
@@ -129,6 +147,7 @@ DHL_BASE_URL=https://api.dhl.com
 ---
 
 #### Twilio (SMS Notifications)
+
 ```
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=xxxxxxxxxxxxx
@@ -136,6 +155,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 ```
 
 **Where to get:**
+
 - Create account at [Twilio Console](https://www.twilio.com/console)
 - Go to Account Info
 - Copy Account SID and Auth Token
@@ -148,12 +168,14 @@ TWILIO_PHONE_NUMBER=+1234567890
 ### 4. **Maps & Location Services (Optional)**
 
 #### Google Maps / HERE Maps
+
 ```
 MAPS_API_KEY=xxxxxxxxxxxxx
 MAPS_PROVIDER=google|here
 ```
 
 **Where to get:**
+
 - Google: [Google Cloud Console](https://console.cloud.google.com) → Enable Maps API
 - HERE: [HERE Developer Portal](https://developer.here.com)
 
@@ -164,11 +186,13 @@ MAPS_PROVIDER=google|here
 ### 5. **Analytics & Monitoring (Optional)**
 
 #### Google Analytics
+
 ```
 VITE_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
 ```
 
 **Where to get:**
+
 - Go to [Google Analytics](https://analytics.google.com)
 - Create new property
 - Copy Measurement ID
@@ -178,11 +202,13 @@ VITE_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
 ---
 
 #### Sentry (Error Tracking)
+
 ```
 SENTRY_DSN=https://xxxxxxxxxxxxx@xxxxxxxxxxxxx.ingest.sentry.io/xxxxx
 ```
 
 **Where to get:**
+
 - Sign up at [Sentry.io](https://sentry.io)
 - Create new project (React)
 - Copy DSN
@@ -194,11 +220,13 @@ SENTRY_DSN=https://xxxxxxxxxxxxx@xxxxxxxxxxxxx.ingest.sentry.io/xxxxx
 ### 6. **AI & Recommendations (Optional)**
 
 #### OpenAI API (for product recommendations)
+
 ```
 OPENAI_API_KEY=sk-xxxxxxxxxxxxx
 ```
 
 **Where to get:**
+
 - Go to [OpenAI Platform](https://platform.openai.com)
 - Create API key in Billing → API Keys
 - Enable billing
@@ -212,12 +240,14 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxxx
 ### 7. **Email Service (Optional)**
 
 #### Sendgrid
+
 ```
 SENDGRID_API_KEY=SG.xxxxxxxxxxxxx
 SENDGRID_FROM_EMAIL=noreply@harvesta.com
 ```
 
 **Where to get:**
+
 - Sign up at [SendGrid](https://app.sendgrid.com)
 - Go to Settings → API Keys
 - Create new API key
@@ -229,20 +259,24 @@ SENDGRID_FROM_EMAIL=noreply@harvesta.com
 ## Environment Variables Setup on Hostinger
 
 ### Step 1: Access Hostinger Control Panel
+
 1. Log in to [Hostinger hPanel](https://hpanel.hostinger.com)
 2. Select your hosting plan
 3. Navigate to **Files → File Manager**
 
 ### Step 2: Create Environment File
+
 1. Create a new file called `.env.production`
 2. Add all required variables (see template below)
 
 ### Step 3: Configure Node.js
+
 1. Go to **Node.js** section in hPanel
 2. Set Node version to **20.x LTS**
 3. Set **Package manager** to npm
 
 ### Step 4: Add Environment Variables
+
 1. In hPanel, go to **Environment variables**
 2. Add each variable:
    - **Name:** `VITE_SUPABASE_URL`
@@ -341,6 +375,7 @@ STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx
 ```
 
 This allows:
+
 - User authentication
 - Product browsing
 - Shopping cart
@@ -351,16 +386,16 @@ This allows:
 
 ## Cost Breakdown
 
-| Service | Cost | Purpose |
-|---------|------|---------|
-| Hostinger | $2.99-$12.99/mo | Hosting |
-| Supabase | $0-$25+/mo | Database (free tier available) |
-| Stripe | 2.9% + $0.30 | Payment processing |
-| MTN MoMo | 1-2% | Mobile money (regional) |
-| Twilio | $0.0075/SMS | SMS notifications |
-| Google Maps | $0-$200/mo | Maps API |
-| SendGrid | $0-$99/mo | Email |
-| OpenAI | ~$0.002/1K tokens | AI features |
+| Service     | Cost              | Purpose                        |
+| ----------- | ----------------- | ------------------------------ |
+| Hostinger   | $2.99-$12.99/mo   | Hosting                        |
+| Supabase    | $0-$25+/mo        | Database (free tier available) |
+| Stripe      | 2.9% + $0.30      | Payment processing             |
+| MTN MoMo    | 1-2%              | Mobile money (regional)        |
+| Twilio      | $0.0075/SMS       | SMS notifications              |
+| Google Maps | $0-$200/mo        | Maps API                       |
+| SendGrid    | $0-$99/mo         | Email                          |
+| OpenAI      | ~$0.002/1K tokens | AI features                    |
 
 **Total minimum:** ~$5-15/month (with free tiers)
 
