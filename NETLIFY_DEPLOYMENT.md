@@ -13,6 +13,7 @@
 File: `src/components/home/InfiniteProductFeed.tsx`
 
 **Before (BROKEN):**
+
 ```tsx
 import { useEffect } from 'react';  // ❌ useCallback not imported
 ...
@@ -20,6 +21,7 @@ const fetchProducts = useCallback(async (page: number) => {  // ❌ Error!
 ```
 
 **After (FIXED):**
+
 ```tsx
 import { useEffect, useCallback } from 'react';  // ✅ useCallback imported
 ...
@@ -48,11 +50,11 @@ const fetchProducts = useCallback(async (page: number) => {  // ✅ Works!
 
 Netlify will auto-detect Vite. Verify these settings:
 
-| Setting | Value |
-|---------|-------|
-| **Build command** | `npm run build` |
-| **Publish directory** | `dist` |
-| **Node version** | 18.x or higher |
+| Setting               | Value           |
+| --------------------- | --------------- |
+| **Build command**     | `npm run build` |
+| **Publish directory** | `dist`          |
+| **Node version**      | 18.x or higher  |
 
 ### Step 4: Add Environment Variables
 
@@ -86,17 +88,17 @@ React hooks need to be imported before use:
 
 ```javascript
 // ❌ WRONG - useCallback not imported
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 function MyComponent() {
-  const callback = useCallback(() => {}, []);  // Error!
+  const callback = useCallback(() => {}, []); // Error!
 }
 
 // ✅ CORRECT - useCallback imported
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from "react";
 
 function MyComponent() {
-  const callback = useCallback(() => {}, []);  // Works!
+  const callback = useCallback(() => {}, []); // Works!
 }
 ```
 
@@ -125,6 +127,7 @@ npm start          # Start development server
 ## Deploy Steps
 
 1. **Commit the fix:**
+
    ```powershell
    git add src/components/home/InfiniteProductFeed.tsx
    git commit -m "Fix: Add missing useCallback import in InfiniteProductFeed"
@@ -167,6 +170,7 @@ After deployment, you should see:
 ## Cost
 
 **Netlify Free Tier:**
+
 - Unlimited deployments
 - 100GB bandwidth/month
 - Unlimited projects

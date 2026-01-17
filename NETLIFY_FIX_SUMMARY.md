@@ -10,6 +10,7 @@
 ## The Issue
 
 Your Netlify deployment was showing:
+
 ```
 Something went wrong
 useCallback is not defined
@@ -18,6 +19,7 @@ useCallback is not defined
 ### Root Cause
 
 File: `src/components/home/InfiniteProductFeed.tsx`
+
 - Used `useCallback` hook
 - But didn't import it from React
 - Error only appeared in production builds
@@ -25,13 +27,15 @@ File: `src/components/home/InfiniteProductFeed.tsx`
 ### The Fix
 
 **Changed:**
+
 ```typescript
-import { useEffect } from 'react';  // ❌ Missing useCallback
+import { useEffect } from "react"; // ❌ Missing useCallback
 ```
 
 **To:**
+
 ```typescript
-import { useEffect, useCallback } from 'react';  // ✅ Added useCallback
+import { useEffect, useCallback } from "react"; // ✅ Added useCallback
 ```
 
 ---
@@ -73,6 +77,7 @@ Node version: 18.x (or higher)
 Click **"Site settings"** → **"Build & deploy"** → **"Environment"**
 
 Add these:
+
 ```
 VITE_SUPABASE_URL = your_supabase_url
 VITE_SUPABASE_PUBLISHABLE_KEY = your_supabase_key
@@ -85,6 +90,7 @@ Click **"Deploy site"** button
 **Wait 2-3 minutes...**
 
 Your app will be live at:
+
 ```
 https://harvesta-[random].netlify.app
 ```
@@ -111,18 +117,22 @@ Total: ~2 minutes
 Once Netlify says "✅ Published", test:
 
 1. **Visit your app**
+
    ```
    https://harvesta-[random].netlify.app
    ```
+
    Expected: App loads without errors ✅
 
 2. **Navigation works**
+
    ```
    Click links
    Expected: Routes work, no 404s ✅
    ```
 
 3. **Supabase connected**
+
    ```
    Try login/create account
    Expected: Works with your database ✅
@@ -156,6 +166,7 @@ npm run build
 **File:** `src/components/home/InfiniteProductFeed.tsx`
 
 **Before:**
+
 ```tsx
 import { useEffect } from 'react';
 // ... later in code
@@ -163,6 +174,7 @@ const fetchProducts = useCallback(async (page: number) => {  // ERROR!
 ```
 
 **After:**
+
 ```tsx
 import { useEffect, useCallback } from 'react';
 // ... later in code
@@ -194,12 +206,12 @@ React hooks must be imported before use:
 
 ```javascript
 // ❌ WRONG
-import { useState } from 'react';
-const handler = useCallback(() => {}, []);  // Error!
+import { useState } from "react";
+const handler = useCallback(() => {}, []); // Error!
 
-// ✅ CORRECT  
-import { useState, useCallback } from 'react';
-const handler = useCallback(() => {}, []);  // Works!
+// ✅ CORRECT
+import { useState, useCallback } from "react";
+const handler = useCallback(() => {}, []); // Works!
 ```
 
 ---
@@ -232,16 +244,19 @@ const handler = useCallback(() => {}, []);  // Works!
 ## If Something Goes Wrong
 
 ### Build fails
+
 - Check Netlify build logs (shows exact error)
 - Run locally: `npm run build`
 - Fix errors locally and push again
 
 ### Blank page
+
 - Check Netlify environment variables are set
 - Verify Supabase keys are correct
 - Check browser console for errors
 
 ### Slow performance
+
 - Netlify CDN should be fast globally
 - Check DevTools Network tab
 - Contact Netlify support if needed
@@ -252,11 +267,11 @@ const handler = useCallback(() => {}, []);  // Works!
 
 You now have working configs for:
 
-| Platform | Status |
-|----------|--------|
+| Platform    | Status                 |
+| ----------- | ---------------------- |
 | **Netlify** | ✅ FIXED - Deploy now! |
-| **Vercel** | ✅ Configured |
-| **Render** | ✅ Configured |
+| **Vercel**  | ✅ Configured          |
+| **Render**  | ✅ Configured          |
 
 Choose any platform to deploy!
 
@@ -264,13 +279,13 @@ Choose any platform to deploy!
 
 ## Summary
 
-| Item | Status |
-|------|--------|
-| useCallback error | ✅ Fixed |
-| Build succeeds | ✅ Yes |
-| Pushed to GitHub | ✅ Yes |
-| Ready for Netlify | ✅ Yes |
-| Deployment time | ~2-3 minutes |
+| Item              | Status       |
+| ----------------- | ------------ |
+| useCallback error | ✅ Fixed     |
+| Build succeeds    | ✅ Yes       |
+| Pushed to GitHub  | ✅ Yes       |
+| Ready for Netlify | ✅ Yes       |
+| Deployment time   | ~2-3 minutes |
 
 ---
 
