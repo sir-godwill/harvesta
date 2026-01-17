@@ -3,7 +3,7 @@ services:
     name: harvesta
     runtime: node
     buildCommand: npm ci && npm run build
-    startCommand: npm run preview
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -11,10 +11,7 @@ services:
         sync: false
       - key: VITE_SUPABASE_PUBLISHABLE_KEY
         sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    healthCheckPath: /api/health
     disk:
       name: node_modules
       mountPath: /opt/render/project/.render/node_modules
