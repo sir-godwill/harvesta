@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Check, TrendingDown, Globe, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { QuantityInput } from '@/components/marketplace/QuantityInput';
-import { calculateTieredPricing, type ProductPricing } from '@/lib/productApi';
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Check, TrendingDown, Globe, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { QuantityInput } from "@/components/marketplace/QuantityInput";
+import { calculateTieredPricing, type ProductPricing } from "@/lib/productApi";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
 
 interface ProductPricingSectionProps {
   pricing: ProductPricing;
@@ -37,18 +37,24 @@ export function ProductPricingSection({
 }: ProductPricingSectionProps) {
   const [showInternational, setShowInternational] = useState(false);
 
-  const { applicableTier, totalPrice, unitPrice } = calculateTieredPricing(quantity, pricing.tiers);
+  const { applicableTier, totalPrice, unitPrice } = calculateTieredPricing(
+    quantity,
+    pricing.tiers,
+  );
 
   const basePrice = pricing.tiers[0]?.pricePerUnit || 0;
-  const savings = basePrice > unitPrice ? (basePrice - unitPrice) * quantity : 0;
-  const savingsPercentage = basePrice > unitPrice
-    ? Math.round(((basePrice - unitPrice) / basePrice) * 100)
-    : 0;
+  const savings =
+    basePrice > unitPrice ? (basePrice - unitPrice) * quantity : 0;
+  const savingsPercentage =
+    basePrice > unitPrice
+      ? Math.round(((basePrice - unitPrice) / basePrice) * 100)
+      : 0;
 
   // Find the best value tier (lowest price per unit)
-  const bestValueTier = pricing.tiers.reduce((best, tier) =>
-    tier.pricePerUnit < best.pricePerUnit ? tier : best
-    , pricing.tiers[0]);
+  const bestValueTier = pricing.tiers.reduce(
+    (best, tier) => (tier.pricePerUnit < best.pricePerUnit ? tier : best),
+    pricing.tiers[0],
+  );
 
   return (
     <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 rounded-xl p-4 lg:p-6 space-y-4">
@@ -71,7 +77,9 @@ export function ProductPricingSection({
         {pricing.internationalPrice && showInternational && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Globe className="w-4 h-4" />
-            <span>International: ${(pricing.internationalPrice ?? 0).toFixed(2)} USD</span>
+            <span>
+              International: ${(pricing.internationalPrice ?? 0).toFixed(2)} USD
+            </span>
           </div>
         )}
       </div>
@@ -80,7 +88,10 @@ export function ProductPricingSection({
       <div className="flex items-center gap-2 text-sm">
         <AlertCircle className="w-4 h-4 text-amber-600" />
         <span className="text-amber-700 dark:text-amber-400">
-          Minimum Order: <strong>{moq} {unit}</strong>
+          Minimum Order:{" "}
+          <strong>
+            {moq} {unit}
+          </strong>
         </span>
       </div>
 
@@ -92,7 +103,12 @@ export function ProductPricingSection({
           <h4 className="font-semibold text-foreground flex items-center gap-2">
             Bulk Pricing Breakdown
             {isB2B && (
-              <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">B2B Rates</Badge>
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-primary/5 text-primary border-primary/20"
+              >
+                B2B Rates
+              </Badge>
             )}
           </h4>
           <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -113,16 +129,19 @@ export function ProductPricingSection({
             <tbody className="divide-y divide-primary/5">
               {pricing.tiers.map((tier, index) => {
                 const isActive = tier === applicableTier;
-                const savingsPct = basePrice > tier.pricePerUnit
-                  ? Math.round(((basePrice - tier.pricePerUnit) / basePrice) * 100)
-                  : 0;
+                const savingsPct =
+                  basePrice > tier.pricePerUnit
+                    ? Math.round(
+                        ((basePrice - tier.pricePerUnit) / basePrice) * 100,
+                      )
+                    : 0;
 
                 return (
                   <tr
                     key={tier.id || index}
                     className={cn(
-                      'transition-colors cursor-pointer',
-                      isActive ? 'bg-primary/5' : 'hover:bg-muted/30'
+                      "transition-colors cursor-pointer",
+                      isActive ? "bg-primary/5" : "hover:bg-muted/30",
                     )}
                     onClick={() => {
                       if (tier.minQuantity > quantity) {
@@ -131,17 +150,23 @@ export function ProductPricingSection({
                     }}
                   >
                     <td className="px-4 py-3 font-medium">
-                      {tier.minQuantity}{tier.maxQuantity ? `-${tier.maxQuantity}` : '+'}
+                      {tier.minQuantity}
+                      {tier.maxQuantity ? `-${tier.maxQuantity}` : "+"}
                     </td>
-                    <td className={cn(
-                      'px-4 py-3 text-right font-bold',
-                      isActive ? 'text-primary' : 'text-foreground'
-                    )}>
+                    <td
+                      className={cn(
+                        "px-4 py-3 text-right font-bold",
+                        isActive ? "text-primary" : "text-foreground",
+                      )}
+                    >
                       {formatPrice(tier.pricePerUnit)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {savingsPct > 0 ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-700 hover:bg-green-100 border-none"
+                        >
                           -{savingsPct}%
                         </Badge>
                       ) : (
@@ -184,11 +209,15 @@ export function ProductPricingSection({
       <div className="bg-white dark:bg-card rounded-lg p-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Unit Price:</span>
-          <span className="font-medium">{formatPrice(unitPrice)} / {unit}</span>
+          <span className="font-medium">
+            {formatPrice(unitPrice)} / {unit}
+          </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Quantity:</span>
-          <span className="font-medium">{quantity} {unit}</span>
+          <span className="font-medium">
+            {quantity} {unit}
+          </span>
         </div>
         {savings > 0 && (
           <div className="flex justify-between text-sm text-green-600">
@@ -199,7 +228,9 @@ export function ProductPricingSection({
         <Separator />
         <div className="flex justify-between">
           <span className="font-semibold text-foreground">Total:</span>
-          <span className="text-xl font-bold text-primary">{formatPrice(totalPrice)}</span>
+          <span className="text-xl font-bold text-primary">
+            {formatPrice(totalPrice)}
+          </span>
         </div>
       </div>
     </div>

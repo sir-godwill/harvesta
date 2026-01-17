@@ -36,11 +36,13 @@ ${(product.currentPrice ?? 0).toFixed(2)}
 ### Pattern Applied
 
 **Before (Error):**
+
 ```typescript
 <span>${product.currentPrice.toFixed(2)}</span>
 ```
 
 **After (Safe):**
+
 ```typescript
 <span>${(product.currentPrice ?? 0).toFixed(2)}</span>
 ```
@@ -69,12 +71,14 @@ No errors!
 Since you already connected Netlify to GitHub, the fixes will auto-deploy!
 
 ### Option 1: Automatic Deployment (Recommended)
+
 - Netlify detects the new commit on GitHub
 - Automatically rebuilds and deploys
 - Takes ~2-3 minutes
 - Check: https://app.netlify.com
 
 ### Option 2: Manual Redeploy
+
 1. Go to **app.netlify.com**
 2. Find your **harvesta** site
 3. Click **Deploys**
@@ -97,12 +101,14 @@ Since you already connected Netlify to GitHub, the fixes will auto-deploy!
 ## Technical Details
 
 ### The Error Happened When:
+
 - Products were fetched from Supabase
 - Some fields came back as `undefined` instead of numbers
 - Component tried to call `.toFixed()` on `undefined`
 - React caught the error and showed error boundary
 
 ### The Fix:
+
 - Used nullish coalescing operator (`??`)
 - Provides fallback value `0` when undefined
 - `.toFixed(2)` always receives a valid number
@@ -116,11 +122,12 @@ All fixed files now have proper null checks:
 
 ```typescript
 // All of these are now safe:
-(product.currentPrice ?? 0).toFixed(2)
-(rating ?? 0).toFixed(1)
-(seller.rating ?? 0).toFixed(1)
-(viewCount ?? 0).toFixed(0)
-(orderCount ?? 0).toFixed(0)
+(product.currentPrice ?? 0)
+  .toFixed(2)(rating ?? 0)
+  .toFixed(1)(seller.rating ?? 0)
+  .toFixed(1)(viewCount ?? 0)
+  .toFixed(0)(orderCount ?? 0)
+  .toFixed(0);
 ```
 
 ---
@@ -158,6 +165,7 @@ Status: ✅ Pushed to GitHub
 ## Deployment URL
 
 Your app will be at:
+
 ```
 https://harvesta-[random].netlify.app
 ```
@@ -203,14 +211,14 @@ After redeployment, you should see:
 
 ## Summary
 
-| Item | Status |
-|------|--------|
-| toFixed error | ✅ Fixed |
-| Null checks added | ✅ Yes |
-| Build succeeds | ✅ Yes |
-| Pushed to GitHub | ✅ Yes |
-| Netlify auto-deploys | ✅ Yes |
-| Ready for Netlify | ✅ Yes |
+| Item                 | Status   |
+| -------------------- | -------- |
+| toFixed error        | ✅ Fixed |
+| Null checks added    | ✅ Yes   |
+| Build succeeds       | ✅ Yes   |
+| Pushed to GitHub     | ✅ Yes   |
+| Netlify auto-deploys | ✅ Yes   |
+| Ready for Netlify    | ✅ Yes   |
 
 ---
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Building2,
   MessageCircle,
   Phone,
@@ -14,14 +14,20 @@ import {
   Trash2,
   ExternalLink,
   Filter,
-  Search
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { VendorTrustBadge } from "@/components/common/VendorTrustBadge";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,7 +48,7 @@ const mockSavedSuppliers = [
     totalProducts: 156,
     completedOrders: 1250,
     specialties: ["Organic Vegetables", "Fresh Fruits", "Herbs"],
-    savedAt: "2026-01-05"
+    savedAt: "2026-01-05",
   },
   {
     id: "vendor-2",
@@ -59,7 +65,7 @@ const mockSavedSuppliers = [
     totalProducts: 423,
     completedOrders: 2100,
     specialties: ["Fertilizers", "Seeds", "Pesticides"],
-    savedAt: "2026-01-04"
+    savedAt: "2026-01-04",
   },
   {
     id: "vendor-3",
@@ -76,7 +82,7 @@ const mockSavedSuppliers = [
     totalProducts: 67,
     completedOrders: 450,
     specialties: ["Maize", "Rice", "Wheat"],
-    savedAt: "2026-01-03"
+    savedAt: "2026-01-03",
   },
   {
     id: "vendor-4",
@@ -93,7 +99,7 @@ const mockSavedSuppliers = [
     totalProducts: 34,
     completedOrders: 120,
     specialties: ["Plantains", "Bananas", "Pineapples"],
-    savedAt: "2026-01-02"
+    savedAt: "2026-01-02",
   },
   {
     id: "vendor-5",
@@ -110,8 +116,8 @@ const mockSavedSuppliers = [
     totalProducts: 89,
     completedOrders: 890,
     specialties: ["Cattle", "Poultry", "Goats"],
-    savedAt: "2026-01-01"
-  }
+    savedAt: "2026-01-01",
+  },
 ];
 
 const SavedSuppliers = () => {
@@ -121,22 +127,24 @@ const SavedSuppliers = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
 
-  const filteredSuppliers = suppliers.filter(supplier => {
-    const matchesSearch = supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredSuppliers = suppliers.filter((supplier) => {
+    const matchesSearch =
+      supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       supplier.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || supplier.category === categoryFilter;
+    const matchesCategory =
+      categoryFilter === "all" || supplier.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
   const handleRemoveSupplier = (supplierId: string) => {
-    setSuppliers(suppliers.filter(s => s.id !== supplierId));
+    setSuppliers(suppliers.filter((s) => s.id !== supplierId));
     toast({
       title: "Supplier Removed",
       description: "Supplier removed from your saved list",
     });
   };
 
-  const categories = [...new Set(suppliers.map(s => s.category))];
+  const categories = [...new Set(suppliers.map((s) => s.category))];
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -155,7 +163,9 @@ const SavedSuppliers = () => {
                   <Building2 className="h-5 w-5 text-primary" />
                   Saved Suppliers
                 </h1>
-                <p className="text-sm text-muted-foreground">{suppliers.length} trusted partners</p>
+                <p className="text-sm text-muted-foreground">
+                  {suppliers.length} trusted partners
+                </p>
               </div>
             </div>
           </div>
@@ -169,7 +179,9 @@ const SavedSuppliers = () => {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Suppliers</p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Suppliers
+                  </p>
                   <p className="text-2xl font-bold">{suppliers.length}</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -183,7 +195,9 @@ const SavedSuppliers = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Verified</p>
-                  <p className="text-2xl font-bold">{suppliers.filter(s => s.isVerified).length}</p>
+                  <p className="text-2xl font-bold">
+                    {suppliers.filter((s) => s.isVerified).length}
+                  </p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -196,7 +210,9 @@ const SavedSuppliers = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Trade Assured</p>
-                  <p className="text-2xl font-bold">{suppliers.filter(s => s.tradeAssurance).length}</p>
+                  <p className="text-2xl font-bold">
+                    {suppliers.filter((s) => s.tradeAssurance).length}
+                  </p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <Package className="h-5 w-5 text-blue-600" />
@@ -210,7 +226,14 @@ const SavedSuppliers = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Avg. Rating</p>
                   <p className="text-2xl font-bold">
-                    {suppliers.length > 0 ? (suppliers.reduce((acc, s) => acc + (s.rating ?? 0), 0) / suppliers.length).toFixed(1) : 'N/A'}
+                    {suppliers.length > 0
+                      ? (
+                          suppliers.reduce(
+                            (acc, s) => acc + (s.rating ?? 0),
+                            0,
+                          ) / suppliers.length
+                        ).toFixed(1)
+                      : "N/A"}
                   </p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
@@ -235,15 +258,20 @@ const SavedSuppliers = () => {
                 />
               </div>
               <div className="flex gap-2">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
                   <SelectTrigger className="w-[180px]">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -267,7 +295,10 @@ const SavedSuppliers = () => {
         {filteredSuppliers.length > 0 ? (
           <div className="space-y-4">
             {filteredSuppliers.map((supplier) => (
-              <Card key={supplier.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={supplier.id}
+                className="hover:shadow-md transition-shadow"
+              >
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Supplier Info */}
@@ -281,19 +312,28 @@ const SavedSuppliers = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold text-lg">{supplier.name}</h3>
+                            <h3 className="font-semibold text-lg">
+                              {supplier.name}
+                            </h3>
                             <div className="flex items-center flex-wrap gap-2 mt-1">
-                              {supplier.isVerified && <VendorTrustBadge level="verified" />}
+                              {supplier.isVerified && (
+                                <VendorTrustBadge level="verified" />
+                              )}
                               {supplier.tradeAssurance && (
-                                <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+                                <Badge
+                                  variant="outline"
+                                  className="text-blue-600 border-blue-200 bg-blue-50"
+                                >
                                   Trade Assurance
                                 </Badge>
                               )}
-                              <Badge variant="secondary">{supplier.category}</Badge>
+                              <Badge variant="secondary">
+                                {supplier.category}
+                              </Badge>
                             </div>
                           </div>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
                             className="text-destructive hover:text-destructive"
                             onClick={() => handleRemoveSupplier(supplier.id)}
@@ -301,7 +341,7 @@ const SavedSuppliers = () => {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                        
+
                         <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
@@ -315,7 +355,11 @@ const SavedSuppliers = () => {
 
                         <div className="flex flex-wrap gap-2 mt-3">
                           {supplier.specialties.map((specialty, index) => (
-                            <Badge key={index} variant="outline" className="font-normal">
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="font-normal"
+                            >
                               {specialty}
                             </Badge>
                           ))}
@@ -337,15 +381,25 @@ const SavedSuppliers = () => {
                         </div>
                         <div className="text-center p-3 bg-muted/50 rounded-lg">
                           <p className="font-bold">{supplier.totalProducts}</p>
-                          <p className="text-xs text-muted-foreground">Products</p>
+                          <p className="text-xs text-muted-foreground">
+                            Products
+                          </p>
                         </div>
                         <div className="text-center p-3 bg-muted/50 rounded-lg">
-                          <p className="font-bold">{supplier.completedOrders}</p>
-                          <p className="text-xs text-muted-foreground">Orders</p>
+                          <p className="font-bold">
+                            {supplier.completedOrders}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Orders
+                          </p>
                         </div>
                         <div className="text-center p-3 bg-muted/50 rounded-lg">
-                          <p className="font-bold">{supplier.yearsOnPlatform}yr</p>
-                          <p className="text-xs text-muted-foreground">Experience</p>
+                          <p className="font-bold">
+                            {supplier.yearsOnPlatform}yr
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Experience
+                          </p>
                         </div>
                       </div>
                       <div className="flex flex-col gap-2">
@@ -373,7 +427,8 @@ const SavedSuppliers = () => {
               </div>
               <h3 className="font-semibold text-xl mb-2">No Saved Suppliers</h3>
               <p className="text-muted-foreground mb-6 max-w-md">
-                Save suppliers you trust to quickly access them later. Build your network of reliable partners.
+                Save suppliers you trust to quickly access them later. Build
+                your network of reliable partners.
               </p>
               <Link to="/">
                 <Button>
@@ -392,9 +447,12 @@ const SavedSuppliers = () => {
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-green-800">Pro Tip: Verified Suppliers</p>
+                  <p className="font-medium text-green-800">
+                    Pro Tip: Verified Suppliers
+                  </p>
                   <p className="text-sm text-green-700 mt-1">
-                    Look for the verified badge and Trade Assurance for secure B2B transactions with quality guarantees.
+                    Look for the verified badge and Trade Assurance for secure
+                    B2B transactions with quality guarantees.
                   </p>
                 </div>
               </div>

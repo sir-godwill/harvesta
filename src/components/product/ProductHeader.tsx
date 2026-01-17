@@ -1,6 +1,6 @@
-import { Badge } from '@/components/ui/badge';
-import { Leaf, Clock, Package, Star, Eye, ShoppingBag } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge";
+import { Leaf, Clock, Package, Star, Eye, ShoppingBag } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProductHeaderProps {
   name: string;
@@ -8,7 +8,7 @@ interface ProductHeaderProps {
     name: string;
     slug: string;
   };
-  status: 'active' | 'draft' | 'seasonal' | 'out_of_stock' | 'discontinued';
+  status: "active" | "draft" | "seasonal" | "out_of_stock" | "discontinued";
   tags: string[];
   isOrganic: boolean;
   isFeatured: boolean;
@@ -19,11 +19,26 @@ interface ProductHeaderProps {
 }
 
 const statusConfig = {
-  active: { label: 'Active', className: 'bg-green-100 text-green-700 border-green-200' },
-  draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700 border-gray-200' },
-  seasonal: { label: 'Seasonal', className: 'bg-amber-100 text-amber-700 border-amber-200' },
-  out_of_stock: { label: 'Out of Stock', className: 'bg-red-100 text-red-700 border-red-200' },
-  discontinued: { label: 'Discontinued', className: 'bg-gray-100 text-gray-500 border-gray-200' },
+  active: {
+    label: "Active",
+    className: "bg-green-100 text-green-700 border-green-200",
+  },
+  draft: {
+    label: "Draft",
+    className: "bg-gray-100 text-gray-700 border-gray-200",
+  },
+  seasonal: {
+    label: "Seasonal",
+    className: "bg-amber-100 text-amber-700 border-amber-200",
+  },
+  out_of_stock: {
+    label: "Out of Stock",
+    className: "bg-red-100 text-red-700 border-red-200",
+  },
+  discontinued: {
+    label: "Discontinued",
+    className: "bg-gray-100 text-gray-500 border-gray-200",
+  },
 };
 
 export function ProductHeader({
@@ -47,9 +62,9 @@ export function ProductHeader({
         <Badge variant="secondary" className="text-xs font-medium">
           {category.name}
         </Badge>
-        <Badge 
-          variant="outline" 
-          className={cn('text-xs font-medium border', statusInfo.className)}
+        <Badge
+          variant="outline"
+          className={cn("text-xs font-medium border", statusInfo.className)}
         >
           {statusInfo.label}
         </Badge>
@@ -71,9 +86,9 @@ export function ProductHeader({
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {tags.map((tag, index) => (
-            <Badge 
-              key={index} 
-              variant="outline" 
+            <Badge
+              key={index}
+              variant="outline"
               className="text-xs bg-muted/50 text-muted-foreground"
             >
               {tag}
@@ -92,18 +107,29 @@ export function ProductHeader({
         {rating > 0 && (
           <div className="flex items-center gap-0.5 sm:gap-1">
             <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-amber-400 text-amber-400" />
-            <span className="font-semibold text-foreground">{(rating ?? 0).toFixed(1)}</span>
+            <span className="font-semibold text-foreground">
+              {(rating ?? 0).toFixed(1)}
+            </span>
             <span className="hidden sm:inline">({reviewCount} reviews)</span>
             <span className="sm:hidden">({reviewCount})</span>
           </div>
         )}
         <div className="flex items-center gap-0.5 sm:gap-1">
           <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span>{(viewCount ?? 0) >= 1000 ? `${((viewCount ?? 0)/1000).toFixed(1)}K` : viewCount ?? 0}</span>
+          <span>
+            {(viewCount ?? 0) >= 1000
+              ? `${((viewCount ?? 0) / 1000).toFixed(1)}K`
+              : (viewCount ?? 0)}
+          </span>
         </div>
         <div className="flex items-center gap-0.5 sm:gap-1">
           <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span>{(orderCount ?? 0) >= 1000 ? `${((orderCount ?? 0)/1000).toFixed(1)}K` : orderCount ?? 0} sold</span>
+          <span>
+            {(orderCount ?? 0) >= 1000
+              ? `${((orderCount ?? 0) / 1000).toFixed(1)}K`
+              : (orderCount ?? 0)}{" "}
+            sold
+          </span>
         </div>
       </div>
     </div>
