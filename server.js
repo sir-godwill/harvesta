@@ -23,38 +23,57 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Try multiple possible dist locations
+// Enhanced dist path detection for Render and local environments
 const possiblePaths = [
-  join(__dirname, "dist"),
-  join(__dirname, "..", "dist"),
-  "/opt/render/project/dist",
-  process.cwd() + "/dist",
+  join(__dirname, "dist"),                           // Local: ./dist
+  join(process.cwd(), "dist"),                       // Current working dir
+  "/opt/render/project/dist",                        // Render standard path
+  "/var/task/dist",                                  // AWS Lambda
+  "/app/dist",                                       // Generic container
+  path.resolve("/opt/render/project", "dist"),       // Render absolute path
+  path.resolve(process.cwd(), "dist"),               // Current dir absolute
 ];
 
 let distPath = null;
 
+// Try to find dist folder
 for (const p of possiblePaths) {
-  if (fs.existsSync(p)) {
-    distPath = p;
-    console.log(`✅ Found dist folder at: ${distPath}`);
-    break;
+  try {
+    if (fs.existsSync(p) && fs.statSync(p).isDirectory()) {
+      const hasIndexHtml = fs.existsSync(join(p, "index.html"));
+      if (hasIndexHtml) {
+        distPath = p;
+        console.log(`✅ Found dist folder at: ${distPath}`);
+        break;
+      }
+    }
+  } catch (err) {
+    // Skip paths that error
   }
 }
 
 // If still not found, provide detailed error
 if (!distPath) {
-  console.error(`❌ CRITICAL ERROR: dist folder not found!`);
-  console.error(`Looked in these locations:`);
+  console.error(`\n❌ CRITICAL ERROR: dist folder not found!\n`);
+  console.error(`This means the build likely failed on Render.\n`);
+  console.error(`Checked these locations:`);
   possiblePaths.forEach((p) => {
-    const exists = fs.existsSync(p) ? "✅ EXISTS" : "❌ NOT FOUND";
-    console.error(`  ${exists}: ${p}`);
+    try {
+      const exists = fs.existsSync(p) ? "✅ EXISTS" : "❌ NOT FOUND";
+      const isDir = fs.existsSync(p) && fs.statSync(p).isDirectory() ? " (dir)" : "";
+      const hasIndex = fs.existsSync(join(p, "index.html")) ? " (has index.html)" : "";
+      console.error(`  ${exists}${isDir}${hasIndex}: ${p}`);
+    } catch (err) {
+      console.error(`  ⚠️  ERROR: ${p}`);
+    }
   });
   console.error(``);
-  console.error(`SOLUTIONS:`);
-  console.error(`1. Run "npm run build" locally to test`);
-  console.error(`2. Check Render build logs for npm run build errors`);
-  console.error(`3. Verify package.json has correct build script`);
-  console.error(`4. Check vite.config.ts has outDir: "dist"`);
+  console.error(`WHAT TO DO:`);
+  console.error(`1. Check Render BUILD LOGS (not runtime logs)`);
+  console.error(`2. Look for "npm run build" output`);
+  console.error(`3. Fix any TypeScript/build errors shown`);
+  console.error(`4. Verify locally: npm run build && npm start`);
+  console.error(`5. Commit and redeploy\n`);
   process.exit(1);
 }
 
