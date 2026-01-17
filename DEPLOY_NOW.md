@@ -9,6 +9,7 @@
 ## What I Did
 
 Updated `server.js` with:
+
 - ✅ Better path detection for Render's environment
 - ✅ Validation that dist/ is actually a directory
 - ✅ Checks that index.html exists
@@ -33,11 +34,13 @@ npm run build
 ```
 
 Verify dist folder:
+
 ```powershell
 Test-Path "dist/index.html"  # Should return True
 ```
 
 Start server:
+
 ```powershell
 npm start
 
@@ -79,6 +82,7 @@ git push origin main
 ## What Happens During Render Deploy
 
 ### Build Phase (1-3 minutes)
+
 ```
 Running: npm ci && npm run build
 ├─ Installs dependencies
@@ -87,6 +91,7 @@ Running: npm ci && npm run build
 ```
 
 ### Start Phase (<1 minute)
+
 ```
 Running: node server.js
 ├─ server.js starts
@@ -96,6 +101,7 @@ Running: node server.js
 ```
 
 ### Live!
+
 ```
 Your app is at: https://harvesta-XXXX.onrender.com
 ```
@@ -133,6 +139,7 @@ After deployment, you should see in Render logs:
 ### Common Fixes
 
 **If build has TypeScript errors:**
+
 ```powershell
 # Fix locally
 npm run build
@@ -144,11 +151,13 @@ npm run build
 ```
 
 **If build seems stuck or times out:**
+
 - Click "Cancel Deployment"
 - Wait 1 minute
 - Click "Redeploy latest commit" again
 
 **If still not working:**
+
 - Double-check environment variables are set:
   - NODE_ENV = production
   - VITE_SUPABASE_URL = your_actual_url
@@ -160,13 +169,14 @@ npm run build
 
 Make sure these are set in Render dashboard:
 
-| Variable | Value | Required |
-|----------|-------|----------|
-| NODE_ENV | production | Yes |
-| VITE_SUPABASE_URL | your_supabase_url | Yes |
-| VITE_SUPABASE_PUBLISHABLE_KEY | your_public_key | Yes |
+| Variable                      | Value             | Required |
+| ----------------------------- | ----------------- | -------- |
+| NODE_ENV                      | production        | Yes      |
+| VITE_SUPABASE_URL             | your_supabase_url | Yes      |
+| VITE_SUPABASE_PUBLISHABLE_KEY | your_public_key   | Yes      |
 
 If not set:
+
 1. Go to https://dashboard.render.com
 2. Click your service
 3. Click "Environment"
@@ -178,12 +188,14 @@ If not set:
 ## Files Changed
 
 **server.js** - Updated with better path detection
+
 - ✅ Checks multiple paths
 - ✅ Validates directories
 - ✅ Better error messages
 - ✅ Verified working locally
 
 **Everything else** - No changes needed
+
 - ✅ render.yaml is correct
 - ✅ package.json is correct
 - ✅ vite.config.ts is correct
@@ -192,13 +204,13 @@ If not set:
 
 ## Timeline
 
-| Task | Time |
-|------|------|
-| Test locally (build + start) | 3-5 min |
-| Commit & push | 1 min |
-| Render build | 1-3 min |
-| Render start | <1 min |
-| **Total** | **5-10 min** |
+| Task                         | Time         |
+| ---------------------------- | ------------ |
+| Test locally (build + start) | 3-5 min      |
+| Commit & push                | 1 min        |
+| Render build                 | 1-3 min      |
+| Render start                 | <1 min       |
+| **Total**                    | **5-10 min** |
 
 ---
 
@@ -241,4 +253,3 @@ Once your app is live at `https://harvesta-XXXX.onrender.com`:
 ---
 
 Good to go! Deploy now! 🎉
-

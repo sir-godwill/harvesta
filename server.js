@@ -25,13 +25,13 @@ const port = process.env.PORT || 3000;
 
 // Enhanced dist path detection for Render and local environments
 const possiblePaths = [
-  join(__dirname, "dist"),                           // Local: ./dist
-  join(process.cwd(), "dist"),                       // Current working dir
-  "/opt/render/project/dist",                        // Render standard path
-  "/var/task/dist",                                  // AWS Lambda
-  "/app/dist",                                       // Generic container
-  path.resolve("/opt/render/project", "dist"),       // Render absolute path
-  path.resolve(process.cwd(), "dist"),               // Current dir absolute
+  join(__dirname, "dist"), // Local: ./dist
+  join(process.cwd(), "dist"), // Current working dir
+  "/opt/render/project/dist", // Render standard path
+  "/var/task/dist", // AWS Lambda
+  "/app/dist", // Generic container
+  path.resolve("/opt/render/project", "dist"), // Render absolute path
+  path.resolve(process.cwd(), "dist"), // Current dir absolute
 ];
 
 let distPath = null;
@@ -60,8 +60,11 @@ if (!distPath) {
   possiblePaths.forEach((p) => {
     try {
       const exists = fs.existsSync(p) ? "✅ EXISTS" : "❌ NOT FOUND";
-      const isDir = fs.existsSync(p) && fs.statSync(p).isDirectory() ? " (dir)" : "";
-      const hasIndex = fs.existsSync(join(p, "index.html")) ? " (has index.html)" : "";
+      const isDir =
+        fs.existsSync(p) && fs.statSync(p).isDirectory() ? " (dir)" : "";
+      const hasIndex = fs.existsSync(join(p, "index.html"))
+        ? " (has index.html)"
+        : "";
       console.error(`  ${exists}${isDir}${hasIndex}: ${p}`);
     } catch (err) {
       console.error(`  ⚠️  ERROR: ${p}`);

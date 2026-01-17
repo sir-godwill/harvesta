@@ -107,18 +107,21 @@ Your `vercel.json` includes:
 Once Vercel says "✅ Ready", test these:
 
 1. **App loads**
+
    ```
    https://harvesta.vercel.app
    Expected: Your app appears ✅
    ```
 
 2. **Routes work**
+
    ```
    Click links in app
    Expected: No 404 errors ✅
    ```
 
 3. **Supabase connected**
+
    ```
    Try login/create account
    Expected: Works with your database ✅
@@ -141,6 +144,7 @@ git push origin main
 ```
 
 Vercel automatically:
+
 1. Builds your app
 2. Deploys new version
 3. Your app updates live (no manual steps)
@@ -162,6 +166,7 @@ To use your own domain (`harvesta.com`):
 ## Vercel vs Render
 
 ### Vercel (Current Setup)
+
 ```
 ✅ Perfect for React/Vite frontend
 ✅ Global CDN (super fast)
@@ -172,6 +177,7 @@ To use your own domain (`harvesta.com`):
 ```
 
 ### Render (Alternative)
+
 ```
 ✅ Perfect for full-stack (Express + React)
 ✅ Always-on server
@@ -185,6 +191,7 @@ To use your own domain (`harvesta.com`):
 ## Troubleshooting
 
 ### Build fails: "vite build failed"
+
 ```
 1. Check Vercel build logs
 2. Run locally: npm run build
@@ -192,6 +199,7 @@ To use your own domain (`harvesta.com`):
 ```
 
 ### Blank page appears
+
 ```
 1. Check Vercel environment variables are set
 2. Verify VITE_SUPABASE_URL and KEY are correct
@@ -199,6 +207,7 @@ To use your own domain (`harvesta.com`):
 ```
 
 ### Routes give 404
+
 ```
 1. Verify vercel.json has rewrites section
 2. Verify index.html is in dist/
@@ -206,6 +215,7 @@ To use your own domain (`harvesta.com`):
 ```
 
 ### Very slow loading
+
 ```
 1. Check DevTools → Network tab
 2. Look for slow asset loading
@@ -224,6 +234,7 @@ git push origin main
 ```
 
 All files are already configured:
+
 - ✅ vercel.json
 - ✅ package.json
 - ✅ vite.config.ts
@@ -249,6 +260,7 @@ Vercel will show:
 ## Cost
 
 **Vercel Free Tier:**
+
 - Unlimited deployments
 - 80GB bandwidth/month
 - Unlimited projects
@@ -262,13 +274,13 @@ Vercel will show:
 
 ## Summary
 
-| Item | Status |
-|------|--------|
-| Build verification | ✅ Succeeds |
-| Vercel config | ✅ Done |
-| Environment vars | ✅ Documented |
-| GitHub repo | ✅ Ready |
-| Deployment ready | ✅ YES |
+| Item               | Status        |
+| ------------------ | ------------- |
+| Build verification | ✅ Succeeds   |
+| Vercel config      | ✅ Done       |
+| Environment vars   | ✅ Documented |
+| GitHub repo        | ✅ Ready      |
+| Deployment ready   | ✅ YES        |
 
 ---
 
