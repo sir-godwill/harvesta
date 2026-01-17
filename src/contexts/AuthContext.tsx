@@ -67,36 +67,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let loadingTimeout: ReturnType<typeof setTimeout>;
+    let isMounted = true;
+
+    // Set a timeout to prevent infinite loading (e.g., if auth connection fails)
+    loadingTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('AuthContext: Loading timeout reached, stopping loading state');
+        setIsLoading(false);
+      }
+    }, 5000); // 5 second timeout
+
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    let subscription: any;
+    try {
+      const { data } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          if (!isMounted) return;
+
+          setSession(session);
+          setUser(session?.user ?? null);
+
+          if (session?.user) {
+            await fetchUserRolesAndProfile(session.user.id);
+          } else {
+            setRoles([]);
+            setSupplierProfile(null);
+          }
+
+          if (isMounted) {
+            setIsLoading(false);
+            clearTimeout(loadingTimeout);
+          }
+        }
+      );
+      subscription = data?.subscription;
+    } catch (error) {
+      console.error('AuthContext: Failed to set up auth listener:', error);
+      if (isMounted) {
+        setIsLoading(false);
+        clearTimeout(loadingTimeout);
+      }
+    }
+
+    // THEN check for existing session
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        if (!isMounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           await fetchUserRolesAndProfile(session.user.id);
-        } else {
-          setRoles([]);
-          setSupplierProfile(null);
         }
 
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          clearTimeout(loadingTimeout);
+        }
+      })
+      .catch((error) => {
+        console.error('AuthContext: Failed to get session:', error);
+        if (isMounted) {
+          setIsLoading(false);
+          clearTimeout(loadingTimeout);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      if (subscription) {
+        subscription.unsubscribe();
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        await fetchUserRolesAndProfile(session.user.id);
-      }
-
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+      clearTimeout(loadingTimeout);
+    };
   }, []);
 
   const signOut = async () => {

@@ -5,8 +5,16 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error("Supabase config missing:", { url: !!SUPABASE_URL, key: !!SUPABASE_PUBLISHABLE_KEY });
+// Log environment variable status
+if (typeof window !== 'undefined') {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    console.warn("⚠️ Supabase config incomplete:", { 
+      url: SUPABASE_URL ? "✓" : "✗", 
+      key: SUPABASE_PUBLISHABLE_KEY ? "✓" : "✗" 
+    });
+  } else {
+    console.log("✓ Supabase config loaded successfully");
+  }
 }
 
 // Import the supabase client like this:
@@ -17,7 +25,7 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY || "placeholder-key",
   {
     auth: {
-      storage: localStorage,
+      storage: typeof window !== 'undefined' ? localStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
     }
